@@ -36,6 +36,12 @@
     state.distanceLayer = null
   }
 
+  function hideTransientUi() {
+    for (const element of [state.overlay, state.selectedOverlay, state.tooltip, state.distanceLayer]) {
+      if (element) element.style.display = 'none'
+    }
+  }
+
   function isOwnElement(element) {
     return element?.classList?.contains('layoutpilot-overlay') ||
       element?.classList?.contains('layoutpilot-selected-overlay') ||
@@ -65,6 +71,23 @@
     return `${styles[`${prefix}Top`]} ${styles[`${prefix}Right`]} ${styles[`${prefix}Bottom`]} ${styles[`${prefix}Left`]}`
   }
 
+  function formatRadiusValues(styles) {
+    return `${styles.borderTopLeftRadius} ${styles.borderTopRightRadius} ${styles.borderBottomRightRadius} ${styles.borderBottomLeftRadius}`
+  }
+
+  function formatGapValues(styles) {
+    if (!['flex', 'inline-flex', 'grid', 'inline-grid'].includes(styles.display)) return ''
+
+    const rowGap = styles.rowGap
+    const columnGap = styles.columnGap
+    const normalized = [rowGap, columnGap].map(value => String(value).trim())
+
+    if (normalized.every(value => value === 'normal' || value === '0px')) return ''
+
+    if (normalized[0] === normalized[1]) return normalized[0]
+
+    return `${rowGap} / ${columnGap}`
+  }
 
   function rgbToHex(value) {
     if (!value || value === 'transparent') return value || ''
@@ -105,7 +128,7 @@
   function formatColor(value) {
     const normalized = String(value || '').trim()
     if (!normalized || isTransparentColor(normalized)) return '—'
-    return escapeHtml(rgbToHex(normalized))
+    return rgbToHex(normalized)
   }
 
   function getElementBackgroundColor(styles) {
@@ -131,9 +154,7 @@
       .map(border => border.color)
 
     const unique = Array.from(new Set(visibleColors))
-    if (!unique.length) return ''
-    if (unique.length === 1) return unique[0]
-    return unique.join(' / ')
+    return unique.map(color => rgbToHex(color)).filter(Boolean)
   }
 
   function formatFont(styles) {
@@ -167,13 +188,57 @@
     return `${tag}${id}${className}`
   }
 
+  function formatColorMarkup(colorValue) {
+    const value = formatColor(colorValue)
+    if (value === '—') return value
+    return createColorChipMarkup([value])
+  }
+
+  function formatColorsMarkup(colors) {
+    if (!colors?.length) return ''
+    return createColorChipMarkup(colors)
+  }
+
+  function createColorChipMarkup(colors) {
+    const uniqueColors = Array.from(new Set(colors.filter(Boolean)))
+    if (!uniqueColors.length) return '—'
+
+    const background = uniqueColors.length === 1
+      ? uniqueColors[0]
+      : `linear-gradient(90deg, ${uniqueColors.join(', ')})`
+
+    return `
+      <span class="layoutpilot-color-chip">
+        <span class="layoutpilot-color-swatch" style="background: ${background}"></span>
+        <span>${escapeHtml(uniqueColors.join(' / '))}</span>
+      </span>
+    `
+  }
+
+  function positionTooltip(event) {
+    const offset = 14
+    state.tooltip.style.display = 'block'
+    state.tooltip.style.visibility = 'hidden'
+    state.tooltip.style.left = '0px'
+    state.tooltip.style.top = '0px'
+
+    const tooltipRect = state.tooltip.getBoundingClientRect()
+    const left = Math.min(event.clientX + offset, window.innerWidth - tooltipRect.width - offset)
+    const top = Math.min(event.clientY + offset, window.innerHeight - tooltipRect.height - offset)
+
+    state.tooltip.style.left = px(Math.max(12, left))
+    state.tooltip.style.top = px(Math.max(12, top))
+    state.tooltip.style.visibility = 'visible'
+  }
+
   function renderTooltip(event, element) {
     const rect = element.getBoundingClientRect()
     const styles = getComputedStyle(element)
     const selectedRect = state.selectedElement?.isConnected ? state.selectedElement.getBoundingClientRect() : null
     const spacing = selectedRect && state.selectedElement !== element ? getSpacingBetween(selectedRect, rect) : null
     const backgroundColor = getElementBackgroundColor(styles)
-    const borderColor = getBorderColor(styles)
+    const borderColors = getBorderColor(styles)
+    const gap = formatGapValues(styles)
     const isPinned = state.selectedElement === element
 
     state.tooltip.innerHTML = `
@@ -187,17 +252,23 @@
         <span class="layoutpilot-value">${escapeHtml(formatBoxValues(styles, 'margin'))}</span>
         <span class="layoutpilot-label">Position</span>
         <span class="layoutpilot-value">x ${Math.round(rect.left)}, y ${Math.round(rect.top)}</span>
+        <span class="layoutpilot-label">Radius</span>
+        <span class="layoutpilot-value">${escapeHtml(formatRadiusValues(styles))}</span>
+        ${gap ? `
+          <span class="layoutpilot-label">Gap</span>
+          <span class="layoutpilot-value">${escapeHtml(gap)}</span>
+        ` : ''}
         <span class="layoutpilot-label">Font</span>
         <span class="layoutpilot-value">${escapeHtml(formatFont(styles))}</span>
         <span class="layoutpilot-label">Color</span>
-        <span class="layoutpilot-value">${formatColor(styles.color)}</span>
+        <span class="layoutpilot-value">${formatColorMarkup(styles.color)}</span>
         ${backgroundColor ? `
           <span class="layoutpilot-label">Background</span>
-          <span class="layoutpilot-value">${formatColor(backgroundColor)}</span>
+          <span class="layoutpilot-value">${formatColorMarkup(backgroundColor)}</span>
         ` : ''}
-        ${borderColor ? `
+        ${borderColors.length ? `
           <span class="layoutpilot-label">Border</span>
-          <span class="layoutpilot-value">${formatColor(borderColor)}</span>
+          <span class="layoutpilot-value">${formatColorsMarkup(borderColors)}</span>
         ` : ''}
         <span class="layoutpilot-label">Classes</span>
         <span class="layoutpilot-value layoutpilot-code">${escapeHtml(getClasses(element))}</span>
@@ -210,23 +281,17 @@
       <div class="layoutpilot-help">${isPinned ? 'Click again to unpin. ' : 'Click to pin. '}Press Esc to turn off.</div>
     `
 
-    const offset = 14
-    const tooltipWidth = 360
-    const left = Math.min(event.clientX + offset, window.innerWidth - tooltipWidth - offset)
-    const top = Math.min(event.clientY + offset, window.innerHeight - 180)
-
-    state.tooltip.style.display = 'block'
-    state.tooltip.style.left = px(Math.max(12, left))
-    state.tooltip.style.top = px(Math.max(12, top))
+    positionTooltip(event)
   }
 
   function renderSelectedOverlay() {
     if (!state.selectedElement?.isConnected) {
       state.selectedElement = null
-      state.selectedOverlay.style.display = 'none'
+      if (state.selectedOverlay) state.selectedOverlay.style.display = 'none'
       return
     }
 
+    ensureUi()
     setBox(state.selectedOverlay, state.selectedElement.getBoundingClientRect())
   }
 
@@ -314,6 +379,32 @@
     }
   }
 
+  function handleViewportChange() {
+    if (!state.enabled || !state.selectedElement) return
+    renderSelectedOverlay()
+  }
+
+  function handlePageVisibilityChange() {
+    if (!state.enabled) return
+
+    if (document.hidden) {
+      hideTransientUi()
+      return
+    }
+
+    renderSelectedOverlay()
+  }
+
+  function handleWindowBlur() {
+    if (!state.enabled) return
+    hideTransientUi()
+  }
+
+  function handleWindowFocus() {
+    if (!state.enabled) return
+    renderSelectedOverlay()
+  }
+
   function setEnabled(enabled) {
     state.enabled = enabled
 
@@ -322,12 +413,22 @@
       document.addEventListener('mousemove', inspectAtEvent, true)
       document.addEventListener('click', handleClick, true)
       document.addEventListener('keydown', handleKeyDown, true)
+      window.addEventListener('scroll', handleViewportChange, true)
+      window.addEventListener('resize', handleViewportChange)
+      window.addEventListener('blur', handleWindowBlur)
+      window.addEventListener('focus', handleWindowFocus)
+      document.addEventListener('visibilitychange', handlePageVisibilityChange)
       return
     }
 
     document.removeEventListener('mousemove', inspectAtEvent, true)
     document.removeEventListener('click', handleClick, true)
     document.removeEventListener('keydown', handleKeyDown, true)
+    window.removeEventListener('scroll', handleViewportChange, true)
+    window.removeEventListener('resize', handleViewportChange)
+    window.removeEventListener('blur', handleWindowBlur)
+    window.removeEventListener('focus', handleWindowFocus)
+    document.removeEventListener('visibilitychange', handlePageVisibilityChange)
     state.hoveredElement = null
     state.selectedElement = null
     hideUi()
