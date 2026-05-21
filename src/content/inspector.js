@@ -313,19 +313,25 @@
   }
 
   function renderDistances(element) {
+    ensureUi()
     state.distanceLayer.innerHTML = ''
 
-    if (!state.selectedElement?.isConnected || state.selectedElement === element) return
+    if (!state.selectedElement?.isConnected || state.selectedElement === element) {
+      state.distanceLayer.style.display = 'none'
+      return
+    }
 
     const a = state.selectedElement.getBoundingClientRect()
     const b = element.getBoundingClientRect()
     const spacing = getSpacingBetween(a, b)
+    let hasDistance = false
 
     if (spacing.horizontal > 0) {
       const left = b.left > a.right ? a.right : b.right
       const right = b.left > a.right ? b.left : a.left
       const y = Math.max(Math.min(a.top + a.height / 2, b.bottom), b.top)
       addDistanceLine('horizontal', left, y, right - left, 2, `${spacing.horizontal}px`)
+      hasDistance = true
     }
 
     if (spacing.vertical > 0) {
@@ -333,7 +339,10 @@
       const bottom = b.top > a.bottom ? b.top : a.top
       const x = Math.max(Math.min(a.left + a.width / 2, b.right), b.left)
       addDistanceLine('vertical', x, top, 2, bottom - top, `${spacing.vertical}px`)
+      hasDistance = true
     }
+
+    state.distanceLayer.style.display = hasDistance ? 'block' : 'none'
   }
 
   function inspectAtEvent(event) {

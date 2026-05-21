@@ -63,6 +63,9 @@ toggleButton.addEventListener('click', async () => {
     await ensureContentScript(tab.id)
     const response = await sendToTab(tab.id, { type: 'layoutpilot:toggle' })
     setStatus(!!response?.enabled, response?.enabled ? 'Inspect mode is active.' : 'Inspect mode is off.')
+    if (response?.enabled) {
+      window.close()
+    }
   } finally {
     toggleButton.disabled = false
   }
