@@ -1,0 +1,113 @@
+.layoutpilot-overlay,
+.layoutpilot-selected-overlay,
+.layoutpilot-tooltip,
+.layoutpilot-distance-layer {
+  all: initial;
+  box-sizing: border-box;
+  position: fixed;
+  z-index: 2147483647;
+  pointer-events: none;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.layoutpilot-overlay {
+  border: 2px solid #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.65), 0 0 0 99999px rgba(2, 6, 23, 0.04);
+}
+
+.layoutpilot-selected-overlay {
+  border: 2px dashed #a7f3d0;
+  background: rgba(167, 243, 208, 0.08);
+}
+
+.layoutpilot-tooltip {
+  max-width: min(460px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.35);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.layoutpilot-tooltip strong {
+  all: unset;
+  display: block;
+  margin-bottom: 6px;
+  color: #e0f2fe;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.layoutpilot-tooltip code {
+  all: unset;
+  color: #bae6fd;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.layoutpilot-tooltip .layoutpilot-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 10px;
+}
+
+.layoutpilot-tooltip .layoutpilot-label {
+  color: #94a3b8;
+}
+
+.layoutpilot-tooltip .layoutpilot-value {
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
+.layoutpilot-tooltip .layoutpilot-code {
+  color: #bae6fd;
+}
+
+.layoutpilot-tooltip .layoutpilot-muted {
+  color: #94a3b8;
+}
+
+.layoutpilot-tooltip .layoutpilot-divider {
+  height: 1px;
+  margin: 8px 0;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.layoutpilot-tooltip .layoutpilot-help {
+  margin-top: 8px;
+  color: #cbd5e1;
+}
+
+.layoutpilot-distance-layer {
+  inset: 0;
+}
+
+.layoutpilot-distance-line {
+  position: fixed;
+  background: #fbbf24;
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.75);
+}
+
+.layoutpilot-distance-line.horizontal {
+  height: 2px;
+}
+
+.layoutpilot-distance-line.vertical {
+  width: 2px;
+}
+
+.layoutpilot-distance-label {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #0f172a;
+  background: #fbbf24;
+  font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.35);
+}
