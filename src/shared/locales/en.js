@@ -30,6 +30,8 @@
         checking: 'Checking current tab...',
         unsupported: 'Open an http/https page to inspect.',
         active: 'Inspect Mode active.',
+        inspectActive: 'Inspect Mode active.',
+        reviewActive: 'Review Mode active.',
         inactive: 'LayoutPilot disabled.'
       },
       mode: {
@@ -40,7 +42,7 @@
         },
         review: {
           name: 'Review Mode',
-          description: 'Coming soon: marks and Markdown report.'
+          description: 'Visual review foundation. Annotations coming next.'
         }
       },
       shortcuts: {
@@ -102,6 +104,7 @@
     toast: {
       noElement: 'No element selected',
       inspectOn: 'Inspect mode on',
+      reviewOn: 'Review mode on',
       reviewSoon: 'Review mode coming soon',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',

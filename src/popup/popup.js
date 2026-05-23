@@ -2,6 +2,7 @@ const toggleButton = document.getElementById('toggle-button')
 const statusText = document.getElementById('status-text')
 const statusDot = document.getElementById('status-dot')
 const modeInspect = document.getElementById('mode-inspect')
+const modeReview = document.getElementById('mode-review')
 const languageSelect = document.getElementById('language-select')
 const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
@@ -47,6 +48,14 @@ const languageOptionLabels = {
   es: 'language.spanish'
 }
 
+function normalizeMode(mode) {
+  return mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+}
+
+function getActiveStatusKey(mode) {
+  return normalizeMode(mode) === MODE.REVIEW ? 'popup.status.reviewActive' : 'popup.status.inspectActive'
+}
+
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
   return tab
@@ -79,15 +88,20 @@ function renderPopupTexts() {
   toggleButton.textContent = state.enabled ? t('common.deactivate') : t('common.activate')
 }
 
+function renderModeSelection() {
+  modeInspect.checked = state.mode === MODE.INSPECT
+  modeReview.checked = state.mode === MODE.REVIEW
+}
+
 function setStatus(enabled, statusKey, mode = MODE.INSPECT) {
   state.enabled = !!enabled
-  state.mode = mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+  state.mode = normalizeMode(mode)
   state.statusKey = statusKey
 
   statusDot.classList.toggle('active', !!enabled)
   statusText.textContent = t(statusKey)
   toggleButton.textContent = enabled ? t('common.deactivate') : t('common.activate')
-  modeInspect.checked = state.mode === MODE.INSPECT
+  renderModeSelection()
 }
 
 async function ensureContentScript(tabId) {
@@ -112,15 +126,15 @@ async function refreshStatus() {
 
   if (!isInspectableTab(tab)) {
     toggleButton.disabled = true
-    setStatus(false, 'popup.status.unsupported')
+    setStatus(false, 'popup.status.unsupported', state.mode)
     return
   }
 
   toggleButton.disabled = false
   const response = await sendToTab(tab.id, { type: MESSAGE_TYPE.GET_STATE })
   const enabled = !!response?.enabled
-  const mode = response?.mode || MODE.INSPECT
-  setStatus(enabled, enabled ? 'popup.status.active' : 'popup.status.inactive', mode)
+  const mode = response?.mode || state.mode
+  setStatus(enabled, enabled ? getActiveStatusKey(mode) : 'popup.status.inactive', mode)
 }
 
 toggleButton.addEventListener('click', async () => {
@@ -133,12 +147,18 @@ toggleButton.addEventListener('click', async () => {
     const response = await sendToTab(tab.id, {
       type: MESSAGE_TYPE.SET_ENABLED,
       enabled: !state.enabled,
-      mode: MODE.INSPECT
+      mode: state.mode
     })
+    if (!response) {
+      setStatus(false, 'popup.status.inactive', state.mode)
+      return
+    }
+
+    const mode = response?.mode || state.mode
     setStatus(
       !!response?.enabled,
-      response?.enabled ? 'popup.status.active' : 'popup.status.inactive',
-      response?.mode || MODE.INSPECT
+      response?.enabled ? getActiveStatusKey(mode) : 'popup.status.inactive',
+      mode
     )
     if (response?.enabled) {
       window.close()
@@ -146,6 +166,37 @@ toggleButton.addEventListener('click', async () => {
   } finally {
     toggleButton.disabled = false
   }
+})
+
+async function handleModeChange(mode) {
+  state.mode = normalizeMode(mode)
+  renderModeSelection()
+
+  if (!state.enabled) return
+
+  const tab = await getActiveTab()
+  if (!isInspectableTab(tab)) return
+
+  const response = await sendToTab(tab.id, {
+    type: MESSAGE_TYPE.SET_ENABLED,
+    enabled: true,
+    mode: state.mode
+  })
+  if (!response) {
+    setStatus(false, 'popup.status.inactive', state.mode)
+    return
+  }
+
+  const responseMode = response?.mode || state.mode
+  setStatus(!!response?.enabled, response?.enabled ? getActiveStatusKey(responseMode) : 'popup.status.inactive', responseMode)
+}
+
+modeInspect.addEventListener('change', () => {
+  if (modeInspect.checked) handleModeChange(MODE.INSPECT)
+})
+
+modeReview.addEventListener('change', () => {
+  if (modeReview.checked) handleModeChange(MODE.REVIEW)
 })
 
 languageSelect.addEventListener('change', async () => {

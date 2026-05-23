@@ -30,6 +30,8 @@
         checking: 'Verificando aba atual...',
         unsupported: 'Abra uma página http/https para inspecionar.',
         active: 'Modo Inspeção ativo.',
+        inspectActive: 'Modo Inspeção ativo.',
+        reviewActive: 'Modo Revisão ativo.',
         inactive: 'LayoutPilot desativado.'
       },
       mode: {
@@ -40,7 +42,7 @@
         },
         review: {
           name: 'Modo Revisão',
-          description: 'Em breve: marcações e relatório Markdown.'
+          description: 'Base de revisão visual. Anotações vêm a seguir.'
         }
       },
       shortcuts: {
@@ -102,6 +104,7 @@
     toast: {
       noElement: 'Nenhum elemento selecionado',
       inspectOn: 'Modo inspeção ativo',
+      reviewOn: 'Modo revisão ativo',
       reviewSoon: 'Modo revisão em breve',
       elementPinned: 'Elemento fixado',
       elementUnpinned: 'Elemento desfixado',

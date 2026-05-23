@@ -47,6 +47,8 @@
     'src/content/shortcuts.js',
     'src/content/detail-panel.js',
     'src/content/draggable-panel.js',
+    'src/content/review-state.js',
+    'src/content/review-mode.js',
     'src/content/inspector.js'
   ]
 

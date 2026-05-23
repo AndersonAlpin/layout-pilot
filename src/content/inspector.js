@@ -9,6 +9,7 @@
     shortcuts,
     detailPanel,
     draggablePanel,
+    reviewMode,
     ui,
     i18n
   } = window.LayoutPilotModules
@@ -34,6 +35,7 @@
   const { normalizeKey, shouldIgnoreShortcut, consumeShortcut } = shortcuts
   const { renderDetailPanelContent } = detailPanel
   const { createDraggablePanel } = draggablePanel
+  const { createReviewMode } = reviewMode
   const { renderCloseButton, renderShortcutList } = ui
   const {
     loadLanguagePreference,
@@ -72,6 +74,11 @@
     detailPanelPosition: null,
     detailPanelDrag: null
   }
+
+  const reviewController = createReviewMode({
+    showToast,
+    t
+  })
 
   const TECHNICAL_TOOLTIP_LABEL = {
     size: 'Size',
@@ -144,6 +151,15 @@
     for (const element of [state.overlay, state.selectedOverlay, state.tooltip, state.distanceLayer]) {
       if (element) element.style.display = 'none'
     }
+  }
+
+  function hideInspectUi() {
+    for (const key of ['overlay', 'selectedOverlay', 'tooltip', 'distanceLayer', 'detailPanel']) {
+      removeElement(key)
+    }
+    state.hoveredElement = null
+    state.selectedElement = null
+    state.lastPointerEvent = null
   }
 
   function isOwnElement(element) {
@@ -232,6 +248,7 @@
   }
 
   function refreshTranslatedUi() {
+    reviewController.refreshLanguage()
     if (state.helpPanel) renderHelpPanel()
     if (state.detailPanel && getActiveElement()) openDetailPanel(getActiveElement())
     if (state.lastPointerEvent && state.hoveredElement?.isConnected) {
@@ -588,8 +605,12 @@
 
     if (normalized === SHORTCUT.INSPECT) {
       consumeShortcut(event)
+      if (state.enabled) {
+        setEnabled(false)
+        return
+      }
       setMode(MODE.INSPECT)
-      setEnabled(!state.enabled)
+      setEnabled(true)
       return
     }
 
@@ -600,6 +621,18 @@
     }
 
     if (!state.enabled) return
+
+    if (state.mode === MODE.REVIEW) {
+      if (reviewController.handleKeyDown(event, normalized)) {
+        consumeShortcut(event)
+        return
+      }
+
+      if (normalized === SHORTCUT.CANCEL) {
+        consumeShortcut(event)
+      }
+      return
+    }
 
     if (normalized === SHORTCUT.CANCEL) {
       consumeShortcut(event)
@@ -710,8 +743,38 @@
     state.healthCheckTimer = null
   }
 
+  function startMode(mode) {
+    if (mode === MODE.REVIEW) {
+      reviewController.start()
+      return
+    }
+
+    ensureUi()
+    bindInspectListeners()
+    showToast(t('toast.inspectOn'))
+  }
+
+  function stopMode(mode) {
+    if (mode === MODE.REVIEW) {
+      reviewController.stop()
+      return
+    }
+
+    unbindInspectListeners()
+    detailPanelDrag.stop()
+    hideInspectUi()
+  }
+
   function setMode(mode) {
-    state.mode = mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+    const nextMode = mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+    if (state.mode === nextMode) return
+
+    const previousMode = state.mode
+    if (state.enabled) stopMode(previousMode)
+
+    state.mode = nextMode
+
+    if (state.enabled) startMode(state.mode)
   }
 
   function setEnabled(enabled) {
@@ -719,22 +782,19 @@
     state.enabled = enabled
 
     if (enabled) {
-      ensureUi()
-      bindInspectListeners()
-      showToast(state.mode === MODE.INSPECT ? t('toast.inspectOn') : t('toast.reviewSoon'))
+      startMode(state.mode)
       return
     }
 
-    unbindInspectListeners()
-    detailPanelDrag.stop()
-    state.hoveredElement = null
-    state.selectedElement = null
-    state.lastPointerEvent = null
-    hideUi()
+    stopMode(state.mode)
+    removeElement('helpPanel')
+    removeElement('toast')
+    cleanupOrphanUi()
   }
 
   function destroy() {
     stopHealthCheck()
+    reviewController.destroy()
     detailPanelDrag.stop()
     unbindInspectListeners()
     document.removeEventListener('keydown', handleKeyDown, true)
