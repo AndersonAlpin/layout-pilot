@@ -8,7 +8,8 @@
     clipboard,
     shortcuts,
     detailPanel,
-    draggablePanel
+    draggablePanel,
+    ui
   } = window.LayoutPilotModules
   const { INSTANCE_KEY, MODE, MESSAGE_TYPE, SHORTCUT, UI_SELECTOR } = constants
   const {
@@ -32,6 +33,7 @@
   const { normalizeKey, shouldIgnoreShortcut, consumeShortcut } = shortcuts
   const { renderDetailPanelContent } = detailPanel
   const { createDraggablePanel } = draggablePanel
+  const { renderCloseButton, renderShortcutList } = ui
 
   function cleanupOrphanUi() {
     document.querySelectorAll(UI_SELECTOR).forEach(element => element.remove())
@@ -75,6 +77,16 @@
       state.detailPanelDrag = drag
     }
   })
+
+  const HELP_SHORTCUTS = [
+    { key: 'I', label: 'Ativar/desativar inspecao' },
+    { key: 'H', label: 'Mostrar/ocultar atalhos' },
+    { key: 'Q', label: 'Desativar LayoutPilot' },
+    { key: 'Esc', label: 'Cancelar acao atual' },
+    { key: 'C', label: 'Copiar contexto simples' },
+    { key: 'D', label: 'Abrir/fechar detalhes' },
+    { key: 'P', label: 'Fixar/desfixar elemento' }
+  ]
 
   function ensureUi() {
     state.overlay ||= createElement('layoutpilot-overlay')
@@ -336,17 +348,9 @@
     panel.innerHTML = `
       <div class="layoutpilot-help-header">
         <strong>LayoutPilot atalhos</strong>
-        <button class="layoutpilot-icon-button" type="button" data-layoutpilot-action="close-help" aria-label="Close help">x</button>
+        ${renderCloseButton({ action: 'close-help', label: 'Close help' })}
       </div>
-      <div class="layoutpilot-help-grid">
-        <kbd>I</kbd><span>Ativar/desativar inspecao</span>
-        <kbd>H</kbd><span>Mostrar/ocultar atalhos</span>
-        <kbd>Q</kbd><span>Desativar LayoutPilot</span>
-        <kbd>Esc</kbd><span>Cancelar acao atual</span>
-        <kbd>C</kbd><span>Copiar contexto simples</span>
-        <kbd>D</kbd><span>Abrir/fechar detalhes</span>
-        <kbd>P</kbd><span>Fixar/desfixar elemento</span>
-      </div>
+      ${renderShortcutList(HELP_SHORTCUTS)}
       <p>I funciona depois de ativar a extensao nesta aba pelo popup.</p>
       <p>Modo Revisao: em breve.</p>
     `

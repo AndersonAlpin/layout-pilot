@@ -2,24 +2,22 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
   const { formatLineHeightText } = root.elementInspector
+  const {
+    renderButton,
+    renderCloseButton,
+    renderPanelRow,
+    renderPanelSection
+  } = root.ui
 
   function renderDetailRow(label, value, options = {}) {
-    const className = options.strong ? 'layoutpilot-detail-value layoutpilot-detail-strong' : 'layoutpilot-detail-value'
-    return `
-      <div class="layoutpilot-detail-row">
-        <span class="layoutpilot-detail-label">${escapeHtml(label)}</span>
-        <span class="${className}">${value}</span>
-      </div>
-    `
+    return renderPanelRow(label, '', {
+      strong: options.strong,
+      valueHtml: value
+    })
   }
 
   function renderDetailSection(title, rows) {
-    return `
-      <section class="layoutpilot-detail-section">
-        <h3>${escapeHtml(title)}</h3>
-        ${rows.join('')}
-      </section>
-    `
+    return renderPanelSection(title, rows)
   }
 
   function renderChildrenRows(children) {
@@ -43,13 +41,13 @@
           <span class="layoutpilot-detail-kicker">Modo Inspecao</span>
           <h2>${escapeHtml(info.name)}</h2>
         </div>
-        <button class="layoutpilot-icon-button" type="button" data-layoutpilot-action="close-detail" aria-label="Close details">x</button>
+        ${renderCloseButton({ action: 'close-detail', label: 'Close details' })}
       </div>
       <div class="layoutpilot-detail-actions">
-        <button type="button" data-layoutpilot-action="copy-ai">Contexto simples</button>
-        <button type="button" data-layoutpilot-action="copy-ai-full">Contexto completo</button>
-        <button type="button" data-layoutpilot-action="copy-selector">Selector</button>
-        <button type="button" data-layoutpilot-action="copy-css">CSS/layout</button>
+        ${renderButton({ label: 'Contexto simples', action: 'copy-ai' })}
+        ${renderButton({ label: 'Contexto completo', action: 'copy-ai-full' })}
+        ${renderButton({ label: 'Selector', action: 'copy-selector' })}
+        ${renderButton({ label: 'CSS/layout', action: 'copy-css' })}
       </div>
       <div class="layoutpilot-detail-body">
         ${renderDetailSection('Element', [

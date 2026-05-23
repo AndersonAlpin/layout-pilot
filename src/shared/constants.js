@@ -30,6 +30,10 @@
   const CONTENT_SCRIPT_FILES = [
     'src/shared/constants.js',
     'src/shared/dom.js',
+    'src/shared/ui/render.js',
+    'src/shared/ui/button.js',
+    'src/shared/ui/panel-section.js',
+    'src/shared/ui/shortcut-key.js',
     'src/content/selector-utils.js',
     'src/content/element-inspector.js',
     'src/content/context-export.js',
