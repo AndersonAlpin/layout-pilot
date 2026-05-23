@@ -9,7 +9,8 @@
     shortcuts,
     detailPanel,
     draggablePanel,
-    ui
+    ui,
+    i18n
   } = window.LayoutPilotModules
   const { INSTANCE_KEY, MODE, MESSAGE_TYPE, SHORTCUT, UI_SELECTOR } = constants
   const {
@@ -34,6 +35,12 @@
   const { renderDetailPanelContent } = detailPanel
   const { createDraggablePanel } = draggablePanel
   const { renderCloseButton, renderShortcutList } = ui
+  const {
+    loadLanguagePreference,
+    setCurrentLanguage,
+    resolveLanguage,
+    t
+  } = i18n
 
   function cleanupOrphanUi() {
     document.querySelectorAll(UI_SELECTOR).forEach(element => element.remove())
@@ -66,6 +73,21 @@
     detailPanelDrag: null
   }
 
+  const TECHNICAL_TOOLTIP_LABEL = {
+    size: 'Size',
+    position: 'Position',
+    padding: 'Padding',
+    margin: 'Margin',
+    layout: 'Layout',
+    lineHeight: 'Line height',
+    font: 'Font',
+    color: 'Color',
+    background: 'Background',
+    border: 'Border',
+    classes: 'Classes',
+    spacing: 'Spacing'
+  }
+
   const detailPanelDrag = createDraggablePanel({
     getPanel: () => state.detailPanel,
     getPosition: () => state.detailPanelPosition,
@@ -78,15 +100,9 @@
     }
   })
 
-  const HELP_SHORTCUTS = [
-    { key: 'I', label: 'Ativar/desativar inspecao' },
-    { key: 'H', label: 'Mostrar/ocultar atalhos' },
-    { key: 'Q', label: 'Desativar LayoutPilot' },
-    { key: 'Esc', label: 'Cancelar acao atual' },
-    { key: 'C', label: 'Copiar contexto simples' },
-    { key: 'D', label: 'Abrir/fechar detalhes' },
-    { key: 'P', label: 'Fixar/desfixar elemento' }
-  ]
+  loadLanguagePreference().then(() => {
+    refreshTranslatedUi()
+  })
 
   function ensureUi() {
     state.overlay ||= createElement('layoutpilot-overlay')
@@ -185,6 +201,44 @@
     `
   }
 
+  function getHelpShortcuts() {
+    return [
+      { key: 'I', label: t('help.shortcuts.inspect') },
+      { key: 'H', label: t('help.shortcuts.help') },
+      { key: 'Q', label: t('help.shortcuts.quit') },
+      { key: 'Esc', label: t('help.shortcuts.cancel') },
+      { key: 'C', label: t('help.shortcuts.context') },
+      { key: 'D', label: t('help.shortcuts.details') },
+      { key: 'P', label: t('help.shortcuts.pin') }
+    ]
+  }
+
+  function getContextPrompt() {
+    return {
+      issueTitle: t('context.issue.title'),
+      issuePlaceholder: t('context.issue.placeholder'),
+      requestTitle: t('context.request.title'),
+      compactRequest: t('context.request.compact'),
+      fullRequest: t('context.request.full')
+    }
+  }
+
+  function createTranslatedCompactContext(info) {
+    return createCompactAiContext(info, { prompt: getContextPrompt() })
+  }
+
+  function createTranslatedFullContext(info) {
+    return createAiContext(info, { prompt: getContextPrompt() })
+  }
+
+  function refreshTranslatedUi() {
+    if (state.helpPanel) renderHelpPanel()
+    if (state.detailPanel && getActiveElement()) openDetailPanel(getActiveElement())
+    if (state.lastPointerEvent && state.hoveredElement?.isConnected) {
+      renderTooltip(state.lastPointerEvent, state.hoveredElement)
+    }
+  }
+
   function positionTooltip(event) {
     const offset = 14
     state.tooltip.style.display = 'block'
@@ -211,39 +265,39 @@
     state.tooltip.innerHTML = `
       <strong>${escapeHtml(info.name)}</strong>
       <div class="layoutpilot-grid">
-        <span class="layoutpilot-label">Size</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.size}</span>
         <span class="layoutpilot-value">${info.width} x ${info.height}px</span>
-        <span class="layoutpilot-label">Position</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.position}</span>
         <span class="layoutpilot-value">x ${info.x}, y ${info.y}</span>
-        <span class="layoutpilot-label">Padding</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.padding}</span>
         <span class="layoutpilot-value">${escapeHtml(info.padding)}</span>
-        <span class="layoutpilot-label">Margin</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.margin}</span>
         <span class="layoutpilot-value">${escapeHtml(info.margin)}</span>
-        <span class="layoutpilot-label">Layout</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.layout}</span>
         <span class="layoutpilot-value">${escapeHtml(layoutExtra)}</span>
-        <span class="layoutpilot-label layoutpilot-line-label">Line height</span>
+        <span class="layoutpilot-label layoutpilot-line-label">${TECHNICAL_TOOLTIP_LABEL.lineHeight}</span>
         <span class="layoutpilot-value layoutpilot-line-value">${escapeHtml(formatLineHeightText(info))}</span>
-        <span class="layoutpilot-label">Font</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.font}</span>
         <span class="layoutpilot-value">${escapeHtml(`${info.fontSize} ${info.fontFamily}`)}</span>
-        <span class="layoutpilot-label">Color</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.color}</span>
         <span class="layoutpilot-value">${formatColorMarkup(info.color)}</span>
         ${info.background !== '—' ? `
-          <span class="layoutpilot-label">Background</span>
+          <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.background}</span>
           <span class="layoutpilot-value">${formatColorMarkup(info.background)}</span>
         ` : ''}
         ${info.borderColors.length ? `
-          <span class="layoutpilot-label">Border</span>
+          <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.border}</span>
           <span class="layoutpilot-value">${formatColorsMarkup(info.borderColors)}</span>
         ` : ''}
-        <span class="layoutpilot-label">Classes</span>
+        <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.classes}</span>
         <span class="layoutpilot-value layoutpilot-code">${escapeHtml(info.classes)}</span>
         ${spacing ? `
-          <span class="layoutpilot-label">Spacing</span>
+          <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.spacing}</span>
           <span class="layoutpilot-value">H ${spacing.horizontal}px - V ${spacing.vertical}px</span>
         ` : ''}
       </div>
       <div class="layoutpilot-divider"></div>
-      <div class="layoutpilot-help">${isPinned ? 'Click again to unpin.' : 'Click to pin.'} D details - C simple context - H help - Q quit</div>
+      <div class="layoutpilot-help">${escapeHtml(isPinned ? t('tooltip.clickToUnpin') : t('tooltip.clickToPin'))} ${escapeHtml(t('tooltip.help'))}</div>
     `
 
     positionTooltip(event)
@@ -312,7 +366,7 @@
 
   function openDetailPanel(element = getActiveElement()) {
     if (!element?.isConnected) {
-      showToast('No element selected')
+      showToast(t('toast.noElement'))
       return
     }
 
@@ -322,8 +376,9 @@
     const info = collectElementInfo(element)
     const panel = ensureDetailPanel()
     panel.innerHTML = renderDetailPanelContent(info, {
-      createCompactContext: createCompactAiContext,
-      formatColorMarkup
+      createCompactContext: createTranslatedCompactContext,
+      formatColorMarkup,
+      t
     })
     panel.style.display = 'flex'
     detailPanelDrag.applyPosition()
@@ -347,12 +402,12 @@
     const panel = ensureHelpPanel()
     panel.innerHTML = `
       <div class="layoutpilot-help-header">
-        <strong>LayoutPilot atalhos</strong>
-        ${renderCloseButton({ action: 'close-help', label: 'Close help' })}
+        <strong>${escapeHtml(t('help.title'))}</strong>
+        ${renderCloseButton({ action: 'close-help', label: t('help.close') })}
       </div>
-      ${renderShortcutList(HELP_SHORTCUTS)}
-      <p>I funciona depois de ativar a extensao nesta aba pelo popup.</p>
-      <p>Modo Revisao: em breve.</p>
+      ${renderShortcutList(getHelpShortcuts())}
+      <p>${escapeHtml(t('help.note.inspect'))}</p>
+      <p>${escapeHtml(t('help.note.review'))}</p>
     `
     panel.style.display = 'block'
   }
@@ -390,34 +445,46 @@
 
   function copyAiContext(element = getActiveElement()) {
     if (!element?.isConnected) {
-      showToast('No element selected')
+      showToast(t('toast.noElement'))
       return
     }
-    copyText(createCompactAiContext(collectElementInfo(element)), 'Simple context', showToast)
+    copyText(createTranslatedCompactContext(collectElementInfo(element)), 'Simple context', showToast, {
+      success: t('toast.copied.simpleContext'),
+      failure: t('toast.copyFailed')
+    })
   }
 
   function copyFullAiContext(element = getActiveElement()) {
     if (!element?.isConnected) {
-      showToast('No element selected')
+      showToast(t('toast.noElement'))
       return
     }
-    copyText(createAiContext(collectElementInfo(element)), 'Full context', showToast)
+    copyText(createTranslatedFullContext(collectElementInfo(element)), 'Full context', showToast, {
+      success: t('toast.copied.fullContext'),
+      failure: t('toast.copyFailed')
+    })
   }
 
   function copySelector(element = getActiveElement()) {
     if (!element?.isConnected) {
-      showToast('No element selected')
+      showToast(t('toast.noElement'))
       return
     }
-    copyText(collectElementInfo(element).selector, 'Selector', showToast)
+    copyText(collectElementInfo(element).selector, 'Selector', showToast, {
+      success: t('toast.copied.selector'),
+      failure: t('toast.copyFailed')
+    })
   }
 
   function copyCssSummary(element = getActiveElement()) {
     if (!element?.isConnected) {
-      showToast('No element selected')
+      showToast(t('toast.noElement'))
       return
     }
-    copyText(createCssSummary(collectElementInfo(element)), 'CSS/layout summary', showToast)
+    copyText(createCssSummary(collectElementInfo(element)), 'CSS/layout summary', showToast, {
+      success: t('toast.copied.cssLayout'),
+      failure: t('toast.copyFailed')
+    })
   }
 
   function inspectAtEvent(event) {
@@ -437,7 +504,7 @@
 
   function togglePin(element = getActiveElement()) {
     if (!element?.isConnected) {
-      showToast('No element selected')
+      showToast(t('toast.noElement'))
       return
     }
 
@@ -449,7 +516,7 @@
         state.distanceLayer.innerHTML = ''
         state.distanceLayer.style.display = 'none'
       }
-      showToast('Element unpinned')
+      showToast(t('toast.elementUnpinned'))
       return
     }
 
@@ -457,7 +524,7 @@
     renderSelectedOverlay()
     renderDistances(element)
     if (state.detailPanel) openDetailPanel(element)
-    showToast('Element pinned')
+    showToast(t('toast.elementPinned'))
   }
 
   function handleClick(event) {
@@ -654,7 +721,7 @@
     if (enabled) {
       ensureUi()
       bindInspectListeners()
-      showToast(state.mode === MODE.INSPECT ? 'Inspect mode on' : 'Review mode coming soon')
+      showToast(state.mode === MODE.INSPECT ? t('toast.inspectOn') : t('toast.reviewSoon'))
       return
     }
 
@@ -718,6 +785,13 @@
       setMode(message.mode || MODE.INSPECT)
       setEnabled(!!message.enabled)
       sendResponse({ enabled: state.enabled, mode: state.mode })
+      return true
+    }
+
+    if (message?.type === MESSAGE_TYPE.SET_LANGUAGE) {
+      setCurrentLanguage(message.language || resolveLanguage(message.preference), message.preference)
+      refreshTranslatedUi()
+      sendResponse({ ok: true })
       return true
     }
 

@@ -2,12 +2,49 @@ const toggleButton = document.getElementById('toggle-button')
 const statusText = document.getElementById('status-text')
 const statusDot = document.getElementById('status-dot')
 const modeInspect = document.getElementById('mode-inspect')
+const languageSelect = document.getElementById('language-select')
 const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
+const {
+  AUTO_LANGUAGE,
+  loadLanguagePreference,
+  setLanguagePreference,
+  getCurrentPreference,
+  getCurrentLanguage,
+  t
+} = window.LayoutPilotModules.i18n
 
 const state = {
   enabled: false,
-  mode: MODE.INSPECT
+  mode: MODE.INSPECT,
+  statusKey: 'popup.status.checking'
+}
+
+const textBindings = {
+  'tagline-text': 'app.tagline',
+  'mode-title': 'popup.mode.title',
+  'mode-inspect-name': 'popup.mode.inspect.name',
+  'mode-inspect-description': 'popup.mode.inspect.description',
+  'mode-review-name': 'popup.mode.review.name',
+  'mode-review-description': 'popup.mode.review.description',
+  'shortcuts-title': 'popup.shortcuts.title',
+  'shortcut-inspect': 'shortcuts.inspect',
+  'shortcut-help': 'shortcuts.help',
+  'shortcut-quit': 'shortcuts.quit',
+  'shortcut-cancel': 'shortcuts.cancel',
+  'shortcut-context': 'shortcuts.context',
+  'shortcut-pin': 'shortcuts.pin',
+  'shortcut-details': 'shortcuts.details',
+  'shortcut-note': 'popup.shortcuts.note',
+  'language-title': 'language.title',
+  'language-label': 'language.label'
+}
+
+const languageOptionLabels = {
+  auto: 'language.auto',
+  'pt-BR': 'language.portuguese',
+  en: 'language.english',
+  es: 'language.spanish'
 }
 
 async function getActiveTab() {
@@ -19,13 +56,37 @@ function isInspectableTab(tab) {
   return tab?.id && /^https?:\/\//.test(tab.url || '')
 }
 
-function setStatus(enabled, message, mode = MODE.INSPECT) {
+function setElementText(id, value) {
+  const element = document.getElementById(id)
+  if (element) element.textContent = value
+}
+
+function renderLanguageOptions() {
+  for (const option of Array.from(languageSelect.options)) {
+    option.textContent = t(languageOptionLabels[option.value] || option.textContent)
+  }
+  languageSelect.value = getCurrentPreference() || AUTO_LANGUAGE
+  document.documentElement.lang = getCurrentLanguage()
+}
+
+function renderPopupTexts() {
+  for (const [id, key] of Object.entries(textBindings)) {
+    setElementText(id, t(key))
+  }
+
+  renderLanguageOptions()
+  statusText.textContent = t(state.statusKey)
+  toggleButton.textContent = state.enabled ? t('common.deactivate') : t('common.activate')
+}
+
+function setStatus(enabled, statusKey, mode = MODE.INSPECT) {
   state.enabled = !!enabled
   state.mode = mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+  state.statusKey = statusKey
 
   statusDot.classList.toggle('active', !!enabled)
-  statusText.textContent = message
-  toggleButton.textContent = enabled ? 'Desativar' : 'Ativar'
+  statusText.textContent = t(statusKey)
+  toggleButton.textContent = enabled ? t('common.deactivate') : t('common.activate')
   modeInspect.checked = state.mode === MODE.INSPECT
 }
 
@@ -51,7 +112,7 @@ async function refreshStatus() {
 
   if (!isInspectableTab(tab)) {
     toggleButton.disabled = true
-    setStatus(false, 'Abra uma página http/https para inspecionar.')
+    setStatus(false, 'popup.status.unsupported')
     return
   }
 
@@ -59,8 +120,7 @@ async function refreshStatus() {
   const response = await sendToTab(tab.id, { type: MESSAGE_TYPE.GET_STATE })
   const enabled = !!response?.enabled
   const mode = response?.mode || MODE.INSPECT
-  const message = enabled ? 'Modo Inspeção ativo.' : 'LayoutPilot desativado.'
-  setStatus(enabled, message, mode)
+  setStatus(enabled, enabled ? 'popup.status.active' : 'popup.status.inactive', mode)
 }
 
 toggleButton.addEventListener('click', async () => {
@@ -77,7 +137,7 @@ toggleButton.addEventListener('click', async () => {
     })
     setStatus(
       !!response?.enabled,
-      response?.enabled ? 'Modo Inspeção ativo.' : 'LayoutPilot desativado.',
+      response?.enabled ? 'popup.status.active' : 'popup.status.inactive',
       response?.mode || MODE.INSPECT
     )
     if (response?.enabled) {
@@ -88,4 +148,24 @@ toggleButton.addEventListener('click', async () => {
   }
 })
 
-refreshStatus()
+languageSelect.addEventListener('change', async () => {
+  const result = await setLanguagePreference(languageSelect.value)
+  renderPopupTexts()
+
+  const tab = await getActiveTab()
+  if (isInspectableTab(tab)) {
+    await sendToTab(tab.id, {
+      type: MESSAGE_TYPE.SET_LANGUAGE,
+      preference: result.preference,
+      language: result.language
+    })
+  }
+})
+
+async function initializePopup() {
+  await loadLanguagePreference()
+  renderPopupTexts()
+  await refreshStatus()
+}
+
+initializePopup()

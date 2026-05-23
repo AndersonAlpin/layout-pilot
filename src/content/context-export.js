@@ -19,7 +19,18 @@
     return ['flex', 'inline-flex', 'grid', 'inline-grid'].includes(display)
   }
 
-  function createCompactAiContext(info) {
+  function getContextPrompt(prompt = {}) {
+    return {
+      issueTitle: prompt.issueTitle || 'Issue',
+      issuePlaceholder: prompt.issuePlaceholder || '[Describe what looks wrong here]',
+      requestTitle: prompt.requestTitle || 'Request',
+      compactRequest: prompt.compactRequest || 'Suggest the most likely CSS/layout adjustment. Keep the existing visual style unless needed.',
+      fullRequest: prompt.fullRequest || 'Use this context to suggest precise frontend/CSS adjustments. Keep the existing visual style unless the issue requires changing it.'
+    }
+  }
+
+  function createCompactAiContext(info, options = {}) {
+    const prompt = getContextPrompt(options.prompt)
     const lines = ['LayoutPilot context']
     const pageRows = [
       `- URL: ${location.href}`,
@@ -71,17 +82,19 @@
 
     lines.push(
       '',
-      'Issue:',
-      '[Describe what looks wrong here]',
+      `${prompt.issueTitle}:`,
+      prompt.issuePlaceholder,
       '',
-      'Request:',
-      'Suggest the most likely CSS/layout adjustment. Keep the existing visual style unless needed.'
+      `${prompt.requestTitle}:`,
+      prompt.compactRequest
     )
 
     return lines.join('\n')
   }
 
-  function createAiContext(info) {
+  function createAiContext(info, options = {}) {
+    const prompt = getContextPrompt(options.prompt)
+
     return `LayoutPilot element context
 
 Page:
@@ -156,11 +169,11 @@ Visual:
 - Box shadow: ${info.shadow}
 - Opacity: ${info.opacity}
 
-Observed issue:
-[Describe what looks wrong here]
+${prompt.issueTitle}:
+${prompt.issuePlaceholder}
 
-Request:
-Use this context to suggest precise frontend/CSS adjustments. Keep the existing visual style unless the issue requires changing it.`
+${prompt.requestTitle}:
+${prompt.fullRequest}`
   }
 
   root.contextExport = {

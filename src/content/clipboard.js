@@ -13,16 +13,16 @@
     return copied
   }
 
-  async function copyText(text, label, showToast) {
+  async function copyText(text, label, showToast, options = {}) {
     try {
       if (navigator.clipboard?.writeText && window.isSecureContext) {
         await navigator.clipboard.writeText(text)
       } else if (!fallbackCopy(text)) {
         throw new Error('copy failed')
       }
-      showToast?.(`${label} copied`)
+      showToast?.(options.success || `${label} copied`)
     } catch {
-      showToast?.('Could not copy')
+      showToast?.(options.failure || 'Could not copy')
     }
   }
 

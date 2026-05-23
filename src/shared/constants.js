@@ -10,7 +10,8 @@
     PING: 'layoutpilot:ping',
     GET_STATE: 'layoutpilot:get-state',
     TOGGLE: 'layoutpilot:toggle',
-    SET_ENABLED: 'layoutpilot:set-enabled'
+    SET_ENABLED: 'layoutpilot:set-enabled',
+    SET_LANGUAGE: 'layoutpilot:set-language'
   }
 
   const SHORTCUT = {
@@ -29,6 +30,10 @@
 
   const CONTENT_SCRIPT_FILES = [
     'src/shared/constants.js',
+    'src/shared/locales/en.js',
+    'src/shared/locales/pt-BR.js',
+    'src/shared/locales/es.js',
+    'src/shared/i18n.js',
     'src/shared/dom.js',
     'src/shared/ui/render.js',
     'src/shared/ui/button.js',
@@ -65,7 +70,8 @@
     UI_CLASSES,
     UI_SELECTOR: UI_CLASSES.map(className => `.${className}`).join(', '),
     STORAGE_KEYS: {
-      INSTALLED_AT: 'layoutPilotInstalledAt'
+      INSTALLED_AT: 'layoutPilotInstalledAt',
+      LANGUAGE: 'layoutPilotLanguage'
     }
   }
 })()
