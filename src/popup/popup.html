@@ -12,24 +12,49 @@
         <div class="brand-mark">LP</div>
         <div>
           <h1>LayoutPilot</h1>
-          <p>Spacing and size inspector</p>
+          <p>Inspect e review visual para frontend</p>
         </div>
       </header>
 
       <section class="status-card">
         <span id="status-dot" class="status-dot"></span>
-        <span id="status-text">Checking current tab...</span>
+        <span id="status-text">Verificando aba atual...</span>
       </section>
 
       <button id="toggle-button" class="primary-button" type="button">
-        Toggle inspect mode
+        Ativar
       </button>
 
-      <section class="help">
-        <strong>How to use</strong>
-        <p>Move the mouse to inspect size, padding and margin.</p>
-        <p>Click an element to pin it, then hover another element to compare spacing.</p>
-        <p>Press <kbd>Esc</kbd> to turn off inspect mode.</p>
+      <section class="mode-card" aria-labelledby="mode-title">
+        <strong id="mode-title">Modo</strong>
+        <label class="mode-option">
+          <input id="mode-inspect" type="radio" name="mode" value="inspect" checked />
+          <span>
+            <b>Modo Inspeção</b>
+            <small>Hover, pin, detalhes e contexto simples.</small>
+          </span>
+        </label>
+        <label class="mode-option disabled">
+          <input id="mode-review" type="radio" name="mode" value="review" disabled />
+          <span>
+            <b>Modo Revisão</b>
+            <small>Em breve: marcações e relatório Markdown.</small>
+          </span>
+        </label>
+      </section>
+
+      <section class="shortcuts" aria-labelledby="shortcuts-title">
+        <strong id="shortcuts-title">Atalhos</strong>
+        <div class="shortcut-grid">
+          <kbd>I</kbd><span>Inspeção</span>
+          <kbd>H</kbd><span>Atalhos</span>
+          <kbd>Q</kbd><span>Desativar</span>
+          <kbd>Esc</kbd><span>Cancelar</span>
+          <kbd>C</kbd><span>Contexto simples</span>
+          <kbd>P</kbd><span>Fixar</span>
+          <kbd>D</kbd><span>Detalhes</span>
+        </div>
+        <p class="shortcut-note">I funciona depois de ativar nesta aba pelo popup.</p>
       </section>
     </main>
     <script src="popup.js"></script>

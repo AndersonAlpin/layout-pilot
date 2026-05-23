@@ -16,7 +16,7 @@ LayoutPilot is a lightweight Chrome extension for inspecting layout details dire
 
 Once inspect mode is enabled, LayoutPilot injects a content script into the current tab and renders a visual overlay on top of the page. As you move the mouse, the extension reads computed styles from the hovered element and shows the most relevant layout information in a floating tooltip.
 
-Clicking an element pins it in place so you can hover another one and measure the spacing between them. Press `Esc` at any time to leave inspect mode.
+Clicking an element pins it in place so you can hover another one and measure the spacing between them. Press `H` to show shortcuts, `D` to open or close details, and `Q` to disable LayoutPilot.
 
 ## Installation
 
@@ -37,7 +37,16 @@ After loading the extension, click the LayoutPilot icon in Chrome and enable ins
 4. Move the mouse over elements to inspect them
 5. Click an element to pin it
 6. Hover another element to compare spacing
-7. Press `Esc` to disable inspect mode
+7. Press `Q` to disable LayoutPilot, or `Esc` to cancel the current panel/selection
+
+Shortcuts:
+
+- `H`: show/hide shortcuts
+- `Q`: disable LayoutPilot
+- `Esc`: cancel the current action, close panels, or clear selection
+- `C`: copy simple context
+- `P`: pin/unpin the current element
+- `D`: open/close element details
 
 ## Project structure
 

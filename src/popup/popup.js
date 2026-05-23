@@ -1,6 +1,12 @@
 const toggleButton = document.getElementById('toggle-button')
 const statusText = document.getElementById('status-text')
 const statusDot = document.getElementById('status-dot')
+const modeInspect = document.getElementById('mode-inspect')
+
+const state = {
+  enabled: false,
+  mode: 'inspect'
+}
 
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -11,10 +17,14 @@ function isInspectableTab(tab) {
   return tab?.id && /^https?:\/\//.test(tab.url || '')
 }
 
-function setStatus(enabled, message) {
+function setStatus(enabled, message, mode = 'inspect') {
+  state.enabled = !!enabled
+  state.mode = mode === 'review' ? 'review' : 'inspect'
+
   statusDot.classList.toggle('active', !!enabled)
   statusText.textContent = message
-  toggleButton.textContent = enabled ? 'Disable inspect mode' : 'Enable inspect mode'
+  toggleButton.textContent = enabled ? 'Desativar' : 'Ativar'
+  modeInspect.checked = state.mode === 'inspect'
 }
 
 async function sendToTab(tabId, message) {
@@ -45,13 +55,16 @@ async function refreshStatus() {
 
   if (!isInspectableTab(tab)) {
     toggleButton.disabled = true
-    setStatus(false, 'Open an http/https page to inspect.')
+    setStatus(false, 'Abra uma página http/https para inspecionar.')
     return
   }
 
   toggleButton.disabled = false
   const response = await sendToTab(tab.id, { type: 'layoutpilot:get-state' })
-  setStatus(!!response?.enabled, response?.enabled ? 'Inspect mode is active.' : 'Inspect mode is off.')
+  const enabled = !!response?.enabled
+  const mode = response?.mode || 'inspect'
+  const message = enabled ? 'Modo Inspeção ativo.' : 'LayoutPilot desativado.'
+  setStatus(enabled, message, mode)
 }
 
 toggleButton.addEventListener('click', async () => {
@@ -61,8 +74,16 @@ toggleButton.addEventListener('click', async () => {
   toggleButton.disabled = true
   try {
     await ensureContentScript(tab.id)
-    const response = await sendToTab(tab.id, { type: 'layoutpilot:toggle' })
-    setStatus(!!response?.enabled, response?.enabled ? 'Inspect mode is active.' : 'Inspect mode is off.')
+    const response = await sendToTab(tab.id, {
+      type: 'layoutpilot:set-enabled',
+      enabled: !state.enabled,
+      mode: 'inspect'
+    })
+    setStatus(
+      !!response?.enabled,
+      response?.enabled ? 'Modo Inspeção ativo.' : 'LayoutPilot desativado.',
+      response?.mode || 'inspect'
+    )
     if (response?.enabled) {
       window.close()
     }
