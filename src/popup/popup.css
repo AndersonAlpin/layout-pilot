@@ -56,19 +56,14 @@ body {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 12px;
 }
 
-.brand-mark {
-  display: grid;
-  flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 9px;
-  color: #00111f;
-  font-weight: 800;
-  background: linear-gradient(135deg, #38bdf8, #a7f3d0);
+.brand-logo {
+  display: block;
+  flex: 0 1 auto;
+  width: 166px;
+  max-width: 100%;
+  height: auto;
 }
 
 .language-picker {
@@ -185,12 +180,6 @@ body {
 .language-option-auto {
   font-size: 14px;
   line-height: 1;
-}
-
-h1 {
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.2;
 }
 
 p {

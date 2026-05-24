@@ -26,7 +26,6 @@ const state = {
 }
 
 const textBindings = {
-  'tagline-text': 'app.tagline',
   'mode-title': 'popup.mode.title',
   'mode-inspect-name': 'popup.mode.inspect.name',
   'mode-inspect-description': 'popup.mode.inspect.description',

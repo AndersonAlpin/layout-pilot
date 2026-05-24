@@ -718,8 +718,11 @@
       toolbar.innerHTML = renderReviewToolbar(state, { t })
       toolbar.style.display = 'block'
       applyToolbarPosition()
+      toolbar.removeEventListener('pointerdown', toolbarDrag.handleStart)
       if (state.toolbarPinned !== false) {
-        toolbar.querySelector('[data-layoutpilot-toolbar-drag-handle]')?.addEventListener('pointerdown', toolbarDrag.handleStart)
+        toolbar.addEventListener('pointerdown', toolbarDrag.handleStart)
+      } else {
+        toolbarDrag.stop()
       }
       toolbar.onpointerenter = showToolbarTemporarily
       toolbar.onfocusin = showToolbarTemporarily

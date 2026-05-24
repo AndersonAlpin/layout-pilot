@@ -12,6 +12,16 @@
   "background": {
     "service_worker": "src/background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/assets/brand/logo-horizontal.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "action": {
     "default_title": "LayoutPilot",
     "default_popup": "src/popup/popup.html",

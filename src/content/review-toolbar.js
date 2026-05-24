@@ -42,6 +42,7 @@
 
   function renderReviewToolbar(state, options = {}) {
     const { t = key => key } = options
+    const brandLogoUrl = chrome.runtime.getURL('src/assets/brand/logo-horizontal.png')
 
     const isPinned = state.toolbarPinned !== false
     const pinLabel = isPinned ? t('review.toolbar.unpin') : t('review.toolbar.pin')
@@ -50,8 +51,7 @@
     return `
       <div class="layoutpilot-review-toolbar-shell">
         <div class="layoutpilot-review-toolbar-grip" data-layoutpilot-toolbar-drag-handle="true" title="${escapeHtml(t('review.toolbar.drag'))}">
-          <span class="layoutpilot-review-toolbar-brand">${icon('brand', 20)}</span>
-          <span>${escapeHtml(t('review.toolbar.review'))}</span>
+          <img class="layoutpilot-review-toolbar-brand-logo" src="${escapeHtml(brandLogoUrl)}" alt="LayoutPilot" />
         </div>
         <div class="layoutpilot-review-toolbar-group" role="group" aria-label="${escapeHtml(t('review.toolbar.tools'))}">
           ${['move', 'element', 'area', 'pen'].map(tool => renderToolButton(tool, state, t)).join('')}

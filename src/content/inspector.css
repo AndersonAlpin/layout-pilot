@@ -506,19 +506,14 @@
 .layoutpilot-review-toolbar-grip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   min-height: 38px;
   padding: 0 10px;
   border-radius: 9px;
-  color: #f8fafc;
-  font: 900 13px/1.2 ui-sans-serif, system-ui, sans-serif;
   cursor: move;
   touch-action: none;
   user-select: none;
-  white-space: nowrap;
 }
 
-.layoutpilot-review-toolbar-brand,
 .layoutpilot-review-toolbar-icon {
   display: inline-grid;
   width: 18px;
@@ -527,11 +522,12 @@
   flex: 0 0 auto;
 }
 
-.layoutpilot-review-toolbar-brand {
-  width: 22px;
-  height: 22px;
-  color: #7dd3fc;
-  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.22));
+.layoutpilot-review-toolbar-brand-logo {
+  display: block;
+  width: 132px;
+  height: auto;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.18));
 }
 
 .layoutpilot-review-toolbar svg {
@@ -625,8 +621,8 @@
 .layoutpilot-review-toolbar--unpinned:not(.layoutpilot-review-toolbar--peek) .layoutpilot-review-toolbar-shell {
   width: 126px;
   max-width: 126px;
-  min-height: 22px;
-  height: 22px;
+  min-height: 24px;
+  height: 24px;
   padding: 0 8px;
   gap: 0;
   border-top: 0;
@@ -637,18 +633,15 @@
 }
 
 .layoutpilot-review-toolbar--unpinned:not(.layoutpilot-review-toolbar--peek) .layoutpilot-review-toolbar-grip {
-  min-height: 20px;
-  height: 20px;
+  min-height: 22px;
+  height: 22px;
   width: 100%;
   justify-content: center;
-  gap: 5px;
   padding: 0;
-  font-size: 11px;
 }
 
-.layoutpilot-review-toolbar--unpinned:not(.layoutpilot-review-toolbar--peek) .layoutpilot-review-toolbar-brand {
-  width: 14px;
-  height: 14px;
+.layoutpilot-review-toolbar--unpinned:not(.layoutpilot-review-toolbar--peek) .layoutpilot-review-toolbar-brand-logo {
+  width: 82px;
 }
 
 .layoutpilot-review-toolbar--unpinned:not(.layoutpilot-review-toolbar--peek) .layoutpilot-review-toolbar-group,
