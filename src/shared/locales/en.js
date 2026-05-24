@@ -99,7 +99,12 @@
         cancel: 'Cancel',
         remove: 'Remove',
         copyImage: 'Copy image',
-        downloadSnapshot: 'Download image'
+        downloadSnapshot: 'Download image',
+        generatePdf: 'Generate PDF'
+      },
+      printReport: {
+        imageUnavailable: 'Image unavailable: annotation is outside the captured viewport',
+        printButton: 'Print / Save PDF'
       },
       clearConfirm: {
         title: 'Clear review?',
@@ -159,6 +164,9 @@
       snapshotDownloadFailed: 'Could not download image',
       snapshotCopied: 'Image copied',
       snapshotCopyFailed: 'Could not copy image',
+      printReportGenerating: 'Generating PDF...',
+      printReportNoAnnotations: 'No annotations to generate PDF',
+      printReportFailed: 'Could not generate PDF',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',
       copyFailed: 'Could not copy',

@@ -99,7 +99,12 @@
         cancel: 'Cancelar',
         remove: 'Remover',
         copyImage: 'Copiar imagem',
-        downloadSnapshot: 'Baixar imagem'
+        downloadSnapshot: 'Baixar imagem',
+        generatePdf: 'Gerar PDF'
+      },
+      printReport: {
+        imageUnavailable: 'Imagem indisponível: anotação fora da viewport capturada',
+        printButton: 'Imprimir / Salvar PDF'
       },
       clearConfirm: {
         title: 'Limpar revisão?',
@@ -159,6 +164,9 @@
       snapshotDownloadFailed: 'Não foi possível baixar a imagem',
       snapshotCopied: 'Imagem copiada',
       snapshotCopyFailed: 'Não foi possível copiar a imagem',
+      printReportGenerating: 'Gerando PDF...',
+      printReportNoAnnotations: 'Nenhuma anotação para gerar PDF',
+      printReportFailed: 'Não foi possível gerar PDF',
       elementPinned: 'Elemento fixado',
       elementUnpinned: 'Elemento desfixado',
       copyFailed: 'Não foi possível copiar',

@@ -76,6 +76,7 @@
     'src/content/review-markers.js',
     'src/content/review-panel.js',
     'src/content/review-snapshot.js',
+    'src/content/review-print-report.js',
     'src/content/review-mode.js',
     'src/content/inspector.js'
   ]

@@ -26,6 +26,7 @@
   const { getAnnotationViewportRect, renderReviewAnnotationBoxes, renderReviewMarkers } = root.reviewMarkers
   const { renderReviewPanel, renderClearReviewDialog } = root.reviewPanel
   const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
+  const { generateReviewPrintReport } = root.reviewPrintReport
 
   function createReviewMode(options = {}) {
     const {
@@ -330,6 +331,10 @@
       return copyReviewSnapshot(state, { showToast, t })
     }
 
+    async function generatePdfReport() {
+      return generateReviewPrintReport(state, { showToast, t })
+    }
+
     function isRectVisible(rect) {
       return rect.x >= 0 &&
         rect.y >= 0 &&
@@ -477,6 +482,11 @@
 
       if (action === 'review-copy-image') {
         copySnapshot()
+        return true
+      }
+
+      if (action === 'review-generate-pdf') {
+        generatePdfReport()
         return true
       }
 
@@ -746,6 +756,7 @@
       getState,
       downloadSnapshot,
       copySnapshot,
+      generatePdfReport,
       blocksGlobalShortcuts
     }
   }

@@ -168,6 +168,11 @@
               action: 'review-download-snapshot',
               className: 'layoutpilot-review-primary'
             })}
+            ${renderButton({
+              label: t('review.panel.generatePdf'),
+              action: 'review-generate-pdf',
+              className: 'layoutpilot-review-primary'
+            })}
           </div>
           ${renderDraftAnnotation(state, t)}
           ${renderAnnotationList(state, t)}
