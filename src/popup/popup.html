@@ -9,10 +9,19 @@
   <body>
     <main class="popup">
       <header class="header">
-        <div class="brand-mark">LP</div>
-        <div>
-          <h1>LayoutPilot</h1>
-          <p id="tagline-text">Inspeção e revisão visual</p>
+        <div class="brand">
+          <div class="brand-mark">LP</div>
+          <div>
+            <h1>LayoutPilot</h1>
+            <p id="tagline-text">Inspeção e revisão visual</p>
+          </div>
+        </div>
+        <div id="language-picker" class="language-picker">
+          <button id="language-toggle" class="language-toggle" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <img id="language-current-flag" class="language-current-flag" src="../assets/flags/pt-BR.png" alt="" aria-hidden="true" />
+            <span class="language-chevron" aria-hidden="true"></span>
+          </button>
+          <div id="language-menu" class="language-menu" role="listbox" hidden></div>
         </div>
       </header>
 
@@ -56,19 +65,6 @@
             <div class="shortcut-item"><kbd>D</kbd><span id="shortcut-details">Detalhes</span></div>
           </div>
           <p id="shortcut-note" class="shortcut-note">I funciona depois de ativar nesta aba pelo popup.</p>
-        </section>
-
-        <section class="language-card" aria-labelledby="language-title">
-          <label for="language-select">
-            <strong id="language-title">Idioma</strong>
-            <span id="language-label">Idioma da interface</span>
-          </label>
-          <select id="language-select">
-            <option value="auto">Auto</option>
-            <option value="pt-BR">Português</option>
-            <option value="en">English</option>
-            <option value="es">Español</option>
-          </select>
         </section>
       </div>
     </main>

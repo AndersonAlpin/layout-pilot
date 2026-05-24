@@ -3,7 +3,10 @@ const statusText = document.getElementById('status-text')
 const statusDot = document.getElementById('status-dot')
 const modeInspect = document.getElementById('mode-inspect')
 const modeReview = document.getElementById('mode-review')
-const languageSelect = document.getElementById('language-select')
+const languagePicker = document.getElementById('language-picker')
+const languageToggle = document.getElementById('language-toggle')
+const languageMenu = document.getElementById('language-menu')
+const languageCurrentFlag = document.getElementById('language-current-flag')
 const shortcutGrid = document.getElementById('shortcut-grid')
 const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES, SHORTCUTS_BY_MODE, STORAGE_KEYS } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
@@ -30,16 +33,14 @@ const textBindings = {
   'mode-review-name': 'popup.mode.review.name',
   'mode-review-description': 'popup.mode.review.description',
   'shortcuts-title': 'popup.shortcuts.title',
-  'shortcut-note': 'popup.shortcuts.note',
-  'language-title': 'language.title',
-  'language-label': 'language.label'
+  'shortcut-note': 'popup.shortcuts.note'
 }
 
-const languageOptionLabels = {
-  auto: 'language.auto',
-  'pt-BR': 'language.portuguese',
-  en: 'language.english',
-  es: 'language.spanish'
+const languageOptions = {
+  auto: { icon: '🌐', labelKey: 'language.auto' },
+  'pt-BR': { flagSrc: '../assets/flags/pt-BR.png', labelKey: 'language.portuguese' },
+  en: { flagSrc: '../assets/flags/en.png', labelKey: 'language.english' },
+  es: { flagSrc: '../assets/flags/es.png', labelKey: 'language.spanish' }
 }
 
 function normalizeMode(mode) {
@@ -86,11 +87,70 @@ function setElementText(id, value) {
   if (element) element.textContent = value
 }
 
-function renderLanguageOptions() {
-  for (const option of Array.from(languageSelect.options)) {
-    option.textContent = t(languageOptionLabels[option.value] || option.textContent)
+function closeLanguageMenu() {
+  languagePicker.classList.remove('is-open')
+  languageToggle.setAttribute('aria-expanded', 'false')
+  languageMenu.hidden = true
+}
+
+function toggleLanguageMenu() {
+  const isOpen = languagePicker.classList.toggle('is-open')
+  languageToggle.setAttribute('aria-expanded', String(isOpen))
+  languageMenu.hidden = !isOpen
+}
+
+async function chooseLanguagePreference(preference) {
+  const result = await setLanguagePreference(preference)
+  closeLanguageMenu()
+  renderPopupTexts()
+
+  const tab = await getActiveTab()
+  if (isInspectableTab(tab)) {
+    await sendToTab(tab.id, {
+      type: MESSAGE_TYPE.SET_LANGUAGE,
+      preference: result.preference,
+      language: result.language
+    })
   }
-  languageSelect.value = getCurrentPreference() || AUTO_LANGUAGE
+}
+
+function getLanguageOptionIcon(language, className) {
+  if (language.flagSrc) {
+    const image = document.createElement('img')
+    image.className = className
+    image.src = language.flagSrc
+    image.alt = ''
+    image.setAttribute('aria-hidden', 'true')
+    return image
+  }
+
+  const span = document.createElement('span')
+  span.className = className
+  span.setAttribute('aria-hidden', 'true')
+  span.textContent = language.icon || ''
+  return span
+}
+
+function renderLanguageOptions() {
+  const currentPreference = getCurrentPreference() || AUTO_LANGUAGE
+  languageCurrentFlag.src = languageOptions[getCurrentLanguage()]?.flagSrc || languageOptions['pt-BR'].flagSrc
+  languageToggle.setAttribute('aria-label', t('language.label'))
+  languageMenu.replaceChildren()
+
+  for (const [value, language] of Object.entries(languageOptions)) {
+    const button = document.createElement('button')
+    const label = document.createElement('span')
+    button.type = 'button'
+    button.className = 'language-option'
+    button.dataset.languagePreference = value
+    button.setAttribute('role', 'option')
+    button.setAttribute('aria-selected', String(value === currentPreference))
+    button.append(getLanguageOptionIcon(language, language.flagSrc ? 'language-option-flag' : 'language-option-auto'))
+    label.textContent = t(language.labelKey)
+    button.append(label)
+    languageMenu.append(button)
+  }
+
   document.documentElement.lang = getCurrentLanguage()
 }
 
@@ -238,18 +298,24 @@ modeReview.addEventListener('change', () => {
   if (modeReview.checked) handleModeChange(MODE.REVIEW)
 })
 
-languageSelect.addEventListener('change', async () => {
-  const result = await setLanguagePreference(languageSelect.value)
-  renderPopupTexts()
+languageToggle.addEventListener('click', event => {
+  event.preventDefault()
+  toggleLanguageMenu()
+})
 
-  const tab = await getActiveTab()
-  if (isInspectableTab(tab)) {
-    await sendToTab(tab.id, {
-      type: MESSAGE_TYPE.SET_LANGUAGE,
-      preference: result.preference,
-      language: result.language
-    })
-  }
+languageMenu.addEventListener('click', event => {
+  const option = event.target?.closest?.('[data-language-preference]')
+  if (!option) return
+  chooseLanguagePreference(option.dataset.languagePreference)
+})
+
+document.addEventListener('click', event => {
+  if (languagePicker.contains(event.target)) return
+  closeLanguageMenu()
+})
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeLanguageMenu()
 })
 
 async function initializePopup() {
