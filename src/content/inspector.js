@@ -13,7 +13,7 @@
     ui,
     i18n
   } = window.LayoutPilotModules
-  const { INSTANCE_KEY, MODE, MESSAGE_TYPE, SHORTCUT, UI_SELECTOR } = constants
+  const { INSTANCE_KEY, MODE, MESSAGE_TYPE, SHORTCUT, SHORTCUTS_BY_MODE, UI_SELECTOR } = constants
   const {
     createElement,
     px,
@@ -162,16 +162,14 @@
     state.lastPointerEvent = null
   }
 
+  function hasLayoutPilotClass(element) {
+    return element instanceof Element &&
+      Array.from(element.classList || []).some(className => className.startsWith('layoutpilot-'))
+  }
+
   function isOwnElement(element) {
     if (!(element instanceof Element)) return false
-    return element.classList?.contains('layoutpilot-overlay') ||
-      element.classList?.contains('layoutpilot-selected-overlay') ||
-      element.classList?.contains('layoutpilot-tooltip') ||
-      element.classList?.contains('layoutpilot-distance-layer') ||
-      element.classList?.contains('layoutpilot-detail-panel') ||
-      element.classList?.contains('layoutpilot-help-panel') ||
-      element.classList?.contains('layoutpilot-toast') ||
-      !!element.closest?.('.layoutpilot-tooltip, .layoutpilot-distance-layer, .layoutpilot-detail-panel, .layoutpilot-help-panel, .layoutpilot-toast')
+    return hasLayoutPilotClass(element) || !!element.closest?.('[class*="layoutpilot-"]')
   }
 
   function getElementAtPoint(event) {
@@ -218,15 +216,15 @@
   }
 
   function getHelpShortcuts() {
-    return [
-      { key: 'I', label: t('help.shortcuts.inspect') },
-      { key: 'H', label: t('help.shortcuts.help') },
-      { key: 'Q', label: t('help.shortcuts.quit') },
-      { key: 'Esc', label: t('help.shortcuts.cancel') },
-      { key: 'C', label: t('help.shortcuts.context') },
-      { key: 'D', label: t('help.shortcuts.details') },
-      { key: 'P', label: t('help.shortcuts.pin') }
-    ]
+    const shortcuts = SHORTCUTS_BY_MODE[state.mode] || SHORTCUTS_BY_MODE[MODE.INSPECT]
+    return shortcuts.map(shortcut => ({
+      key: shortcut.key,
+      label: t(shortcut.labelKey)
+    }))
+  }
+
+  function getHelpNote() {
+    return state.mode === MODE.REVIEW ? t('help.note.review') : t('help.note.inspect')
   }
 
   function getContextPrompt() {
@@ -423,8 +421,7 @@
         ${renderCloseButton({ action: 'close-help', label: t('help.close') })}
       </div>
       ${renderShortcutList(getHelpShortcuts())}
-      <p>${escapeHtml(t('help.note.inspect'))}</p>
-      <p>${escapeHtml(t('help.note.review'))}</p>
+      <p>${escapeHtml(getHelpNote())}</p>
     `
     panel.style.display = 'block'
   }
@@ -590,6 +587,12 @@
     if (shouldIgnoreShortcut(event)) return
 
     const normalized = normalizeKey(event)
+
+    if (state.enabled && state.mode === MODE.REVIEW && reviewController.blocksGlobalShortcuts?.()) {
+      consumeShortcut(event)
+      reviewController.handleKeyDown(event, normalized)
+      return
+    }
 
     if (normalized === SHORTCUT.HELP) {
       consumeShortcut(event)
@@ -775,6 +778,7 @@
     state.mode = nextMode
 
     if (state.enabled) startMode(state.mode)
+    if (state.helpPanel) renderHelpPanel()
   }
 
   function setEnabled(enabled) {

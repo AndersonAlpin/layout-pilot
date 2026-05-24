@@ -25,50 +25,52 @@
         Ativar
       </button>
 
-      <section class="mode-card" aria-labelledby="mode-title">
-        <strong id="mode-title">Modo</strong>
-        <label class="mode-option">
-          <input id="mode-inspect" type="radio" name="mode" value="inspect" checked />
-          <span>
-            <b id="mode-inspect-name">Modo Inspeção</b>
-            <small id="mode-inspect-description">Hover, pin, detalhes e contexto simples.</small>
-          </span>
-        </label>
-        <label class="mode-option">
-          <input id="mode-review" type="radio" name="mode" value="review" />
-          <span>
-            <b id="mode-review-name">Modo Revisão</b>
-            <small id="mode-review-description">Em breve: marcações e relatório Markdown.</small>
-          </span>
-        </label>
-      </section>
+      <div class="popup-scroll">
+        <section class="mode-card" aria-labelledby="mode-title">
+          <strong id="mode-title">Modo</strong>
+          <label class="mode-option">
+            <input id="mode-inspect" type="radio" name="mode" value="inspect" checked />
+            <span>
+              <b id="mode-inspect-name">Modo Inspeção</b>
+              <small id="mode-inspect-description">Hover, pin, detalhes e contexto simples.</small>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input id="mode-review" type="radio" name="mode" value="review" />
+            <span>
+              <b id="mode-review-name">Modo Revisão</b>
+              <small id="mode-review-description">Base de revisão visual. Anotações vêm a seguir.</small>
+            </span>
+          </label>
+        </section>
 
-      <section class="shortcuts" aria-labelledby="shortcuts-title">
-        <strong id="shortcuts-title">Atalhos</strong>
-        <div class="shortcut-grid">
-          <kbd>I</kbd><span id="shortcut-inspect">Inspeção</span>
-          <kbd>H</kbd><span id="shortcut-help">Atalhos</span>
-          <kbd>Q</kbd><span id="shortcut-quit">Desativar</span>
-          <kbd>Esc</kbd><span id="shortcut-cancel">Cancelar</span>
-          <kbd>C</kbd><span id="shortcut-context">Contexto simples</span>
-          <kbd>P</kbd><span id="shortcut-pin">Fixar</span>
-          <kbd>D</kbd><span id="shortcut-details">Detalhes</span>
-        </div>
-        <p id="shortcut-note" class="shortcut-note">I funciona depois de ativar nesta aba pelo popup.</p>
-      </section>
+        <section class="shortcuts" aria-labelledby="shortcuts-title">
+          <strong id="shortcuts-title">Atalhos</strong>
+          <div id="shortcut-grid" class="shortcut-grid">
+            <kbd>I</kbd><span id="shortcut-inspect">Inspeção</span>
+            <kbd>H</kbd><span id="shortcut-help">Atalhos</span>
+            <kbd>Q</kbd><span id="shortcut-quit">Desativar</span>
+            <kbd>Esc</kbd><span id="shortcut-cancel">Cancelar</span>
+            <kbd>C</kbd><span id="shortcut-context">Contexto simples</span>
+            <kbd>P</kbd><span id="shortcut-pin">Fixar</span>
+            <kbd>D</kbd><span id="shortcut-details">Detalhes</span>
+          </div>
+          <p id="shortcut-note" class="shortcut-note">I funciona depois de ativar nesta aba pelo popup.</p>
+        </section>
 
-      <section class="language-card" aria-labelledby="language-title">
-        <label for="language-select">
-          <strong id="language-title">Idioma</strong>
-          <span id="language-label">Idioma da interface</span>
-        </label>
-        <select id="language-select">
-          <option value="auto">Auto</option>
-          <option value="pt-BR">Português</option>
-          <option value="en">English</option>
-          <option value="es">Español</option>
-        </select>
-      </section>
+        <section class="language-card" aria-labelledby="language-title">
+          <label for="language-select">
+            <strong id="language-title">Idioma</strong>
+            <span id="language-label">Idioma da interface</span>
+          </label>
+          <select id="language-select">
+            <option value="auto">Auto</option>
+            <option value="pt-BR">Português</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+          </select>
+        </section>
+      </div>
     </main>
     <script src="../shared/constants.js"></script>
     <script src="../shared/locales/en.js"></script>

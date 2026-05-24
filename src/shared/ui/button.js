@@ -54,8 +54,33 @@
     })
   }
 
+  function renderIconButton({
+    iconHtml,
+    label,
+    className,
+    attrs,
+    data,
+    action,
+    disabled,
+    title = label,
+    type = 'button'
+  } = {}) {
+    return renderButton({
+      labelHtml: iconHtml,
+      className,
+      attrs,
+      data,
+      action,
+      disabled,
+      title,
+      ariaLabel: label,
+      type
+    })
+  }
+
   Object.assign(ui, {
     renderButton,
-    renderCloseButton
+    renderCloseButton,
+    renderIconButton
   })
 })()

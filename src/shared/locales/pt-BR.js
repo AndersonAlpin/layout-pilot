@@ -57,7 +57,12 @@
       cancel: 'Cancelar',
       context: 'Contexto simples',
       pin: 'Fixar',
-      details: 'Detalhes'
+      details: 'Detalhes',
+      toggleLayoutPilot: 'Ativar/desativar',
+      reviewPanel: 'Painel de revisão',
+      copyReport: 'Copiar relatório',
+      reportSoon: 'Relatório em breve',
+      removeAnnotation: 'Remover anotação'
     },
     detail: {
       kicker: 'Modo Inspeção',
@@ -67,6 +72,37 @@
         fullContext: 'Contexto completo'
       },
       simpleContextPreview: 'Contexto simples'
+    },
+    review: {
+      panel: {
+        kicker: 'Modo Revisão',
+        title: 'Revisão visual',
+        count: '{count} anotações',
+        close: 'Fechar painel de revisão',
+        collapse: 'Recolher painel',
+        expand: 'Expandir painel',
+        clearReview: 'Limpar revisão',
+        emptyTitle: 'Nenhuma anotação ainda',
+        emptyDescription: 'Clique em um elemento da página para selecioná-lo para anotação.',
+        draft: 'Rascunho',
+        observation: 'Observação',
+        notePlaceholder: 'Descreva o que parece errado aqui',
+        draftPlaceholder: 'Escreva uma observação para salvar esta anotação',
+        noNote: 'Sem observação ainda',
+        focusAnnotation: 'Focar anotação',
+        highlightAnnotation: 'Destacar anotação',
+        edit: 'Editar',
+        save: 'Salvar',
+        saveAnnotation: 'Salvar anotação',
+        cancel: 'Cancelar',
+        remove: 'Remover'
+      },
+      clearConfirm: {
+        title: 'Limpar revisão?',
+        description: 'Isso removerá todas as anotações e marcações visuais desta revisão.',
+        cancel: 'Cancelar',
+        confirm: 'Limpar revisão'
+      }
     },
     help: {
       title: 'LayoutPilot atalhos',
@@ -82,7 +118,7 @@
       },
       note: {
         inspect: 'I funciona depois de ativar a extensão nesta aba pelo popup.',
-        review: 'Modo Revisão: em breve.'
+        review: 'Modo Revisão: clique em um elemento para criar uma anotação.'
       }
     },
     tooltip: {
@@ -106,6 +142,14 @@
       inspectOn: 'Modo inspeção ativo',
       reviewOn: 'Modo revisão ativo',
       reviewSoon: 'Modo revisão em breve',
+      annotationCreated: 'Anotação {id} criada',
+      annotationSaved: 'Anotação {id} salva',
+      annotationRemoved: 'Anotação {id} removida',
+      draftSelected: 'Rascunho selecionado',
+      draftCanceled: 'Rascunho cancelado',
+      draftHasNote: 'O rascunho tem texto. Salve ou cancele antes de selecionar outro elemento.',
+      editHasChanges: 'Esta anotação tem alterações não salvas. Salve ou cancele antes de editar outro item.',
+      reviewReportSoon: 'Relatório de revisão entra na próxima etapa',
       elementPinned: 'Elemento fixado',
       elementUnpinned: 'Elemento desfixado',
       copyFailed: 'Não foi possível copiar',

@@ -24,6 +24,27 @@
     DETAILS: 'd'
   }
 
+  const SHORTCUTS_BY_MODE = {
+    [MODE.INSPECT]: [
+      { key: 'I', labelKey: 'shortcuts.inspect' },
+      { key: 'H', labelKey: 'shortcuts.help' },
+      { key: 'Q', labelKey: 'shortcuts.quit' },
+      { key: 'Esc', labelKey: 'shortcuts.cancel' },
+      { key: 'C', labelKey: 'shortcuts.context' },
+      { key: 'P', labelKey: 'shortcuts.pin' },
+      { key: 'D', labelKey: 'shortcuts.details' }
+    ],
+    [MODE.REVIEW]: [
+      { key: 'I', labelKey: 'shortcuts.toggleLayoutPilot' },
+      { key: 'H', labelKey: 'shortcuts.help' },
+      { key: 'Q', labelKey: 'shortcuts.quit' },
+      { key: 'Esc', labelKey: 'shortcuts.cancel' },
+      { key: 'D', labelKey: 'shortcuts.reviewPanel' },
+      { key: 'Delete', labelKey: 'shortcuts.removeAnnotation' },
+      { key: 'C', labelKey: 'shortcuts.reportSoon' }
+    ]
+  }
+
   const CONTENT_CSS_FILES = [
     'src/content/inspector.css'
   ]
@@ -48,6 +69,8 @@
     'src/content/detail-panel.js',
     'src/content/draggable-panel.js',
     'src/content/review-state.js',
+    'src/content/review-markers.js',
+    'src/content/review-panel.js',
     'src/content/review-mode.js',
     'src/content/inspector.js'
   ]
@@ -59,6 +82,12 @@
     'layoutpilot-distance-layer',
     'layoutpilot-detail-panel',
     'layoutpilot-help-panel',
+    'layoutpilot-review-hit-layer',
+    'layoutpilot-review-hover',
+    'layoutpilot-review-annotation-layer',
+    'layoutpilot-review-marker-layer',
+    'layoutpilot-review-panel',
+    'layoutpilot-review-confirm',
     'layoutpilot-toast'
   ]
 
@@ -67,6 +96,7 @@
     MODE,
     MESSAGE_TYPE,
     SHORTCUT,
+    SHORTCUTS_BY_MODE,
     CONTENT_CSS_FILES,
     CONTENT_SCRIPT_FILES,
     UI_CLASSES,

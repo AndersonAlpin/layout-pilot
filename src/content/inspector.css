@@ -4,6 +4,12 @@
 .layoutpilot-distance-layer,
 .layoutpilot-detail-panel,
 .layoutpilot-help-panel,
+.layoutpilot-review-hit-layer,
+.layoutpilot-review-hover,
+.layoutpilot-review-annotation-layer,
+.layoutpilot-review-marker-layer,
+.layoutpilot-review-panel,
+.layoutpilot-review-confirm,
 .layoutpilot-toast {
   all: initial;
   box-sizing: border-box;
@@ -19,6 +25,12 @@
 .layoutpilot-distance-layer *,
 .layoutpilot-detail-panel *,
 .layoutpilot-help-panel *,
+.layoutpilot-review-hit-layer *,
+.layoutpilot-review-hover *,
+.layoutpilot-review-annotation-layer *,
+.layoutpilot-review-marker-layer *,
+.layoutpilot-review-panel *,
+.layoutpilot-review-confirm *,
 .layoutpilot-toast * {
   box-sizing: border-box;
 }
@@ -410,4 +422,514 @@
   box-shadow: 0 14px 36px rgba(2, 6, 23, 0.35);
   font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif;
   pointer-events: none;
+}
+
+.layoutpilot-review-marker-layer {
+  inset: 0;
+  pointer-events: none;
+}
+
+.layoutpilot-review-hit-layer {
+  inset: 0;
+  background: transparent;
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-hover {
+  display: none;
+  border: 2px solid #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.68), 0 0 0 99999px rgba(251, 191, 36, 0.025);
+  pointer-events: none;
+}
+
+.layoutpilot-review-annotation-layer {
+  inset: 0;
+  pointer-events: none;
+}
+
+.layoutpilot-review-annotation-box {
+  position: fixed;
+  border: 2px solid var(--layoutpilot-review-color, rgba(251, 191, 36, 0.96));
+  background: transparent;
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.65);
+  pointer-events: none;
+}
+
+.layoutpilot-review-draft-box {
+  position: fixed;
+  border: 2px dashed #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.65), 0 0 0 4px rgba(251, 191, 36, 0.08);
+  pointer-events: none;
+}
+
+.layoutpilot-review-annotation-box--selected {
+  border-color: var(--layoutpilot-review-color, #38bdf8);
+  background: transparent;
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.72), 0 0 0 4px rgba(var(--layoutpilot-review-color-rgb, 56, 189, 248), 0.16);
+}
+
+.layoutpilot-review-annotation-box--highlighted {
+  background: rgba(var(--layoutpilot-review-color-rgb, 56, 189, 248), 0.1);
+}
+
+.layoutpilot-review-marker {
+  all: unset;
+  box-sizing: border-box;
+  position: fixed;
+  z-index: 2147483647;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 2px solid rgba(248, 250, 252, 0.9);
+  border-radius: 999px;
+  color: var(--layoutpilot-review-text-color, #03111f);
+  background: var(--layoutpilot-review-color, #fbbf24);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.38), 0 0 0 2px rgba(var(--layoutpilot-review-color-rgb, 251, 191, 36), 0.24);
+  font: 900 12px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.layoutpilot-review-marker:hover,
+.layoutpilot-review-marker--selected {
+  background: var(--layoutpilot-review-color, #38bdf8);
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.44), 0 0 0 4px rgba(var(--layoutpilot-review-color-rgb, 56, 189, 248), 0.3), 0 0 0 7px rgba(248, 250, 252, 0.16);
+}
+
+.layoutpilot-review-connector {
+  position: fixed;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(var(--layoutpilot-review-color-rgb, 251, 191, 36), 0.72);
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.36);
+  pointer-events: none;
+  transform-origin: 0 50%;
+}
+
+.layoutpilot-review-connector--selected {
+  height: 3px;
+  background: rgba(var(--layoutpilot-review-color-rgb, 56, 189, 248), 0.92);
+}
+
+.layoutpilot-review-panel {
+  right: 16px;
+  bottom: 16px;
+  display: none;
+  width: min(390px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 32px));
+  flex-direction: column;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 10px;
+  color: #f8fafc;
+  background: rgba(10, 15, 28, 0.97);
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.5);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-panel--collapsed {
+  max-height: none;
+}
+
+.layoutpilot-review-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.layoutpilot-review-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.layoutpilot-review-header-button {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.78);
+  font: 900 16px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-review-header-button:hover {
+  border-color: rgba(56, 189, 248, 0.62);
+  background: rgba(14, 165, 233, 0.22);
+}
+
+.layoutpilot-review-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: #7dd3fc;
+  font: 800 10px/1.2 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.layoutpilot-review-header h2 {
+  all: unset;
+  display: block;
+  color: #f8fafc;
+  font: 800 14px/1.25 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-review-header small {
+  all: unset;
+  display: block;
+  margin-top: 4px;
+  color: #94a3b8;
+  font: 700 11px/1.3 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-review-body {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px 14px 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.layoutpilot-review-empty {
+  display: grid;
+  gap: 5px;
+  padding: 11px;
+  border: 1px dashed rgba(148, 163, 184, 0.26);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.layoutpilot-review-empty strong,
+.layoutpilot-review-empty span {
+  all: unset;
+  color: #f8fafc;
+  font: 800 12px/1.35 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-review-empty span {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.layoutpilot-review-list {
+  display: grid;
+  gap: 8px;
+}
+
+.layoutpilot-review-card {
+  box-sizing: border-box;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-left: 3px solid rgba(var(--layoutpilot-review-color-rgb, 148, 163, 184), 0.78);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.62);
+  cursor: pointer;
+}
+
+.layoutpilot-review-card:hover,
+.layoutpilot-review-card--selected {
+  border-color: rgba(var(--layoutpilot-review-color-rgb, 125, 211, 252), 0.58);
+  border-left-color: var(--layoutpilot-review-color, #7dd3fc);
+  background: rgba(var(--layoutpilot-review-color-rgb, 14, 165, 233), 0.12);
+}
+
+.layoutpilot-review-card--editing {
+  border-color: rgba(var(--layoutpilot-review-color-rgb, 56, 189, 248), 0.6);
+  border-left-color: var(--layoutpilot-review-color, #38bdf8);
+  background: rgba(var(--layoutpilot-review-color-rgb, 14, 165, 233), 0.12);
+  cursor: default;
+}
+
+.layoutpilot-review-card-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.layoutpilot-review-card-title,
+.layoutpilot-review-card-title strong,
+.layoutpilot-review-card small,
+.layoutpilot-review-card span {
+  all: unset;
+  min-width: 0;
+  color: #f8fafc;
+  font: 800 12px/1.3 ui-sans-serif, system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.layoutpilot-review-card-title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1 1 auto;
+  min-height: 26px;
+  min-width: 0;
+}
+
+.layoutpilot-review-card-number {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 2px solid rgba(248, 250, 252, 0.86);
+  border-radius: 999px;
+  color: var(--layoutpilot-review-text-color, #03111f);
+  background: var(--layoutpilot-review-color, #fbbf24);
+  box-shadow: 0 0 0 2px rgba(var(--layoutpilot-review-color-rgb, 251, 191, 36), 0.18);
+  font: 900 11px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-review-card-number:hover {
+  box-shadow: 0 0 0 4px rgba(var(--layoutpilot-review-color-rgb, 251, 191, 36), 0.26);
+}
+
+.layoutpilot-review-card-title strong {
+  flex: 1 1 auto;
+  color: #f8fafc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.layoutpilot-review-card span {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.layoutpilot-review-card small {
+  color: #fde68a;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.layoutpilot-review-card-tools {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 5px;
+}
+
+.layoutpilot-review-card-icon {
+  all: unset;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 6px;
+  color: #bfdbfe;
+  background: rgba(15, 23, 42, 0.8);
+  font: 900 14px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-review-card-icon:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #e0f2fe;
+  background: rgba(14, 165, 233, 0.2);
+}
+
+.layoutpilot-review-card-icon--danger {
+  color: #fecaca;
+}
+
+.layoutpilot-review-card-icon--danger:hover {
+  border-color: rgba(248, 113, 113, 0.6);
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.34);
+}
+
+.layoutpilot-review-draft {
+  border-color: rgba(251, 191, 36, 0.38);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.layoutpilot-review-draft .layoutpilot-review-card-title strong {
+  all: unset;
+  color: #fef3c7;
+  font: 900 12px/1.3 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-review-card label {
+  all: unset;
+  color: #bae6fd;
+  font: 800 11px/1.2 ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+}
+
+.layoutpilot-review-card textarea {
+  all: unset;
+  box-sizing: border-box;
+  min-height: 86px;
+  padding: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  color: #f8fafc;
+  background: rgba(2, 6, 23, 0.45);
+  font: 600 12px/1.45 ui-sans-serif, system-ui, sans-serif;
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+
+.layoutpilot-review-card textarea:focus {
+  border-color: rgba(56, 189, 248, 0.72);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.layoutpilot-review-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.layoutpilot-review-card-actions button {
+  all: unset;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 7px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 7px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.72);
+  font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-review-card-actions .layoutpilot-review-danger {
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.28);
+}
+
+.layoutpilot-review-card-actions .layoutpilot-review-primary,
+.layoutpilot-review-card-actions button:last-child {
+  border-color: rgba(56, 189, 248, 0.46);
+  color: #e0f2fe;
+  background: rgba(14, 165, 233, 0.22);
+}
+
+.layoutpilot-review-card-actions button:hover {
+  border-color: rgba(148, 163, 184, 0.52);
+  background: rgba(30, 41, 59, 0.82);
+}
+
+.layoutpilot-review-card-actions .layoutpilot-review-danger:hover {
+  border-color: rgba(248, 113, 113, 0.65);
+  background: rgba(185, 28, 28, 0.36);
+}
+
+.layoutpilot-review-card-actions .layoutpilot-review-primary:hover,
+.layoutpilot-review-card-actions button:last-child:hover {
+  border-color: rgba(56, 189, 248, 0.72);
+  background: rgba(14, 165, 233, 0.34);
+}
+
+.layoutpilot-review-confirm {
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: rgba(2, 6, 23, 0.46);
+  pointer-events: auto;
+}
+
+.layoutpilot-review-confirm-backdrop {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  padding: 20px;
+}
+
+.layoutpilot-review-confirm-dialog {
+  box-sizing: border-box;
+  display: grid;
+  gap: 14px;
+  width: min(360px, calc(100vw - 40px));
+  padding: 16px;
+  border: 1px solid rgba(248, 113, 113, 0.34);
+  border-radius: 10px;
+  color: #f8fafc;
+  background: rgba(10, 15, 28, 0.98);
+  box-shadow: 0 28px 80px rgba(2, 6, 23, 0.6);
+}
+
+.layoutpilot-review-confirm-body {
+  display: grid;
+  gap: 8px;
+}
+
+.layoutpilot-review-confirm-body h3,
+.layoutpilot-review-confirm-body p {
+  all: unset;
+  color: #f8fafc;
+  font: 900 15px/1.25 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-review-confirm-body p {
+  color: #cbd5e1;
+  font: 600 12px/1.45 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-review-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.layoutpilot-review-confirm-actions button {
+  all: unset;
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 8px 11px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 7px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.78);
+  font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-review-confirm-actions .layoutpilot-review-danger {
+  border-color: rgba(248, 113, 113, 0.48);
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.36);
+}
+
+.layoutpilot-review-confirm-actions button:hover {
+  border-color: rgba(56, 189, 248, 0.56);
+  background: rgba(14, 165, 233, 0.2);
+}
+
+.layoutpilot-review-confirm-actions .layoutpilot-review-danger:hover {
+  border-color: rgba(248, 113, 113, 0.72);
+  background: rgba(185, 28, 28, 0.4);
 }

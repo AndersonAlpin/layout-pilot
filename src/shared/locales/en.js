@@ -57,7 +57,12 @@
       cancel: 'Cancel',
       context: 'Simple context',
       pin: 'Pin',
-      details: 'Details'
+      details: 'Details',
+      toggleLayoutPilot: 'Activate/deactivate',
+      reviewPanel: 'Review panel',
+      copyReport: 'Copy report',
+      reportSoon: 'Report coming soon',
+      removeAnnotation: 'Remove annotation'
     },
     detail: {
       kicker: 'Inspect Mode',
@@ -67,6 +72,37 @@
         fullContext: 'Full context'
       },
       simpleContextPreview: 'Simple Context'
+    },
+    review: {
+      panel: {
+        kicker: 'Review Mode',
+        title: 'Visual review',
+        count: '{count} annotations',
+        close: 'Close review panel',
+        collapse: 'Collapse panel',
+        expand: 'Expand panel',
+        clearReview: 'Clear review',
+        emptyTitle: 'No annotations yet',
+        emptyDescription: 'Click an element on the page to select it for annotation.',
+        draft: 'Draft',
+        observation: 'Observation',
+        notePlaceholder: 'Describe what looks wrong here',
+        draftPlaceholder: 'Write an observation to save this annotation',
+        noNote: 'No observation yet',
+        focusAnnotation: 'Focus annotation',
+        highlightAnnotation: 'Highlight annotation',
+        edit: 'Edit',
+        save: 'Save',
+        saveAnnotation: 'Save annotation',
+        cancel: 'Cancel',
+        remove: 'Remove'
+      },
+      clearConfirm: {
+        title: 'Clear review?',
+        description: 'This will remove all annotations and visual markings from this review.',
+        cancel: 'Cancel',
+        confirm: 'Clear review'
+      }
     },
     help: {
       title: 'LayoutPilot shortcuts',
@@ -82,7 +118,7 @@
       },
       note: {
         inspect: 'I works after activating this tab from the popup.',
-        review: 'Review Mode: coming soon.'
+        review: 'Review Mode: click an element to create an annotation.'
       }
     },
     tooltip: {
@@ -106,6 +142,14 @@
       inspectOn: 'Inspect mode on',
       reviewOn: 'Review mode on',
       reviewSoon: 'Review mode coming soon',
+      annotationCreated: 'Annotation {id} created',
+      annotationSaved: 'Annotation {id} saved',
+      annotationRemoved: 'Annotation {id} removed',
+      draftSelected: 'Draft selected',
+      draftCanceled: 'Draft canceled',
+      draftHasNote: 'Draft has text. Save or cancel before selecting another element.',
+      editHasChanges: 'This annotation has unsaved changes. Save or cancel before editing another item.',
+      reviewReportSoon: 'Review report comes in the next step',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',
       copyFailed: 'Could not copy',

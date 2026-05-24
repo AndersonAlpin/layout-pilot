@@ -4,7 +4,8 @@ const statusDot = document.getElementById('status-dot')
 const modeInspect = document.getElementById('mode-inspect')
 const modeReview = document.getElementById('mode-review')
 const languageSelect = document.getElementById('language-select')
-const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES } = window.LayoutPilotModules.constants
+const shortcutGrid = document.getElementById('shortcut-grid')
+const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES, SHORTCUTS_BY_MODE } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
 const {
   AUTO_LANGUAGE,
@@ -29,13 +30,6 @@ const textBindings = {
   'mode-review-name': 'popup.mode.review.name',
   'mode-review-description': 'popup.mode.review.description',
   'shortcuts-title': 'popup.shortcuts.title',
-  'shortcut-inspect': 'shortcuts.inspect',
-  'shortcut-help': 'shortcuts.help',
-  'shortcut-quit': 'shortcuts.quit',
-  'shortcut-cancel': 'shortcuts.cancel',
-  'shortcut-context': 'shortcuts.context',
-  'shortcut-pin': 'shortcuts.pin',
-  'shortcut-details': 'shortcuts.details',
   'shortcut-note': 'popup.shortcuts.note',
   'language-title': 'language.title',
   'language-label': 'language.label'
@@ -78,11 +72,27 @@ function renderLanguageOptions() {
   document.documentElement.lang = getCurrentLanguage()
 }
 
+function renderShortcuts() {
+  const shortcuts = SHORTCUTS_BY_MODE[normalizeMode(state.mode)] || SHORTCUTS_BY_MODE[MODE.INSPECT]
+  const fragment = document.createDocumentFragment()
+
+  for (const shortcut of shortcuts) {
+    const key = document.createElement('kbd')
+    const label = document.createElement('span')
+    key.textContent = shortcut.key
+    label.textContent = t(shortcut.labelKey)
+    fragment.append(key, label)
+  }
+
+  shortcutGrid.replaceChildren(fragment)
+}
+
 function renderPopupTexts() {
   for (const [id, key] of Object.entries(textBindings)) {
     setElementText(id, t(key))
   }
 
+  renderShortcuts()
   renderLanguageOptions()
   statusText.textContent = t(state.statusKey)
   toggleButton.textContent = state.enabled ? t('common.deactivate') : t('common.activate')
@@ -91,6 +101,7 @@ function renderPopupTexts() {
 function renderModeSelection() {
   modeInspect.checked = state.mode === MODE.INSPECT
   modeReview.checked = state.mode === MODE.REVIEW
+  renderShortcuts()
 }
 
 function setStatus(enabled, statusKey, mode = MODE.INSPECT) {
