@@ -36,6 +36,7 @@
     } = options
     const state = createReviewState()
     let suppressNextPageClick = false
+    let toolbarAutoHideTimer = null
     const panelDrag = createDraggablePanel({
       getPanel: () => state.panel,
       getPosition: () => state.panelPosition,
@@ -139,6 +140,15 @@
       return target instanceof Element && isOwnElement(target)
     }
 
+    function isReviewInteractiveUiTarget(target) {
+      return target instanceof Element && Boolean(target.closest?.([
+        '.layoutpilot-review-panel',
+        '.layoutpilot-review-toolbar',
+        '.layoutpilot-review-confirm',
+        '.layoutpilot-toast'
+      ].join(',')))
+    }
+
     function handleScrollLockWheel(event) {
       if (!state.enabled) return
       if (shouldAllowReviewUiScroll(event.target)) return
@@ -150,6 +160,14 @@
     function handleScrollLockTouchMove(event) {
       if (!state.enabled) return
       if (shouldAllowReviewUiScroll(event.target)) return
+
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    function handleContextMenu(event) {
+      if (!state.enabled) return
+      if (isReviewInteractiveUiTarget(event.target)) return
 
       event.preventDefault()
       event.stopPropagation()
@@ -301,12 +319,12 @@
 
     function applyToolbarPosition() {
       const toolbar = ensureToolbar()
-      if (state.toolbarCollapsed) {
-        toolbar.style.left = 'auto'
-        toolbar.style.top = '50%'
-        toolbar.style.right = '0px'
+      if (state.toolbarPinned === false) {
+        toolbar.style.left = '50%'
+        toolbar.style.top = '-2px'
+        toolbar.style.right = 'auto'
         toolbar.style.bottom = 'auto'
-        toolbar.style.transform = 'translateY(-50%)'
+        toolbar.style.transform = 'translateX(-50%)'
         return
       }
 
@@ -323,13 +341,47 @@
       toolbar.style.top = '18px'
     }
 
+    function clearToolbarAutoHideTimer() {
+      if (!toolbarAutoHideTimer) return
+      clearTimeout(toolbarAutoHideTimer)
+      toolbarAutoHideTimer = null
+    }
+
+    function setToolbarAutoVisible(visible) {
+      if (state.toolbarPinned !== false) return
+      state.toolbarAutoVisible = visible
+      state.toolbar?.classList.toggle('layoutpilot-review-toolbar--peek', visible)
+    }
+
+    function showToolbarTemporarily() {
+      clearToolbarAutoHideTimer()
+      setToolbarAutoVisible(true)
+    }
+
+    function scheduleToolbarAutoHide() {
+      if (state.toolbarPinned !== false) return
+      clearToolbarAutoHideTimer()
+      toolbarAutoHideTimer = setTimeout(() => {
+        state.toolbarAutoVisible = false
+        state.toolbar?.classList.remove('layoutpilot-review-toolbar--peek')
+        toolbarAutoHideTimer = null
+      }, 1400)
+    }
+
     function renderToolbar() {
       const toolbar = ensureToolbar()
-      toolbar.classList.toggle('layoutpilot-review-toolbar--collapsed', Boolean(state.toolbarCollapsed))
+      toolbar.classList.toggle('layoutpilot-review-toolbar--unpinned', state.toolbarPinned === false)
+      toolbar.classList.toggle('layoutpilot-review-toolbar--peek', Boolean(state.toolbarAutoVisible))
       toolbar.innerHTML = renderReviewToolbar(state, { t })
       toolbar.style.display = 'block'
       applyToolbarPosition()
-      toolbar.querySelector('[data-layoutpilot-toolbar-drag-handle]')?.addEventListener('pointerdown', toolbarDrag.handleStart)
+      if (state.toolbarPinned !== false) {
+        toolbar.querySelector('[data-layoutpilot-toolbar-drag-handle]')?.addEventListener('pointerdown', toolbarDrag.handleStart)
+      }
+      toolbar.onpointerenter = showToolbarTemporarily
+      toolbar.onfocusin = showToolbarTemporarily
+      toolbar.onpointerleave = scheduleToolbarAutoHide
+      toolbar.onfocusout = scheduleToolbarAutoHide
     }
 
     function renderWorkspaceFrame() {
@@ -480,8 +532,10 @@
       return true
     }
 
-    function toggleToolbarCollapsed() {
-      state.toolbarCollapsed = !state.toolbarCollapsed
+    function toggleToolbarPinned() {
+      state.toolbarPinned = state.toolbarPinned === false
+      state.toolbarAutoVisible = false
+      clearToolbarAutoHideTimer()
       renderToolbar()
       return true
     }
@@ -645,8 +699,8 @@
         return setActiveTool(target?.dataset?.layoutpilotReviewTool)
       }
 
-      if (action === 'review-toggle-toolbar') {
-        return toggleToolbarCollapsed()
+      if (action === 'review-toggle-toolbar-pin') {
+        return toggleToolbarPinned()
       }
 
       if (action === 'review-select') {
@@ -798,8 +852,8 @@
       renderAnnotations()
       if (state.hoverElement?.isConnected) renderHoverPreview(state.hoverElement)
       if (state.panelPosition) panelDrag.applyPosition()
-      if (state.toolbarPosition && !state.toolbarCollapsed) toolbarDrag.applyPosition()
-      if (state.toolbar && !state.toolbarPosition) applyToolbarPosition()
+      if (state.toolbarPosition && state.toolbarPinned !== false) toolbarDrag.applyPosition()
+      if (state.toolbar && (state.toolbarPinned === false || !state.toolbarPosition)) applyToolbarPosition()
     }
 
     function bindListeners() {
@@ -809,6 +863,7 @@
       document.addEventListener('input', handleNoteInput, true)
       document.addEventListener('wheel', handleScrollLockWheel, { capture: true, passive: false })
       document.addEventListener('touchmove', handleScrollLockTouchMove, { capture: true, passive: false })
+      document.addEventListener('contextmenu', handleContextMenu, true)
       document.addEventListener('keydown', handleScrollLockKeyDown, true)
       window.addEventListener('scroll', handleViewportChange, true)
       window.addEventListener('resize', handleViewportChange)
@@ -821,6 +876,7 @@
       document.removeEventListener('input', handleNoteInput, true)
       document.removeEventListener('wheel', handleScrollLockWheel, true)
       document.removeEventListener('touchmove', handleScrollLockTouchMove, true)
+      document.removeEventListener('contextmenu', handleContextMenu, true)
       document.removeEventListener('keydown', handleScrollLockKeyDown, true)
       window.removeEventListener('scroll', handleViewportChange, true)
       window.removeEventListener('resize', handleViewportChange)
@@ -838,6 +894,7 @@
     function stop() {
       if (!state.enabled) return
       unbindListeners()
+      clearToolbarAutoHideTimer()
       panelDrag.stop()
       toolbarDrag.stop()
       unlockPageScroll()
@@ -846,6 +903,7 @@
 
     function destroy() {
       unbindListeners()
+      clearToolbarAutoHideTimer()
       panelDrag.stop()
       toolbarDrag.stop()
       unlockPageScroll()

@@ -1,6 +1,7 @@
 (() => {
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
+  const { icon } = root.icons
   const { renderButton, renderCloseButton, renderIconButton } = root.ui
   const { ensureAnnotationColors, getAnnotationColorStyle } = root.reviewMarkers
 
@@ -67,14 +68,14 @@
           <span class="layoutpilot-review-card-note">${escapeHtml(annotation.note?.trim() || t('review.panel.noNote'))}</span>
           <div class="layoutpilot-review-card-tools">
             ${renderIconButton({
-              iconHtml: '&#9998;',
+              iconHtml: icon('edit', 14),
               label: t('review.panel.edit'),
               action: 'review-edit',
               className: 'layoutpilot-review-card-icon',
               data: { 'layoutpilot-review-id': annotation.id }
             })}
             ${renderIconButton({
-              iconHtml: '&#128465;',
+              iconHtml: icon('trash', 14),
               label: t('review.panel.remove'),
               action: 'review-remove',
               className: 'layoutpilot-review-card-icon layoutpilot-review-card-icon--danger',

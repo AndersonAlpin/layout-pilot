@@ -27,7 +27,8 @@
       toolbar: null,
       toolbarPosition: null,
       toolbarDrag: null,
-      toolbarCollapsed: false,
+      toolbarPinned: true,
+      toolbarAutoVisible: false,
       workspaceFrame: null,
       toast: null,
       panelPosition: null,
@@ -62,7 +63,8 @@
     state.panelDrag = null
     state.toolbarPosition = null
     state.toolbarDrag = null
-    state.toolbarCollapsed = false
+    state.toolbarPinned = true
+    state.toolbarAutoVisible = false
     state.scrollLock = null
     state.lastSnapshotCapture = null
     state.lastSnapshotCaptureError = null
@@ -82,7 +84,8 @@
     state.pointerStart = null
     state.hoverElement = null
     state.panelCollapsed = false
-    state.toolbarCollapsed = false
+    state.toolbarPinned = true
+    state.toolbarAutoVisible = false
     state.lastSnapshotCapture = null
     state.lastSnapshotCaptureError = null
   }

@@ -60,6 +60,7 @@
     'src/shared/locales/es.js',
     'src/shared/i18n.js',
     'src/shared/dom.js',
+    'src/shared/icons.js',
     'src/shared/ui/render.js',
     'src/shared/ui/button.js',
     'src/shared/ui/panel-section.js',
