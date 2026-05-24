@@ -5,7 +5,7 @@
   locales.en = {
     app: {
       name: 'LayoutPilot',
-      tagline: 'Visual inspect and review for frontend'
+      tagline: 'Visual inspection and review'
     },
     common: {
       activate: 'Activate',
@@ -42,7 +42,7 @@
         },
         review: {
           name: 'Review Mode',
-          description: 'Visual review foundation. Annotations coming next.'
+          description: 'Create visual annotations, mark areas and export the review.'
         }
       },
       shortcuts: {
@@ -60,10 +60,9 @@
       details: 'Details',
       toggleLayoutPilot: 'Activate/deactivate',
       reviewPanel: 'Review panel',
-      copyReport: 'Copy report',
-      reportSoon: 'Report coming soon',
       downloadImage: 'Download image',
       copyImage: 'Copy image',
+      generatePdf: 'Generate PDF',
       removeAnnotation: 'Remove annotation'
     },
     detail: {
@@ -77,13 +76,13 @@
     },
     review: {
       panel: {
-        kicker: 'Review Mode',
+        kicker: 'Annotations',
         title: 'Visual review',
         count: '{count} annotations',
         close: 'Close review panel',
         collapse: 'Collapse panel',
         expand: 'Expand panel',
-        clearReview: 'Clear review',
+        clearReview: 'Clear annotations',
         emptyTitle: 'No annotations yet',
         emptyDescription: 'Click an element on the page to select it for annotation.',
         draft: 'Draft',
@@ -103,15 +102,15 @@
         generatePdf: 'Generate PDF'
       },
       snapshot: {
-        commentsTitle: 'Comments'
+        commentsTitle: 'Annotations'
       },
       printReport: {
         imageUnavailable: 'Image unavailable: annotation is outside the captured viewport',
-        areaMarksTitle: 'Marks without comments',
+        areaMarksTitle: 'Marks without annotations',
         printButton: 'Print / Save PDF'
       },
       areaMark: {
-        comment: 'Comment mark',
+        comment: 'Add annotation',
         remove: 'Remove mark'
       },
       toolbar: {
@@ -132,10 +131,10 @@
         generatePdf: 'Generate PDF'
       },
       clearConfirm: {
-        title: 'Clear review?',
-        description: 'This will remove all annotations and visual markings from this review.',
+        title: 'Clear annotations?',
+        description: 'This will remove the annotations from this review.',
         cancel: 'Cancel',
-        confirm: 'Clear review'
+        confirm: 'Clear annotations'
       }
     },
     help: {

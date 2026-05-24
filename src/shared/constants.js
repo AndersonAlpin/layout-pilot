@@ -23,7 +23,8 @@
     COPY_CONTEXT: 'c',
     PIN: 'p',
     DETAILS: 'd',
-    SNAPSHOT_IMAGE: 's'
+    SNAPSHOT_IMAGE: 's',
+    PDF_REPORT: 'g'
   }
 
   const SHORTCUTS_BY_MODE = {
@@ -43,9 +44,10 @@
       { key: 'Esc', labelKey: 'shortcuts.cancel' },
       { key: 'D', labelKey: 'shortcuts.reviewPanel' },
       { key: 'Delete', labelKey: 'shortcuts.removeAnnotation' },
+      { key: 'P', labelKey: 'shortcuts.pin' },
       { key: 'S', labelKey: 'shortcuts.copyImage' },
       { key: 'Shift+S', labelKey: 'shortcuts.downloadImage' },
-      { key: 'C', labelKey: 'shortcuts.reportSoon' }
+      { key: 'G', labelKey: 'shortcuts.generatePdf' }
     ]
   }
 

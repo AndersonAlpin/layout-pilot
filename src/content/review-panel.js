@@ -139,7 +139,6 @@
       <div class="layoutpilot-review-header">
         <div>
           <span class="layoutpilot-review-kicker">${escapeHtml(t('review.panel.kicker'))}</span>
-          <h2>${escapeHtml(t('review.panel.title'))}</h2>
           <small>${escapeHtml(t('review.panel.count', { count }))}</small>
         </div>
         <div class="layoutpilot-review-header-actions">

@@ -99,11 +99,14 @@ function renderShortcuts() {
   const fragment = document.createDocumentFragment()
 
   for (const shortcut of shortcuts) {
+    const item = document.createElement('div')
     const key = document.createElement('kbd')
     const label = document.createElement('span')
+    item.className = 'shortcut-item'
     key.textContent = shortcut.key
     label.textContent = t(shortcut.labelKey)
-    fragment.append(key, label)
+    item.append(key, label)
+    fragment.append(item)
   }
 
   shortcutGrid.replaceChildren(fragment)

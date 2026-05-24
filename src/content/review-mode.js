@@ -728,6 +728,18 @@
 
     function setActiveTool(tool) {
       const nextTool = ['move', 'element', 'area', 'pen'].includes(tool) ? tool : 'element'
+      if (state.draftAnnotation?.note?.trim()) {
+        showToast?.(t('toast.draftHasNote'))
+        return true
+      }
+      if (hasUnsavedEditingChanges(state)) {
+        showToast?.(t('toast.editHasChanges'))
+        return true
+      }
+
+      if (state.draftAnnotation) clearDraftAnnotation(state)
+      if (state.editingAnnotationId) cancelEditingAnnotation(state)
+
       state.activeTool = nextTool
       clearAreaSelection()
       hideHoverPreview()
@@ -849,7 +861,7 @@
     }
 
     function clearReviewAnnotations() {
-      resetReviewState(state)
+      resetReviewState(state, { keepAreaMarks: true })
       clearAreaSelection()
       hideHoverPreview()
       hideClearConfirmation()
@@ -858,7 +870,7 @@
     }
 
     function hasReviewContent() {
-      return Boolean(state.annotations.length || state.areaMarks.length || state.draftAnnotation)
+      return Boolean(state.annotations.length || state.draftAnnotation)
     }
 
     function handleReviewAction(action, target) {
@@ -1211,8 +1223,19 @@
         return true
       }
 
-      if (normalizedKey === SHORTCUT.COPY_CONTEXT) {
-        showToast?.(t('toast.reviewReportSoon'))
+      if (normalizedKey === SHORTCUT.PIN) {
+        if (state.activeTool !== 'element') return true
+        if (!state.hoverElement?.isConnected) {
+          showToast?.(t('toast.noElement'))
+          return true
+        }
+
+        createDraftFromElement(state.hoverElement)
+        return true
+      }
+
+      if (normalizedKey === SHORTCUT.PDF_REPORT) {
+        generatePdfReport()
         return true
       }
 

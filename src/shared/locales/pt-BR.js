@@ -5,7 +5,7 @@
   locales['pt-BR'] = {
     app: {
       name: 'LayoutPilot',
-      tagline: 'Inspect e review visual para frontend'
+      tagline: 'Inspeção e revisão visual'
     },
     common: {
       activate: 'Ativar',
@@ -42,7 +42,7 @@
         },
         review: {
           name: 'Modo Revisão',
-          description: 'Base de revisão visual. Anotações vêm a seguir.'
+          description: 'Crie anotações visuais, marque áreas e exporte a revisão.'
         }
       },
       shortcuts: {
@@ -60,10 +60,9 @@
       details: 'Detalhes',
       toggleLayoutPilot: 'Ativar/desativar',
       reviewPanel: 'Painel de revisão',
-      copyReport: 'Copiar relatório',
-      reportSoon: 'Relatório em breve',
       downloadImage: 'Baixar imagem',
       copyImage: 'Copiar imagem',
+      generatePdf: 'Gerar PDF',
       removeAnnotation: 'Remover anotação'
     },
     detail: {
@@ -77,13 +76,13 @@
     },
     review: {
       panel: {
-        kicker: 'Modo Revisão',
+        kicker: 'Anotações',
         title: 'Revisão visual',
         count: '{count} anotações',
         close: 'Fechar painel de revisão',
         collapse: 'Recolher painel',
         expand: 'Expandir painel',
-        clearReview: 'Limpar revisão',
+        clearReview: 'Limpar anotações',
         emptyTitle: 'Nenhuma anotação ainda',
         emptyDescription: 'Clique em um elemento da página para selecioná-lo para anotação.',
         draft: 'Rascunho',
@@ -103,15 +102,15 @@
         generatePdf: 'Gerar PDF'
       },
       snapshot: {
-        commentsTitle: 'Comentários'
+        commentsTitle: 'Anotações'
       },
       printReport: {
         imageUnavailable: 'Imagem indisponível: anotação fora da viewport capturada',
-        areaMarksTitle: 'Marcações sem comentário',
+        areaMarksTitle: 'Marcações sem anotação',
         printButton: 'Imprimir / Salvar PDF'
       },
       areaMark: {
-        comment: 'Comentar marcação',
+        comment: 'Adicionar anotação',
         remove: 'Remover marcação'
       },
       toolbar: {
@@ -132,10 +131,10 @@
         generatePdf: 'Gerar PDF'
       },
       clearConfirm: {
-        title: 'Limpar revisão?',
-        description: 'Isso removerá todas as anotações e marcações visuais desta revisão.',
+        title: 'Limpar anotações?',
+        description: 'Isso removerá as anotações desta revisão.',
         cancel: 'Cancelar',
-        confirm: 'Limpar revisão'
+        confirm: 'Limpar anotações'
       }
     },
     help: {

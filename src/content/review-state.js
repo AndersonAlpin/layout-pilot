@@ -75,11 +75,14 @@
     state.lastSnapshotCaptureError = null
   }
 
-  function resetReviewState(state) {
+  function resetReviewState(state, options = {}) {
+    const { keepAreaMarks = false } = options
     state.annotations = []
     state.nextId = 1
-    state.areaMarks = []
-    state.nextAreaMarkId = 1
+    if (!keepAreaMarks) {
+      state.areaMarks = []
+      state.nextAreaMarkId = 1
+    }
     state.activeTool = 'element'
     state.selectedAnnotationId = null
     state.highlightedAnnotationId = null
