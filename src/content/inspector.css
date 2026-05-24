@@ -9,6 +9,7 @@
 .layoutpilot-review-hover,
 .layoutpilot-review-annotation-layer,
 .layoutpilot-review-area-mark-layer,
+.layoutpilot-review-pen-layer,
 .layoutpilot-review-marker-layer,
 .layoutpilot-review-panel,
 .layoutpilot-review-toolbar,
@@ -34,6 +35,7 @@
 .layoutpilot-review-hover *,
 .layoutpilot-review-annotation-layer *,
 .layoutpilot-review-area-mark-layer *,
+.layoutpilot-review-pen-layer *,
 .layoutpilot-review-marker-layer *,
 .layoutpilot-review-panel *,
 .layoutpilot-review-toolbar *,
@@ -455,7 +457,7 @@
 }
 
 .layoutpilot-review-hit-layer[data-layoutpilot-review-tool="pen"] {
-  cursor: crosshair;
+  cursor: default;
 }
 
 .layoutpilot-review-selection-box {
@@ -719,13 +721,114 @@
 
 .layoutpilot-review-area-mark-layer {
   inset: 0;
+  z-index: 2147483644;
+  pointer-events: none;
+}
+
+.layoutpilot-review-pen-layer {
+  inset: 0;
   z-index: 2147483642;
   pointer-events: none;
+}
+
+.layoutpilot-review-pen-layer svg {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.layoutpilot-review-pen-stroke {
+  fill: none;
+  stroke: #ef4444;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 0 rgba(2, 6, 23, 0.7));
+  pointer-events: none;
+}
+
+.layoutpilot-review-pen-dot {
+  fill: #ef4444;
+  filter: drop-shadow(0 1px 0 rgba(2, 6, 23, 0.7));
+  pointer-events: none;
+}
+
+.layoutpilot-review-pen-hit-stroke {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+
+.layoutpilot-review-pen-hit-dot {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: fill;
+}
+
+.layoutpilot-review-pen-tools {
+  overflow: visible;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(2px);
+  transition: opacity 140ms ease 360ms, transform 140ms ease 360ms, visibility 0s linear 500ms;
+  pointer-events: none;
+}
+
+.layoutpilot-review-pen-tools--visible,
+.layoutpilot-review-pen-tools:focus-within {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-pen-button {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 6px;
+  color: #fecaca;
+  background: rgba(10, 15, 28, 0.96);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.38);
+  cursor: pointer;
+}
+
+.layoutpilot-review-pen-button:hover {
+  border-color: rgba(248, 113, 113, 0.6);
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.34);
+}
+
+.layoutpilot-review-pen-button svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .layoutpilot-review-area-mark-wrap {
   position: fixed;
   pointer-events: auto;
+}
+
+.layoutpilot-review-area-mark-wrap:hover,
+.layoutpilot-review-area-mark-wrap:focus-within {
+  z-index: 20;
 }
 
 .layoutpilot-review-area-mark-wrap::before {
@@ -746,7 +849,7 @@
 
 .layoutpilot-review-area-mark-tools {
   position: absolute;
-  z-index: 3;
+  z-index: 30;
   display: inline-flex;
   gap: 4px;
   padding: 3px;

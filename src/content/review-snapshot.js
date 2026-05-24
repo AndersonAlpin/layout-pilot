@@ -11,6 +11,7 @@
     '.layoutpilot-review-hover',
     '.layoutpilot-review-selection-box',
     '.layoutpilot-review-area-mark-tools',
+    '.layoutpilot-review-pen-tools',
     '.layoutpilot-review-draft-box',
     '.layoutpilot-toast'
   ].join(', ')

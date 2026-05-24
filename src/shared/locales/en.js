@@ -192,7 +192,7 @@
       printReportNoAnnotations: 'No annotations to generate PDF',
       printReportFailed: 'Could not generate PDF',
       reviewAreaToolReady: 'Drag to select an area',
-      reviewPenToolReady: 'Pen tool prepared',
+      reviewPenToolReady: 'Drag to draw',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',
       copyFailed: 'Could not copy',

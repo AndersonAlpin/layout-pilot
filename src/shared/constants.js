@@ -97,6 +97,7 @@
     'layoutpilot-review-hover',
     'layoutpilot-review-annotation-layer',
     'layoutpilot-review-area-mark-layer',
+    'layoutpilot-review-pen-layer',
     'layoutpilot-review-marker-layer',
     'layoutpilot-review-panel',
     'layoutpilot-review-toolbar',

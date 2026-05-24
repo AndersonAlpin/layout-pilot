@@ -12,6 +12,7 @@
     '.layoutpilot-review-hover',
     '.layoutpilot-review-selection-box',
     '.layoutpilot-review-area-mark-tools',
+    '.layoutpilot-review-pen-tools',
     '.layoutpilot-review-draft-box',
     '.layoutpilot-review-annotation-layer',
     '.layoutpilot-review-marker-layer',
@@ -20,7 +21,8 @@
   const REPORT_HIDDEN_SELECTOR = REPORT_HIDDEN_SELECTORS.join(', ')
   const REPORT_HIDDEN_WITH_AREA_MARKS_SELECTOR = [
     ...REPORT_HIDDEN_SELECTORS,
-    '.layoutpilot-review-area-mark-layer'
+    '.layoutpilot-review-area-mark-layer',
+    '.layoutpilot-review-pen-layer'
   ].join(', ')
   const MAX_REPORT_IMAGE_WIDTH = 1800
 
@@ -330,7 +332,9 @@
       t = key => key
     } = options
 
-    if (!state?.annotations?.length && !state?.areaMarks?.length) {
+    const hasFreeMarks = Boolean(state?.areaMarks?.length || state?.penStrokes?.length)
+
+    if (!state?.annotations?.length && !hasFreeMarks) {
       showToast?.(t('toast.printReportNoAnnotations'))
       return { ok: false, error: { message: 'No annotations to generate PDF.' } }
     }
@@ -347,7 +351,7 @@
       restoreReportUi(hiddenRecords)
       hiddenRecords = []
 
-      if (state.areaMarks?.length) {
+      if (hasFreeMarks) {
         hiddenRecords = hideReportUiForCapture({ hideAreaMarks: false })
         const areaMarksDataUrl = await requestVisibleTabCapture()
         const areaMarksCaptureImage = await loadImage(areaMarksDataUrl)

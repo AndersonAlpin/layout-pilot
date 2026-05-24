@@ -192,7 +192,7 @@
       printReportNoAnnotations: 'No hay anotaciones para generar PDF',
       printReportFailed: 'No fue posible generar PDF',
       reviewAreaToolReady: 'Arrastra para seleccionar un área',
-      reviewPenToolReady: 'Herramienta lápiz preparada',
+      reviewPenToolReady: 'Arrastra para dibujar',
       elementPinned: 'Elemento fijado',
       elementUnpinned: 'Elemento desfijado',
       copyFailed: 'No se pudo copiar',

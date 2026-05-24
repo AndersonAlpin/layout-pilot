@@ -9,6 +9,11 @@
     addAreaMark,
     getAreaMark,
     removeAreaMark,
+    startPenStroke,
+    appendPenStrokePoint,
+    finishPenStroke,
+    cancelPenStroke,
+    removePenStroke,
     getSelectedAnnotation,
     selectAnnotation,
     setHighlightedAnnotation,
@@ -31,7 +36,7 @@
   const { renderReviewPanel, renderClearReviewDialog } = root.reviewPanel
   const { renderReviewToolbar } = root.reviewToolbar
   const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
-  const { generateReviewPrintReport } = root.reviewPrintReport
+    const { generateReviewPrintReport } = root.reviewPrintReport
 
   function createReviewMode(options = {}) {
     const {
@@ -41,9 +46,12 @@
     const state = createReviewState()
     let suppressNextPageClick = false
     let toolbarAutoHideTimer = null
+    let penToolsHideTimer = null
     const MIN_AREA_SELECTION_SIZE = 2
+    const MIN_PEN_POINT_DISTANCE = 2
     const AREA_MARK_TOOLS_WIDTH = 64
     const AREA_MARK_TOOLS_HEIGHT = 30
+    const PEN_STROKE_TOOLS_SIZE = 30
     const panelDrag = createDraggablePanel({
       getPanel: () => state.panel,
       getPosition: () => state.panelPosition,
@@ -211,6 +219,11 @@
       return state.areaMarkLayer
     }
 
+    function ensurePenLayer() {
+      state.penLayer ||= createElement('layoutpilot-review-pen-layer')
+      return state.penLayer
+    }
+
     function ensureHoverOverlay() {
       state.hoverOverlay ||= createElement('layoutpilot-review-hover')
       return state.hoverOverlay
@@ -348,6 +361,13 @@
       }
     }
 
+    function buildPenPoint(event) {
+      return {
+        x: Math.round(event.clientX + window.scrollX),
+        y: Math.round(event.clientY + window.scrollY)
+      }
+    }
+
     function getAreaMarkViewportRect(mark) {
       if (mark?.rect?.page) {
         return {
@@ -375,6 +395,116 @@
           : 'right: -2px; left: auto;'
 
       return `${vertical} ${horizontal}`
+    }
+
+    function getPenStrokeViewportPoints(stroke) {
+      return (stroke?.points || []).map(point => ({
+        x: Math.round(point.x - window.scrollX),
+        y: Math.round(point.y - window.scrollY)
+      }))
+    }
+
+    function getPenStrokePath(points) {
+      if (!points.length) return ''
+      return points.map((point, index) =>
+        `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+      ).join(' ')
+    }
+
+    function getPenStrokeBounds(points) {
+      const xs = points.map(point => point.x)
+      const ys = points.map(point => point.y)
+      return {
+        minX: Math.min(...xs),
+        minY: Math.min(...ys),
+        maxX: Math.max(...xs),
+        maxY: Math.max(...ys)
+      }
+    }
+
+    function getPenStrokeToolsPosition(points) {
+      const origin = points[0] || { x: 0, y: 0 }
+      const x = Math.max(4, Math.min(window.innerWidth - PEN_STROKE_TOOLS_SIZE - 4, origin.x + 8))
+      const y = Math.max(4, Math.min(window.innerHeight - PEN_STROKE_TOOLS_SIZE - 4, origin.y - PEN_STROKE_TOOLS_SIZE - 6))
+      return { x: Math.round(x), y: Math.round(y) }
+    }
+
+    function renderPenStrokes() {
+      const layer = ensurePenLayer()
+      const strokes = state.penStrokes || []
+      if (!strokes.length) {
+        clearPenToolsHideTimer()
+        layer.innerHTML = ''
+        return
+      }
+
+      const strokeItems = []
+      const toolItems = []
+      for (const stroke of strokes) {
+        const points = getPenStrokeViewportPoints(stroke)
+        if (!points.length) continue
+
+        const toolsPosition = getPenStrokeToolsPosition(points)
+        toolItems.push(renderPenStrokeTools(stroke.id, toolsPosition))
+
+        if (points.length === 1) {
+          const [point] = points
+          strokeItems.push(`
+            <g class="layoutpilot-review-pen-stroke-wrap" data-layoutpilot-review-pen-stroke-id="${escapeHtml(stroke.id)}">
+              <circle class="layoutpilot-review-pen-dot" cx="${point.x}" cy="${point.y}" r="2.5"></circle>
+              <circle class="layoutpilot-review-pen-hit-dot" cx="${point.x}" cy="${point.y}" r="10"></circle>
+            </g>
+          `)
+          continue
+        }
+
+        const path = getPenStrokePath(points)
+        strokeItems.push(`
+          <g class="layoutpilot-review-pen-stroke-wrap" data-layoutpilot-review-pen-stroke-id="${escapeHtml(stroke.id)}">
+            <path class="layoutpilot-review-pen-stroke" d="${path}"></path>
+            <path class="layoutpilot-review-pen-hit-stroke" d="${path}"></path>
+          </g>
+        `)
+      }
+
+      layer.innerHTML = `
+        <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}">
+          ${strokeItems.join('')}
+          <g class="layoutpilot-review-pen-tools-layer">
+            ${toolItems.join('')}
+          </g>
+        </svg>
+      `
+
+      layer.querySelectorAll('.layoutpilot-review-pen-stroke-wrap, .layoutpilot-review-pen-tools')
+        .forEach(element => {
+          const strokeId = element.dataset.layoutpilotReviewPenStrokeId
+          element.addEventListener('pointerenter', () => showPenStrokeTools(strokeId))
+          element.addEventListener('pointerleave', scheduleHidePenStrokeTools)
+        })
+    }
+
+    function renderPenStrokeTools(strokeId, position) {
+      return `
+        <foreignObject
+          class="layoutpilot-review-pen-tools"
+          data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
+          x="${position.x}"
+          y="${position.y}"
+          width="${PEN_STROKE_TOOLS_SIZE}"
+          height="${PEN_STROKE_TOOLS_SIZE}"
+        >
+          <button
+            xmlns="http://www.w3.org/1999/xhtml"
+            type="button"
+            class="layoutpilot-review-pen-button layoutpilot-review-pen-button--danger"
+            data-layoutpilot-action="review-remove-pen-stroke"
+            data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
+            title="${escapeHtml(t('review.areaMark.remove'))}"
+            aria-label="${escapeHtml(t('review.areaMark.remove'))}"
+          >${icon('trash', 14)}</button>
+        </foreignObject>
+      `
     }
 
     function renderAreaMarks() {
@@ -422,6 +552,7 @@
       ensureAnnotationLayer()
       ensureMarkerLayer()
       renderAreaMarks()
+      renderPenStrokes()
       renderReviewAnnotationBoxes(state)
       renderReviewMarkers(state)
     }
@@ -479,6 +610,12 @@
       if (state.selectionBox) state.selectionBox.style.display = 'none'
     }
 
+    function cancelPenDrawing() {
+      if (!state.isDrawingPen) return
+      cancelPenStroke(state)
+      renderPenStrokes()
+    }
+
     function renderPanel() {
       const panel = ensurePanel()
       const previousRect = state.panelPosition ? panel.getBoundingClientRect() : null
@@ -525,6 +662,32 @@
       if (!toolbarAutoHideTimer) return
       clearTimeout(toolbarAutoHideTimer)
       toolbarAutoHideTimer = null
+    }
+
+    function clearPenToolsHideTimer() {
+      if (!penToolsHideTimer) return
+      clearTimeout(penToolsHideTimer)
+      penToolsHideTimer = null
+    }
+
+    function showPenStrokeTools(strokeId) {
+      clearPenToolsHideTimer()
+      state.penLayer?.querySelectorAll?.('.layoutpilot-review-pen-tools')
+        .forEach(element => {
+          element.classList.toggle(
+            'layoutpilot-review-pen-tools--visible',
+            element.dataset.layoutpilotReviewPenStrokeId === String(strokeId)
+          )
+        })
+    }
+
+    function scheduleHidePenStrokeTools() {
+      clearPenToolsHideTimer()
+      penToolsHideTimer = setTimeout(() => {
+        state.penLayer?.querySelectorAll?.('.layoutpilot-review-pen-tools--visible')
+          .forEach(element => element.classList.remove('layoutpilot-review-pen-tools--visible'))
+        penToolsHideTimer = null
+      }, 650)
     }
 
     function setToolbarAutoVisible(visible) {
@@ -714,6 +877,14 @@
       return true
     }
 
+    function removeFreePenStroke(strokeId) {
+      const removed = removePenStroke(state, strokeId)
+      if (!removed) return false
+
+      renderUi({ panel: !!state.panel })
+      return true
+    }
+
     async function downloadSnapshot() {
       return downloadReviewSnapshot(state, { showToast, t })
     }
@@ -742,6 +913,7 @@
 
       state.activeTool = nextTool
       clearAreaSelection()
+      cancelPenDrawing()
       hideHoverPreview()
       renderUi({ panel: !!state.panel })
       if (nextTool === 'area') showToast?.(t('toast.reviewAreaToolReady'))
@@ -861,8 +1033,9 @@
     }
 
     function clearReviewAnnotations() {
-      resetReviewState(state, { keepAreaMarks: true })
+      resetReviewState(state, { keepAreaMarks: true, keepPenStrokes: true })
       clearAreaSelection()
+      cancelPenDrawing()
       hideHoverPreview()
       hideClearConfirmation()
       renderAnnotations()
@@ -927,6 +1100,10 @@
 
       if (action === 'review-remove-area-mark') {
         return removeFreeAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
+      }
+
+      if (action === 'review-remove-pen-stroke') {
+        return removeFreePenStroke(target?.dataset?.layoutpilotReviewPenStrokeId)
       }
 
       if (action === 'review-select') {
@@ -1003,6 +1180,14 @@
 
     function handlePointerMove(event) {
       if (!state.enabled) return
+      if (state.activeTool === 'pen' && state.isDrawingPen) {
+        appendPenStrokePoint(state, buildPenPoint(event), MIN_PEN_POINT_DISTANCE)
+        renderPenStrokes()
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
+
       if (state.activeTool === 'area' && state.isSelectingArea && state.pointerStart) {
         const rect = getAreaSelectionRect(state.pointerStart, {
           x: event.clientX,
@@ -1012,6 +1197,11 @@
         renderAreaSelection(rect)
         event.preventDefault()
         event.stopPropagation()
+        return
+      }
+
+      if (state.activeTool === 'pen') {
+        hideHoverPreview()
         return
       }
 
@@ -1066,6 +1256,26 @@
         return
       }
 
+      if (state.activeTool === 'pen') {
+        const isHitLayerEvent = event.target === state.overlay
+        const isPenStrokeEvent = event.target?.closest?.('.layoutpilot-review-pen-stroke-wrap')
+        const isPenToolEvent = event.target?.closest?.('.layoutpilot-review-pen-tools')
+        if (isPenToolEvent) return
+        if (!isHitLayerEvent && isOwnElement(event.target) && !isPenStrokeEvent) return
+        if (!isHitLayerEvent && isEditableTypingTarget(event.target)) return
+        if (!canReplaceDraft() || hasUnsavedEditingChanges(state)) {
+          if (hasUnsavedEditingChanges(state)) showToast?.(t('toast.editHasChanges'))
+          return
+        }
+
+        suppressNextPageClick = true
+        startPenStroke(state, buildPenPoint(event))
+        renderPenStrokes()
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
+
       if (state.activeTool !== 'element') return
 
       const isHitLayerEvent = event.target === state.overlay
@@ -1083,6 +1293,15 @@
 
     function handleDocumentPointerUp(event) {
       if (!state.enabled) return
+      if (state.activeTool === 'pen' && state.isDrawingPen) {
+        appendPenStrokePoint(state, buildPenPoint(event), MIN_PEN_POINT_DISTANCE)
+        finishPenStroke(state)
+        renderPenStrokes()
+        event.preventDefault()
+        event.stopPropagation()
+        return true
+      }
+
       if (state.activeTool !== 'area' || !state.isSelectingArea || !state.pointerStart) return
 
       const rect = getAreaSelectionRect(state.pointerStart, {
@@ -1106,6 +1325,11 @@
 
     function handleDocumentPointerCancel() {
       if (!state.enabled) return
+      if (state.isDrawingPen) {
+        cancelPenDrawing()
+        return
+      }
+
       if (!state.isSelectingArea) return
       clearAreaSelection()
       renderAnnotations()
@@ -1195,6 +1419,7 @@
       if (!state.enabled) return
       unbindListeners()
       clearToolbarAutoHideTimer()
+      clearPenToolsHideTimer()
       panelDrag.stop()
       toolbarDrag.stop()
       unlockPageScroll()
@@ -1204,6 +1429,7 @@
     function destroy() {
       unbindListeners()
       clearToolbarAutoHideTimer()
+      clearPenToolsHideTimer()
       panelDrag.stop()
       toolbarDrag.stop()
       unlockPageScroll()
@@ -1255,6 +1481,11 @@
 
       if (normalizedKey === 'Delete' || normalizedKey === 'Backspace') {
         return removeReviewAnnotation()
+      }
+
+      if (normalizedKey === SHORTCUT.CANCEL && state.isDrawingPen) {
+        cancelPenDrawing()
+        return true
       }
 
       if (normalizedKey === SHORTCUT.CANCEL && (state.isSelectingArea || state.draftSelection)) {
