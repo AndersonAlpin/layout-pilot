@@ -25,7 +25,9 @@
       confirmDialog: null,
       toast: null,
       panelPosition: null,
-      panelDrag: null
+      panelDrag: null,
+      lastSnapshotCapture: null,
+      lastSnapshotCaptureError: null
     }
   }
 
@@ -50,6 +52,8 @@
     state.panelCollapsed = false
     state.panelPosition = null
     state.panelDrag = null
+    state.lastSnapshotCapture = null
+    state.lastSnapshotCaptureError = null
   }
 
   function resetReviewState(state) {
@@ -65,6 +69,8 @@
     state.pointerStart = null
     state.hoverElement = null
     state.panelCollapsed = false
+    state.lastSnapshotCapture = null
+    state.lastSnapshotCaptureError = null
   }
 
   function addAnnotation(state, annotation) {

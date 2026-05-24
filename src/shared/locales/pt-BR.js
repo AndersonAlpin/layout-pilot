@@ -62,6 +62,8 @@
       reviewPanel: 'Painel de revisão',
       copyReport: 'Copiar relatório',
       reportSoon: 'Relatório em breve',
+      downloadImage: 'Baixar imagem',
+      copyImage: 'Copiar imagem',
       removeAnnotation: 'Remover anotação'
     },
     detail: {
@@ -88,14 +90,16 @@
         observation: 'Observação',
         notePlaceholder: 'Descreva o que parece errado aqui',
         draftPlaceholder: 'Escreva uma observação para salvar esta anotação',
-        noNote: 'Sem observação ainda',
+        noNote: 'Sem observação',
         focusAnnotation: 'Focar anotação',
         highlightAnnotation: 'Destacar anotação',
         edit: 'Editar',
         save: 'Salvar',
         saveAnnotation: 'Salvar anotação',
         cancel: 'Cancelar',
-        remove: 'Remover'
+        remove: 'Remover',
+        copyImage: 'Copiar imagem',
+        downloadSnapshot: 'Baixar imagem'
       },
       clearConfirm: {
         title: 'Limpar revisão?',
@@ -150,6 +154,11 @@
       draftHasNote: 'O rascunho tem texto. Salve ou cancele antes de selecionar outro elemento.',
       editHasChanges: 'Esta anotação tem alterações não salvas. Salve ou cancele antes de editar outro item.',
       reviewReportSoon: 'Relatório de revisão entra na próxima etapa',
+      snapshotCaptureFailed: 'Não foi possível capturar a tela',
+      snapshotDownloaded: 'Imagem baixada',
+      snapshotDownloadFailed: 'Não foi possível baixar a imagem',
+      snapshotCopied: 'Imagem copiada',
+      snapshotCopyFailed: 'Não foi possível copiar a imagem',
       elementPinned: 'Elemento fixado',
       elementUnpinned: 'Elemento desfixado',
       copyFailed: 'Não foi possível copiar',

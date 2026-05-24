@@ -153,13 +153,20 @@
     `
   }
 
+  function getAnnotationArea(annotation) {
+    const rect = getAnnotationViewportRect(annotation)
+    return Math.max(0, rect.width || 0) * Math.max(0, rect.height || 0)
+  }
+
   function renderReviewAnnotationBoxes(state) {
     if (!state.annotationLayer) return
     ensureAnnotationColors(state.annotations)
+    const annotationsByPaintOrder = [...state.annotations]
+      .sort((annotationA, annotationB) => getAnnotationArea(annotationB) - getAnnotationArea(annotationA))
 
     state.annotationLayer.innerHTML = [
-      getDraftBoxMarkup(state.draftAnnotation),
-      ...state.annotations.map(annotation => getBoxMarkup(state, annotation))
+      ...annotationsByPaintOrder.map(annotation => getBoxMarkup(state, annotation)),
+      getDraftBoxMarkup(state.draftAnnotation)
     ].join('')
   }
 

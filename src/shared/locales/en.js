@@ -62,6 +62,8 @@
       reviewPanel: 'Review panel',
       copyReport: 'Copy report',
       reportSoon: 'Report coming soon',
+      downloadImage: 'Download image',
+      copyImage: 'Copy image',
       removeAnnotation: 'Remove annotation'
     },
     detail: {
@@ -88,14 +90,16 @@
         observation: 'Observation',
         notePlaceholder: 'Describe what looks wrong here',
         draftPlaceholder: 'Write an observation to save this annotation',
-        noNote: 'No observation yet',
+        noNote: 'No observation',
         focusAnnotation: 'Focus annotation',
         highlightAnnotation: 'Highlight annotation',
         edit: 'Edit',
         save: 'Save',
         saveAnnotation: 'Save annotation',
         cancel: 'Cancel',
-        remove: 'Remove'
+        remove: 'Remove',
+        copyImage: 'Copy image',
+        downloadSnapshot: 'Download image'
       },
       clearConfirm: {
         title: 'Clear review?',
@@ -150,6 +154,11 @@
       draftHasNote: 'Draft has text. Save or cancel before selecting another element.',
       editHasChanges: 'This annotation has unsaved changes. Save or cancel before editing another item.',
       reviewReportSoon: 'Review report comes in the next step',
+      snapshotCaptureFailed: 'Could not capture the screen',
+      snapshotDownloaded: 'Image downloaded',
+      snapshotDownloadFailed: 'Could not download image',
+      snapshotCopied: 'Image copied',
+      snapshotCopyFailed: 'Could not copy image',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',
       copyFailed: 'Could not copy',

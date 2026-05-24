@@ -25,6 +25,7 @@
   const { createDraggablePanel } = root.draggablePanel
   const { getAnnotationViewportRect, renderReviewAnnotationBoxes, renderReviewMarkers } = root.reviewMarkers
   const { renderReviewPanel, renderClearReviewDialog } = root.reviewPanel
+  const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
 
   function createReviewMode(options = {}) {
     const {
@@ -321,6 +322,14 @@
       return true
     }
 
+    async function downloadSnapshot() {
+      return downloadReviewSnapshot(state, { showToast, t })
+    }
+
+    async function copySnapshot() {
+      return copyReviewSnapshot(state, { showToast, t })
+    }
+
     function isRectVisible(rect) {
       return rect.x >= 0 &&
         rect.y >= 0 &&
@@ -458,6 +467,16 @@
 
       if (action === 'review-toggle-collapse') {
         togglePanelCollapsed()
+        return true
+      }
+
+      if (action === 'review-download-snapshot') {
+        downloadSnapshot()
+        return true
+      }
+
+      if (action === 'review-copy-image') {
+        copySnapshot()
         return true
       }
 
@@ -663,6 +682,20 @@
         return true
       }
 
+      if (
+        normalizedKey === SHORTCUT.SNAPSHOT_IMAGE &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        if (event.shiftKey) {
+          downloadSnapshot()
+        } else {
+          copySnapshot()
+        }
+        return true
+      }
+
       if (normalizedKey === 'Delete' || normalizedKey === 'Backspace') {
         return removeReviewAnnotation()
       }
@@ -711,6 +744,8 @@
       handleKeyDown,
       refreshLanguage,
       getState,
+      downloadSnapshot,
+      copySnapshot,
       blocksGlobalShortcuts
     }
   }

@@ -636,6 +636,31 @@
   gap: 8px;
 }
 
+.layoutpilot-review-global-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.layoutpilot-review-global-actions button {
+  all: unset;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 7px 10px;
+  border: 1px solid rgba(56, 189, 248, 0.46);
+  border-radius: 7px;
+  color: #e0f2fe;
+  background: rgba(14, 165, 233, 0.22);
+  font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-review-global-actions button:hover {
+  border-color: rgba(56, 189, 248, 0.72);
+  background: rgba(14, 165, 233, 0.34);
+}
+
 .layoutpilot-review-card {
   box-sizing: border-box;
   display: grid;
@@ -664,10 +689,10 @@
 }
 
 .layoutpilot-review-card-header {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 8px;
   align-items: center;
-  justify-content: space-between;
   min-width: 0;
 }
 
@@ -721,6 +746,14 @@
 .layoutpilot-review-card span {
   color: #94a3b8;
   font-weight: 600;
+}
+
+.layoutpilot-review-card-note {
+  display: block;
+  flex: 1 1 auto;
+  justify-self: stretch;
+  width: 100%;
+  text-align: left;
 }
 
 .layoutpilot-review-card small {

@@ -4,10 +4,6 @@
   const { renderButton, renderCloseButton, renderIconButton } = root.ui
   const { ensureAnnotationColors, getAnnotationColorStyle } = root.reviewMarkers
 
-  function getTargetName(annotation) {
-    return annotation?.target?.selector || annotation?.target?.name || 'Element'
-  }
-
   function renderCardNumber(annotation, t) {
     return renderButton({
       label: annotation.id,
@@ -34,9 +30,6 @@
         <section class="layoutpilot-review-card${selectedClass}${editingClass}" style="${colorStyle}">
           <div class="layoutpilot-review-card-header">
             ${renderCardNumber(annotation, t)}
-            <div class="layoutpilot-review-card-title">
-              <strong>${escapeHtml(getTargetName(annotation))}</strong>
-            </div>
           </div>
           <label for="layoutpilot-review-note-${annotation.id}">${escapeHtml(t('review.panel.observation'))}</label>
           <textarea
@@ -71,9 +64,7 @@
       >
         <div class="layoutpilot-review-card-header">
           ${renderCardNumber(annotation, t)}
-          <div class="layoutpilot-review-card-title">
-            <strong>${escapeHtml(getTargetName(annotation))}</strong>
-          </div>
+          <span class="layoutpilot-review-card-note">${escapeHtml(annotation.note?.trim() || t('review.panel.noNote'))}</span>
           <div class="layoutpilot-review-card-tools">
             ${renderIconButton({
               iconHtml: '&#9998;',
@@ -91,7 +82,6 @@
             })}
           </div>
         </div>
-        <span>${escapeHtml(annotation.note?.trim() || t('review.panel.noNote'))}</span>
       </section>
     `
   }
@@ -119,11 +109,6 @@
 
     return `
       <section class="layoutpilot-review-card layoutpilot-review-draft layoutpilot-review-card--editing">
-        <div class="layoutpilot-review-card-header">
-          <div class="layoutpilot-review-card-title">
-            <strong>${escapeHtml(getTargetName(draft))}</strong>
-          </div>
-        </div>
         <small>${escapeHtml(t('review.panel.draft'))}</small>
         <label for="layoutpilot-review-draft-note">${escapeHtml(t('review.panel.observation'))}</label>
         <textarea
@@ -172,6 +157,18 @@
       </div>
       ${state.panelCollapsed ? '' : `
         <div class="layoutpilot-review-body">
+          <div class="layoutpilot-review-global-actions">
+            ${renderButton({
+              label: t('review.panel.copyImage'),
+              action: 'review-copy-image',
+              className: 'layoutpilot-review-primary'
+            })}
+            ${renderButton({
+              label: t('review.panel.downloadSnapshot'),
+              action: 'review-download-snapshot',
+              className: 'layoutpilot-review-primary'
+            })}
+          </div>
           ${renderDraftAnnotation(state, t)}
           ${renderAnnotationList(state, t)}
         </div>

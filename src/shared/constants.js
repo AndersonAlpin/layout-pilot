@@ -11,7 +11,8 @@
     GET_STATE: 'layoutpilot:get-state',
     TOGGLE: 'layoutpilot:toggle',
     SET_ENABLED: 'layoutpilot:set-enabled',
-    SET_LANGUAGE: 'layoutpilot:set-language'
+    SET_LANGUAGE: 'layoutpilot:set-language',
+    CAPTURE_VISIBLE_TAB: 'layoutpilot:capture-visible-tab'
   }
 
   const SHORTCUT = {
@@ -21,7 +22,8 @@
     CANCEL: 'Escape',
     COPY_CONTEXT: 'c',
     PIN: 'p',
-    DETAILS: 'd'
+    DETAILS: 'd',
+    SNAPSHOT_IMAGE: 's'
   }
 
   const SHORTCUTS_BY_MODE = {
@@ -41,6 +43,8 @@
       { key: 'Esc', labelKey: 'shortcuts.cancel' },
       { key: 'D', labelKey: 'shortcuts.reviewPanel' },
       { key: 'Delete', labelKey: 'shortcuts.removeAnnotation' },
+      { key: 'S', labelKey: 'shortcuts.copyImage' },
+      { key: 'Shift+S', labelKey: 'shortcuts.downloadImage' },
       { key: 'C', labelKey: 'shortcuts.reportSoon' }
     ]
   }
@@ -71,6 +75,7 @@
     'src/content/review-state.js',
     'src/content/review-markers.js',
     'src/content/review-panel.js',
+    'src/content/review-snapshot.js',
     'src/content/review-mode.js',
     'src/content/inspector.js'
   ]
