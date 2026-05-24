@@ -106,6 +106,21 @@
         imageUnavailable: 'Image unavailable: annotation is outside the captured viewport',
         printButton: 'Print / Save PDF'
       },
+      toolbar: {
+        review: 'LayoutPilot',
+        tools: 'Tools',
+        actions: 'Actions',
+        drag: 'Drag toolbar',
+        collapse: 'Collapse toolbar',
+        expand: 'Expand toolbar',
+        move: 'Move',
+        element: 'Element',
+        area: 'Area',
+        pen: 'Pen',
+        copyImage: 'Copy image',
+        downloadImage: 'Download image',
+        generatePdf: 'Generate PDF'
+      },
       clearConfirm: {
         title: 'Clear review?',
         description: 'This will remove all annotations and visual markings from this review.',
@@ -167,6 +182,8 @@
       printReportGenerating: 'Generating PDF...',
       printReportNoAnnotations: 'No annotations to generate PDF',
       printReportFailed: 'Could not generate PDF',
+      reviewAreaToolReady: 'Area tool prepared',
+      reviewPenToolReady: 'Pen tool prepared',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',
       copyFailed: 'Could not copy',

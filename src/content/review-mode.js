@@ -25,6 +25,7 @@
   const { createDraggablePanel } = root.draggablePanel
   const { getAnnotationViewportRect, renderReviewAnnotationBoxes, renderReviewMarkers } = root.reviewMarkers
   const { renderReviewPanel, renderClearReviewDialog } = root.reviewPanel
+  const { renderReviewToolbar } = root.reviewToolbar
   const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
   const { generateReviewPrintReport } = root.reviewPrintReport
 
@@ -44,6 +45,17 @@
       getDrag: () => state.panelDrag,
       setDrag: drag => {
         state.panelDrag = drag
+      }
+    })
+    const toolbarDrag = createDraggablePanel({
+      getPanel: () => state.toolbar,
+      getPosition: () => state.toolbarPosition,
+      setPosition: position => {
+        state.toolbarPosition = position
+      },
+      getDrag: () => state.toolbarDrag,
+      setDrag: drag => {
+        state.toolbarDrag = drag
       }
     })
 
@@ -179,6 +191,16 @@
       return state.panel
     }
 
+    function ensureToolbar() {
+      state.toolbar ||= createElement('layoutpilot-review-toolbar')
+      return state.toolbar
+    }
+
+    function ensureWorkspaceFrame() {
+      state.workspaceFrame ||= createElement('layoutpilot-review-workspace-frame')
+      return state.workspaceFrame
+    }
+
     function ensureConfirmDialog() {
       state.confirmDialog ||= createElement('layoutpilot-review-confirm')
       return state.confirmDialog
@@ -277,6 +299,47 @@
       panel.querySelector('.layoutpilot-review-header')?.addEventListener('pointerdown', panelDrag.handleStart)
     }
 
+    function applyToolbarPosition() {
+      const toolbar = ensureToolbar()
+      if (state.toolbarCollapsed) {
+        toolbar.style.left = 'auto'
+        toolbar.style.top = '50%'
+        toolbar.style.right = '0px'
+        toolbar.style.bottom = 'auto'
+        toolbar.style.transform = 'translateY(-50%)'
+        return
+      }
+
+      toolbar.style.right = 'auto'
+      toolbar.style.bottom = 'auto'
+      toolbar.style.transform = 'none'
+
+      if (state.toolbarPosition) {
+        toolbarDrag.applyPosition()
+        return
+      }
+
+      toolbar.style.left = `${Math.max(14, Math.round((window.innerWidth - toolbar.offsetWidth) / 2))}px`
+      toolbar.style.top = '18px'
+    }
+
+    function renderToolbar() {
+      const toolbar = ensureToolbar()
+      toolbar.classList.toggle('layoutpilot-review-toolbar--collapsed', Boolean(state.toolbarCollapsed))
+      toolbar.innerHTML = renderReviewToolbar(state, { t })
+      toolbar.style.display = 'block'
+      applyToolbarPosition()
+      toolbar.querySelector('[data-layoutpilot-toolbar-drag-handle]')?.addEventListener('pointerdown', toolbarDrag.handleStart)
+    }
+
+    function renderWorkspaceFrame() {
+      const frame = ensureWorkspaceFrame()
+      const isFreeTool = state.activeTool === 'area' || state.activeTool === 'pen'
+      frame.classList.toggle('layoutpilot-review-workspace-frame--visible', isFreeTool)
+      frame.style.display = isFreeTool ? 'block' : 'none'
+      frame.setAttribute('aria-hidden', 'true')
+    }
+
     function showClearConfirmation() {
       const dialog = ensureConfirmDialog()
       dialog.innerHTML = renderClearReviewDialog(t)
@@ -289,7 +352,10 @@
     }
 
     function renderUi({ panel = false } = {}) {
-      ensureHitLayer()
+      const hitLayer = ensureHitLayer()
+      hitLayer.dataset.layoutpilotReviewTool = state.activeTool
+      renderToolbar()
+      renderWorkspaceFrame()
       renderAnnotations()
       if (panel || state.panel) renderPanel()
     }
@@ -402,6 +468,22 @@
 
     async function generatePdfReport() {
       return generateReviewPrintReport(state, { showToast, t })
+    }
+
+    function setActiveTool(tool) {
+      const nextTool = ['move', 'element', 'area', 'pen'].includes(tool) ? tool : 'element'
+      state.activeTool = nextTool
+      hideHoverPreview()
+      renderUi({ panel: !!state.panel })
+      if (nextTool === 'area') showToast?.(t('toast.reviewAreaToolReady'))
+      if (nextTool === 'pen') showToast?.(t('toast.reviewPenToolReady'))
+      return true
+    }
+
+    function toggleToolbarCollapsed() {
+      state.toolbarCollapsed = !state.toolbarCollapsed
+      renderToolbar()
+      return true
     }
 
     function isRectVisible(rect) {
@@ -559,6 +641,14 @@
         return true
       }
 
+      if (action === 'review-set-tool') {
+        return setActiveTool(target?.dataset?.layoutpilotReviewTool)
+      }
+
+      if (action === 'review-toggle-toolbar') {
+        return toggleToolbarCollapsed()
+      }
+
       if (action === 'review-select') {
         const annotationId = Number(target?.dataset?.layoutpilotReviewId)
         if (!canReplaceDraft()) return true
@@ -633,6 +723,10 @@
 
     function handlePointerMove(event) {
       if (!state.enabled) return
+      if (state.activeTool !== 'element') {
+        hideHoverPreview()
+        return
+      }
       const isHitLayerEvent = event.target === state.overlay
 
       if (!isHitLayerEvent && (isOwnElement(event.target) || isEditableTypingTarget(event.target))) {
@@ -652,6 +746,7 @@
     function handleDocumentPointerDown(event) {
       if (!state.enabled) return
       if (event.button !== undefined && event.button !== 0) return
+      if (state.activeTool !== 'element') return
 
       const isHitLayerEvent = event.target === state.overlay
       if (!isHitLayerEvent && isOwnElement(event.target)) return
@@ -687,6 +782,7 @@
       if (isOwnElement(event.target)) return
       if (isEditableTypingTarget(event.target)) return
       if (event.detail > 1) return
+      if (state.activeTool !== 'element') return
 
       const element = getElementAtPoint(event)
       if (!element) return
@@ -702,6 +798,8 @@
       renderAnnotations()
       if (state.hoverElement?.isConnected) renderHoverPreview(state.hoverElement)
       if (state.panelPosition) panelDrag.applyPosition()
+      if (state.toolbarPosition && !state.toolbarCollapsed) toolbarDrag.applyPosition()
+      if (state.toolbar && !state.toolbarPosition) applyToolbarPosition()
     }
 
     function bindListeners() {
@@ -741,6 +839,7 @@
       if (!state.enabled) return
       unbindListeners()
       panelDrag.stop()
+      toolbarDrag.stop()
       unlockPageScroll()
       clearReviewState(state)
     }
@@ -748,6 +847,7 @@
     function destroy() {
       unbindListeners()
       panelDrag.stop()
+      toolbarDrag.stop()
       unlockPageScroll()
       clearReviewState(state)
     }
@@ -814,6 +914,7 @@
 
     function refreshLanguage() {
       if (state.panel) renderPanel()
+      if (state.toolbar) renderToolbar()
       if (state.confirmDialog) showClearConfirmation()
     }
 

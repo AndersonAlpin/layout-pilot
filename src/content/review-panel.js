@@ -157,23 +157,6 @@
       </div>
       ${state.panelCollapsed ? '' : `
         <div class="layoutpilot-review-body">
-          <div class="layoutpilot-review-global-actions">
-            ${renderButton({
-              label: t('review.panel.copyImage'),
-              action: 'review-copy-image',
-              className: 'layoutpilot-review-primary'
-            })}
-            ${renderButton({
-              label: t('review.panel.downloadSnapshot'),
-              action: 'review-download-snapshot',
-              className: 'layoutpilot-review-primary'
-            })}
-            ${renderButton({
-              label: t('review.panel.generatePdf'),
-              action: 'review-generate-pdf',
-              className: 'layoutpilot-review-primary'
-            })}
-          </div>
           ${renderDraftAnnotation(state, t)}
           ${renderAnnotationList(state, t)}
         </div>

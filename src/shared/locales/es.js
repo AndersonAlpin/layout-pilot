@@ -106,6 +106,21 @@
         imageUnavailable: 'Imagen no disponible: la anotación está fuera de la viewport capturada',
         printButton: 'Imprimir / Guardar PDF'
       },
+      toolbar: {
+        review: 'LayoutPilot',
+        tools: 'Herramientas',
+        actions: 'Acciones',
+        drag: 'Arrastrar toolbar',
+        collapse: 'Contraer toolbar',
+        expand: 'Expandir toolbar',
+        move: 'Mover',
+        element: 'Elemento',
+        area: 'Área',
+        pen: 'Lápiz',
+        copyImage: 'Copiar imagen',
+        downloadImage: 'Descargar imagen',
+        generatePdf: 'Generar PDF'
+      },
       clearConfirm: {
         title: '¿Limpiar revisión?',
         description: 'Esto eliminará todas las anotaciones y marcas visuales de esta revisión.',
@@ -167,6 +182,8 @@
       printReportGenerating: 'Generando PDF...',
       printReportNoAnnotations: 'No hay anotaciones para generar PDF',
       printReportFailed: 'No fue posible generar PDF',
+      reviewAreaToolReady: 'Herramienta de área preparada',
+      reviewPenToolReady: 'Herramienta lápiz preparada',
       elementPinned: 'Elemento fijado',
       elementUnpinned: 'Elemento desfijado',
       copyFailed: 'No se pudo copiar',

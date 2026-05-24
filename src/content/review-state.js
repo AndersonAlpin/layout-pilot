@@ -4,6 +4,7 @@
   function createReviewState() {
     return {
       enabled: false,
+      activeTool: 'element',
       annotations: [],
       nextId: 1,
       selectedAnnotationId: null,
@@ -23,6 +24,11 @@
       panel: null,
       panelCollapsed: false,
       confirmDialog: null,
+      toolbar: null,
+      toolbarPosition: null,
+      toolbarDrag: null,
+      toolbarCollapsed: false,
+      workspaceFrame: null,
       toast: null,
       panelPosition: null,
       panelDrag: null,
@@ -33,12 +39,13 @@
   }
 
   function clearReviewState(state) {
-    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toast']) {
+    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toolbar', 'workspaceFrame', 'toast']) {
       state[key]?.remove?.()
       state[key] = null
     }
 
     state.enabled = false
+    state.activeTool = 'element'
     state.annotations = []
     state.nextId = 1
     state.selectedAnnotationId = null
@@ -53,6 +60,9 @@
     state.panelCollapsed = false
     state.panelPosition = null
     state.panelDrag = null
+    state.toolbarPosition = null
+    state.toolbarDrag = null
+    state.toolbarCollapsed = false
     state.scrollLock = null
     state.lastSnapshotCapture = null
     state.lastSnapshotCaptureError = null
@@ -61,6 +71,7 @@
   function resetReviewState(state) {
     state.annotations = []
     state.nextId = 1
+    state.activeTool = 'element'
     state.selectedAnnotationId = null
     state.highlightedAnnotationId = null
     state.editingAnnotationId = null
@@ -71,6 +82,7 @@
     state.pointerStart = null
     state.hoverElement = null
     state.panelCollapsed = false
+    state.toolbarCollapsed = false
     state.lastSnapshotCapture = null
     state.lastSnapshotCaptureError = null
   }

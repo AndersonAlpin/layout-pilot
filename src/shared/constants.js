@@ -75,6 +75,7 @@
     'src/content/review-state.js',
     'src/content/review-markers.js',
     'src/content/review-panel.js',
+    'src/content/review-toolbar.js',
     'src/content/review-snapshot.js',
     'src/content/review-print-report.js',
     'src/content/review-mode.js',
@@ -93,6 +94,8 @@
     'layoutpilot-review-annotation-layer',
     'layoutpilot-review-marker-layer',
     'layoutpilot-review-panel',
+    'layoutpilot-review-toolbar',
+    'layoutpilot-review-workspace-frame',
     'layoutpilot-review-confirm',
     'layoutpilot-toast'
   ]

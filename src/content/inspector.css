@@ -9,6 +9,8 @@
 .layoutpilot-review-annotation-layer,
 .layoutpilot-review-marker-layer,
 .layoutpilot-review-panel,
+.layoutpilot-review-toolbar,
+.layoutpilot-review-workspace-frame,
 .layoutpilot-review-confirm,
 .layoutpilot-toast {
   all: initial;
@@ -30,6 +32,8 @@
 .layoutpilot-review-annotation-layer *,
 .layoutpilot-review-marker-layer *,
 .layoutpilot-review-panel *,
+.layoutpilot-review-toolbar *,
+.layoutpilot-review-workspace-frame *,
 .layoutpilot-review-confirm *,
 .layoutpilot-toast * {
   box-sizing: border-box;
@@ -436,6 +440,198 @@
   pointer-events: auto;
 }
 
+.layoutpilot-review-hit-layer[data-layoutpilot-review-tool="move"] {
+  cursor: default;
+}
+
+.layoutpilot-review-hit-layer[data-layoutpilot-review-tool="area"] {
+  cursor: crosshair;
+}
+
+.layoutpilot-review-hit-layer[data-layoutpilot-review-tool="pen"] {
+  cursor: crosshair;
+}
+
+.layoutpilot-review-toolbar {
+  top: 18px;
+  left: 50%;
+  display: none;
+  z-index: 2147483647;
+  color: #f8fafc;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-toolbar.layoutpilot-detail-dragging {
+  user-select: none;
+}
+
+.layoutpilot-review-toolbar-shell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(1180px, calc(100vw - 28px));
+  min-height: 54px;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(20, 26, 38, 0.96), rgba(7, 11, 19, 0.96)),
+    rgba(10, 15, 28, 0.98);
+  box-shadow: 0 20px 55px rgba(2, 6, 23, 0.45), inset 0 1px 0 rgba(248, 250, 252, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.layoutpilot-review-toolbar-grip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 9px;
+  color: #f8fafc;
+  font: 900 13px/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.layoutpilot-review-toolbar-brand,
+.layoutpilot-review-toolbar-icon {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.layoutpilot-review-toolbar-brand {
+  width: 22px;
+  height: 22px;
+  color: #8b5cf6;
+}
+
+.layoutpilot-review-toolbar svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.layoutpilot-review-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.layoutpilot-review-toolbar-separator {
+  width: 1px;
+  height: 30px;
+  margin: 0 4px;
+  background: rgba(148, 163, 184, 0.24);
+}
+
+.layoutpilot-review-toolbar-button,
+.layoutpilot-review-toolbar-collapse,
+.layoutpilot-review-toolbar-tab {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.62);
+  font: 850 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.layoutpilot-review-toolbar-button:hover,
+.layoutpilot-review-toolbar-collapse:hover,
+.layoutpilot-review-toolbar-tab:hover {
+  border-color: rgba(125, 211, 252, 0.55);
+  color: #f8fafc;
+  background: rgba(14, 165, 233, 0.18);
+}
+
+.layoutpilot-review-toolbar-button--active {
+  border-color: rgba(139, 92, 246, 0.72);
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.95), rgba(99, 102, 241, 0.88));
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.layoutpilot-review-toolbar-button--active:hover {
+  border-color: rgba(167, 139, 250, 0.88);
+  background: linear-gradient(180deg, rgba(147, 97, 255, 0.98), rgba(99, 102, 241, 0.92));
+}
+
+.layoutpilot-review-toolbar-collapse {
+  width: 38px;
+  padding: 0;
+}
+
+.layoutpilot-review-toolbar-tab {
+  min-height: 48px;
+  padding: 0 12px 0 10px;
+  border-radius: 12px 0 0 12px;
+  border-right: 0;
+  background: rgba(10, 15, 28, 0.97);
+  box-shadow: 0 12px 34px rgba(2, 6, 23, 0.38);
+  writing-mode: vertical-rl;
+}
+
+.layoutpilot-review-toolbar-tab .layoutpilot-review-toolbar-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.layoutpilot-review-workspace-frame {
+  inset: 10px;
+  display: none;
+  z-index: 2147483646;
+  border: 2px dashed rgba(139, 92, 246, 0.9);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(248, 250, 252, 0.5),
+    inset 0 0 0 1px rgba(248, 250, 252, 0.22);
+  pointer-events: none;
+}
+
+.layoutpilot-review-workspace-frame--visible::before,
+.layoutpilot-review-workspace-frame--visible::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(139, 92, 246, 0.95);
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+.layoutpilot-review-workspace-frame--visible::before {
+  left: 50%;
+  top: -7px;
+  transform: translateX(-50%);
+}
+
+.layoutpilot-review-workspace-frame--visible::after {
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .layoutpilot-review-hover {
   display: none;
   border: 2px solid #fbbf24;
@@ -655,31 +851,6 @@
 .layoutpilot-review-list {
   display: grid;
   gap: 8px;
-}
-
-.layoutpilot-review-global-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.layoutpilot-review-global-actions button {
-  all: unset;
-  box-sizing: border-box;
-  min-height: 30px;
-  padding: 7px 10px;
-  border: 1px solid rgba(56, 189, 248, 0.46);
-  border-radius: 7px;
-  color: #e0f2fe;
-  background: rgba(14, 165, 233, 0.22);
-  font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif;
-  cursor: pointer;
-}
-
-.layoutpilot-review-global-actions button:hover {
-  border-color: rgba(56, 189, 248, 0.72);
-  background: rgba(14, 165, 233, 0.34);
 }
 
 .layoutpilot-review-card {
