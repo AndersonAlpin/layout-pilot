@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LayoutPilot",
-  "description": "Inspect layouts and create visual annotations, screenshots, and PDF reports on live pages.",
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "version": "0.3.0",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -23,7 +24,7 @@
     }
   ],
   "action": {
-    "default_title": "LayoutPilot",
+    "default_title": "__MSG_extensionName__",
     "default_popup": "src/popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
