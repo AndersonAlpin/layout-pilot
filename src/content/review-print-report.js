@@ -4,16 +4,23 @@
   const { ensureAnnotationColors, getAnnotationColor, getAnnotationViewportRect } = root.reviewMarkers
   const { requestVisibleTabCapture } = root.reviewSnapshot
 
-  const REPORT_HIDDEN_SELECTOR = [
+  const REPORT_HIDDEN_SELECTORS = [
     '.layoutpilot-review-panel',
     '.layoutpilot-review-toolbar',
     '.layoutpilot-review-workspace-frame',
     '.layoutpilot-review-confirm',
     '.layoutpilot-review-hover',
+    '.layoutpilot-review-selection-box',
+    '.layoutpilot-review-area-mark-tools',
     '.layoutpilot-review-draft-box',
     '.layoutpilot-review-annotation-layer',
     '.layoutpilot-review-marker-layer',
     '.layoutpilot-toast'
+  ]
+  const REPORT_HIDDEN_SELECTOR = REPORT_HIDDEN_SELECTORS.join(', ')
+  const REPORT_HIDDEN_WITH_AREA_MARKS_SELECTOR = [
+    ...REPORT_HIDDEN_SELECTORS,
+    '.layoutpilot-review-area-mark-layer'
   ].join(', ')
   const MAX_REPORT_IMAGE_WIDTH = 1800
 
@@ -27,8 +34,9 @@
     }
   }
 
-  function hideReportUiForCapture() {
-    return Array.from(document.querySelectorAll(REPORT_HIDDEN_SELECTOR)).map(element => {
+  function hideReportUiForCapture({ hideAreaMarks = true } = {}) {
+    const selector = hideAreaMarks ? REPORT_HIDDEN_WITH_AREA_MARKS_SELECTOR : REPORT_HIDDEN_SELECTOR
+    return Array.from(document.querySelectorAll(selector)).map(element => {
       const previousVisibility = element.style.visibility
       element.style.visibility = 'hidden'
       return { element, previousVisibility }
@@ -104,6 +112,20 @@
       scaleY,
       outputScale
     })
+
+    return canvas.toDataURL('image/png')
+  }
+
+  function createViewportImage(captureImage) {
+    const outputScale = Math.min(1, MAX_REPORT_IMAGE_WIDTH / captureImage.width)
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(captureImage.width * outputScale))
+    canvas.height = Math.max(1, Math.round(captureImage.height * outputScale))
+
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(captureImage, 0, 0, captureImage.width, captureImage.height, 0, 0, canvas.width, canvas.height)
 
     return canvas.toDataURL('image/png')
   }
@@ -263,7 +285,9 @@
     ${sections.map(section => `
       <section class="annotation">
         <div class="annotation-heading">
-          <p class="comment"><strong>${escapeHtml(section.number)}.</strong> ${escapeHtml(section.comment)}</p>
+          <p class="comment">${section.type === 'areaMarks'
+            ? `<strong>${escapeHtml(section.title)}</strong>`
+            : `<strong>${escapeHtml(section.number)}.</strong> ${escapeHtml(section.comment)}`}</p>
         </div>
         ${section.imageDataUrl
           ? `<img class="capture" src="${section.imageDataUrl}" alt="">`
@@ -306,7 +330,7 @@
       t = key => key
     } = options
 
-    if (!state?.annotations?.length) {
+    if (!state?.annotations?.length && !state?.areaMarks?.length) {
       showToast?.(t('toast.printReportNoAnnotations'))
       return { ok: false, error: { message: 'No annotations to generate PDF.' } }
     }
@@ -316,10 +340,24 @@
 
     let hiddenRecords = []
     try {
-      hiddenRecords = hideReportUiForCapture()
+      hiddenRecords = hideReportUiForCapture({ hideAreaMarks: true })
       const dataUrl = await requestVisibleTabCapture()
       const captureImage = await loadImage(dataUrl)
       const sections = buildReportSections(captureImage, state, t)
+      restoreReportUi(hiddenRecords)
+      hiddenRecords = []
+
+      if (state.areaMarks?.length) {
+        hiddenRecords = hideReportUiForCapture({ hideAreaMarks: false })
+        const areaMarksDataUrl = await requestVisibleTabCapture()
+        const areaMarksCaptureImage = await loadImage(areaMarksDataUrl)
+        sections.push({
+          type: 'areaMarks',
+          title: t('review.printReport.areaMarksTitle'),
+          imageDataUrl: createViewportImage(areaMarksCaptureImage)
+        })
+      }
+
       openPrintableReport(buildPrintableHtml(sections, t))
       return { ok: true, sections }
     } catch (error) {

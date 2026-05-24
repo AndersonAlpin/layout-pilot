@@ -5,8 +5,10 @@
 .layoutpilot-detail-panel,
 .layoutpilot-help-panel,
 .layoutpilot-review-hit-layer,
+.layoutpilot-review-selection-box,
 .layoutpilot-review-hover,
 .layoutpilot-review-annotation-layer,
+.layoutpilot-review-area-mark-layer,
 .layoutpilot-review-marker-layer,
 .layoutpilot-review-panel,
 .layoutpilot-review-toolbar,
@@ -28,8 +30,10 @@
 .layoutpilot-detail-panel *,
 .layoutpilot-help-panel *,
 .layoutpilot-review-hit-layer *,
+.layoutpilot-review-selection-box *,
 .layoutpilot-review-hover *,
 .layoutpilot-review-annotation-layer *,
+.layoutpilot-review-area-mark-layer *,
 .layoutpilot-review-marker-layer *,
 .layoutpilot-review-panel *,
 .layoutpilot-review-toolbar *,
@@ -454,6 +458,18 @@
   cursor: crosshair;
 }
 
+.layoutpilot-review-selection-box {
+  display: none;
+  z-index: 2147483643;
+  border: 2px dashed #38bdf8;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(2, 6, 23, 0.72),
+    0 0 0 99999px rgba(2, 6, 23, 0.08);
+  pointer-events: none;
+}
+
 .layoutpilot-review-toolbar {
   top: 18px;
   left: 50%;
@@ -699,6 +715,100 @@
   inset: 0;
   z-index: 2147483640;
   pointer-events: none;
+}
+
+.layoutpilot-review-area-mark-layer {
+  inset: 0;
+  z-index: 2147483642;
+  pointer-events: none;
+}
+
+.layoutpilot-review-area-mark-wrap {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-area-mark-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+}
+
+.layoutpilot-review-area-mark {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #ef4444;
+  border-radius: 2px;
+  background: transparent;
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.68);
+  pointer-events: none;
+}
+
+.layoutpilot-review-area-mark-tools {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 7px;
+  background: rgba(10, 15, 28, 0.96);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.38);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(2px);
+  transition: opacity 140ms ease 360ms, transform 140ms ease 360ms, visibility 0s linear 500ms;
+  pointer-events: none;
+}
+
+.layoutpilot-review-area-mark-wrap:hover .layoutpilot-review-area-mark-tools,
+.layoutpilot-review-area-mark-wrap:focus-within .layoutpilot-review-area-mark-tools {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-area-mark-button {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 5px;
+  color: #bfdbfe;
+  background: rgba(15, 23, 42, 0.82);
+  cursor: pointer;
+}
+
+.layoutpilot-review-area-mark-button:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #e0f2fe;
+  background: rgba(14, 165, 233, 0.22);
+}
+
+.layoutpilot-review-area-mark-button--danger {
+  color: #fecaca;
+}
+
+.layoutpilot-review-area-mark-button--danger:hover {
+  border-color: rgba(248, 113, 113, 0.6);
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.34);
+}
+
+.layoutpilot-review-area-mark-button svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .layoutpilot-review-annotation-box {

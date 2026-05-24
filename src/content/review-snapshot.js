@@ -9,6 +9,8 @@
     '.layoutpilot-review-workspace-frame',
     '.layoutpilot-review-confirm',
     '.layoutpilot-review-hover',
+    '.layoutpilot-review-selection-box',
+    '.layoutpilot-review-area-mark-tools',
     '.layoutpilot-review-draft-box',
     '.layoutpilot-toast'
   ].join(', ')
@@ -229,7 +231,8 @@
 
   function getSidebarDetails(state, t) {
     return {
-      title: 'LayoutPilot Review',
+      eyebrow: 'LayoutPilot Review',
+      title: t('review.snapshot.commentsTitle'),
       annotations: state.annotations.map(annotation => ({
         number: annotation.id,
         hasComment: Boolean(annotation?.note?.trim()),
@@ -258,13 +261,18 @@
     const { x, yStart, width, padding, scale } = sidebar
     let y = yStart
 
-    setFont(ctx, 22, 900, scale)
-    ctx.fillStyle = '#0f172a'
+    setFont(ctx, 11, 900, scale)
+    ctx.fillStyle = '#67E8F9'
+    if (draw) ctx.fillText(details.eyebrow, x + padding, y)
+    y += Math.round(24 * scale)
+
+    setFont(ctx, 20, 900, scale)
+    ctx.fillStyle = '#F8FAFC'
     if (draw) ctx.fillText(details.title, x + padding, y)
-    y += Math.round(30 * scale)
+    y += Math.round(24 * scale)
 
     if (draw) {
-      ctx.strokeStyle = '#dbe4ef'
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)'
       ctx.lineWidth = Math.max(1, Math.round(scale))
       ctx.beginPath()
       ctx.moveTo(x + padding, y)
@@ -279,14 +287,14 @@
     const { x, width, padding, contentWidth, scale } = sidebar
     const cardX = x + padding
     const cardWidth = contentWidth
-    const cardPadding = Math.round(12 * scale)
+    const cardPadding = Math.round(14 * scale)
     const badgeSize = Math.round(28 * scale)
-    const gap = Math.round(10 * scale)
+    const gap = Math.round(12 * scale)
     const textX = cardX + cardPadding + badgeSize + gap
-    const textWidth = cardWidth - cardPadding * 3 - badgeSize - gap
+    const textWidth = cardWidth - cardPadding * 2 - badgeSize - gap
     let y = sidebar.currentY
 
-    setFont(ctx, 13, 600, scale)
+    setFont(ctx, 13, 650, scale)
     const commentLines = wrapText(ctx, item.comment, textWidth)
 
     const lineHeightComment = Math.round(18 * scale)
@@ -294,22 +302,29 @@
     const cardHeight = Math.max(badgeSize + cardPadding * 2, textHeight + cardPadding * 2)
 
     if (draw) {
+      ctx.save()
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.28)'
+      ctx.shadowBlur = Math.round(16 * scale)
+      ctx.shadowOffsetY = Math.round(8 * scale)
       drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, Math.round(10 * scale))
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = '#0B1220'
       ctx.fill()
-      ctx.strokeStyle = '#d8e2ee'
+      ctx.restore()
+
+      drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, Math.round(10 * scale))
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.24)'
       ctx.lineWidth = Math.max(1, Math.round(scale))
       ctx.stroke()
 
       ctx.fillStyle = item.color.color
-      ctx.fillRect(cardX, y, Math.round(5 * scale), cardHeight)
+      ctx.fillRect(cardX, y + Math.round(10 * scale), Math.round(4 * scale), cardHeight - Math.round(20 * scale))
 
       ctx.beginPath()
       ctx.arc(cardX + cardPadding + badgeSize / 2, y + cardPadding + badgeSize / 2, badgeSize / 2, 0, Math.PI * 2)
       ctx.fillStyle = item.color.color
       ctx.fill()
-      ctx.strokeStyle = '#0f172a'
-      ctx.lineWidth = Math.max(1, Math.round(1.5 * scale))
+      ctx.strokeStyle = 'rgba(248, 250, 252, 0.82)'
+      ctx.lineWidth = Math.max(1, Math.round(2 * scale))
       ctx.stroke()
 
       setFont(ctx, 12, 900, scale)
@@ -322,8 +337,8 @@
     }
 
     if (draw) {
-      setFont(ctx, 13, 600, scale)
-      ctx.fillStyle = item.hasComment ? '#334155' : '#64748b'
+      setFont(ctx, 13, 650, scale)
+      ctx.fillStyle = item.hasComment ? '#E5EDF7' : '#94A3B8'
       ctx.textBaseline = 'middle'
 
       const firstLineY = sidebar.currentY + cardHeight / 2 -
@@ -335,7 +350,7 @@
       ctx.textBaseline = 'alphabetic'
     }
 
-    sidebar.currentY = sidebar.currentY + cardHeight + Math.round(10 * scale)
+    sidebar.currentY = sidebar.currentY + cardHeight + Math.round(12 * scale)
     return sidebar.currentY
   }
 
@@ -355,9 +370,10 @@
     const details = getSidebarDetails(state, t)
 
     if (draw) {
-      ctx.fillStyle = '#f8fafc'
+      ctx.fillStyle = '#08111F'
       ctx.fillRect(x, 0, width, options.height)
-      ctx.fillStyle = '#d8e2ee'
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.18)'
       ctx.fillRect(x, 0, Math.max(1, Math.round(scale)), options.height)
     }
 
@@ -399,7 +415,7 @@
     canvas.height = canvasHeight
 
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#f8fafc'
+    ctx.fillStyle = '#08111F'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(image, 0, 0)
     renderSnapshotSidebar(ctx, {

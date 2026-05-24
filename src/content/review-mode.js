@@ -6,6 +6,9 @@
     clearReviewState,
     resetReviewState,
     addAnnotation,
+    addAreaMark,
+    getAreaMark,
+    removeAreaMark,
     getSelectedAnnotation,
     selectAnnotation,
     setHighlightedAnnotation,
@@ -20,7 +23,8 @@
     clearDraftAnnotation,
     removeAnnotation
   } = root.reviewState
-  const { createElement } = root.dom
+  const { createElement, escapeHtml } = root.dom
+  const { icon } = root.icons
   const { collectElementInfo } = root.elementInspector
   const { createDraggablePanel } = root.draggablePanel
   const { getAnnotationViewportRect, renderReviewAnnotationBoxes, renderReviewMarkers } = root.reviewMarkers
@@ -37,6 +41,9 @@
     const state = createReviewState()
     let suppressNextPageClick = false
     let toolbarAutoHideTimer = null
+    const MIN_AREA_SELECTION_SIZE = 2
+    const AREA_MARK_TOOLS_WIDTH = 64
+    const AREA_MARK_TOOLS_HEIGHT = 30
     const panelDrag = createDraggablePanel({
       getPanel: () => state.panel,
       getPosition: () => state.panelPosition,
@@ -199,6 +206,11 @@
       return state.annotationLayer
     }
 
+    function ensureAreaMarkLayer() {
+      state.areaMarkLayer ||= createElement('layoutpilot-review-area-mark-layer')
+      return state.areaMarkLayer
+    }
+
     function ensureHoverOverlay() {
       state.hoverOverlay ||= createElement('layoutpilot-review-hover')
       return state.hoverOverlay
@@ -217,6 +229,11 @@
     function ensureWorkspaceFrame() {
       state.workspaceFrame ||= createElement('layoutpilot-review-workspace-frame')
       return state.workspaceFrame
+    }
+
+    function ensureSelectionBox() {
+      state.selectionBox ||= createElement('layoutpilot-review-selection-box')
+      return state.selectionBox
     }
 
     function ensureConfirmDialog() {
@@ -271,9 +288,140 @@
       }
     }
 
+    function buildAreaAnnotation(rect) {
+      return {
+        type: 'area',
+        note: '',
+        createdAt: new Date().toISOString(),
+        page: {
+          url: location.href,
+          title: document.title || '—'
+        },
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          scrollX: Math.round(window.scrollX),
+          scrollY: Math.round(window.scrollY),
+          devicePixelRatio: window.devicePixelRatio || 1
+        },
+        target: {
+          selector: '',
+          name: 'Area',
+          tag: '',
+          classes: [],
+          text: ''
+        },
+        rect: {
+          viewport: {
+            x: Math.round(rect.x),
+            y: Math.round(rect.y),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+          },
+          page: {
+            x: Math.round(rect.x + window.scrollX),
+            y: Math.round(rect.y + window.scrollY),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+          }
+        }
+      }
+    }
+
+    function buildAreaMark(rect) {
+      return {
+        createdAt: new Date().toISOString(),
+        rect: {
+          viewport: {
+            x: Math.round(rect.x),
+            y: Math.round(rect.y),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+          },
+          page: {
+            x: Math.round(rect.x + window.scrollX),
+            y: Math.round(rect.y + window.scrollY),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+          }
+        }
+      }
+    }
+
+    function getAreaMarkViewportRect(mark) {
+      if (mark?.rect?.page) {
+        return {
+          x: Math.round(mark.rect.page.x - window.scrollX),
+          y: Math.round(mark.rect.page.y - window.scrollY),
+          width: mark.rect.page.width,
+          height: mark.rect.page.height
+        }
+      }
+
+      return mark?.rect?.viewport || { x: 0, y: 0, width: 0, height: 0 }
+    }
+
+    function getAreaMarkToolsStyle(rect) {
+      const placeBelow = rect.y < AREA_MARK_TOOLS_HEIGHT + 8
+      const alignLeft = rect.x < AREA_MARK_TOOLS_WIDTH - rect.width
+      const alignRight = !alignLeft && rect.x + rect.width + AREA_MARK_TOOLS_WIDTH > window.innerWidth
+      const vertical = placeBelow
+        ? `top: ${Math.round(rect.height + 6)}px;`
+        : `top: -${AREA_MARK_TOOLS_HEIGHT + 6}px;`
+      const horizontal = alignRight
+        ? 'right: -2px; left: auto;'
+        : alignLeft
+          ? 'left: -2px; right: auto;'
+          : 'right: -2px; left: auto;'
+
+      return `${vertical} ${horizontal}`
+    }
+
+    function renderAreaMarks() {
+      const layer = ensureAreaMarkLayer()
+
+      layer.innerHTML = state.areaMarks.map(mark => {
+        const rect = getAreaMarkViewportRect(mark)
+        const toolsStyle = getAreaMarkToolsStyle(rect)
+        return `
+          <div
+            class="layoutpilot-review-area-mark-wrap"
+            data-layoutpilot-review-area-mark-id="${escapeHtml(mark.id)}"
+            style="
+              left: ${Math.round(rect.x)}px;
+              top: ${Math.round(rect.y)}px;
+              width: ${Math.round(rect.width)}px;
+              height: ${Math.round(rect.height)}px;
+            "
+          >
+            <div class="layoutpilot-review-area-mark" aria-hidden="true"></div>
+            <div class="layoutpilot-review-area-mark-tools" style="${toolsStyle}">
+              <button
+                type="button"
+                class="layoutpilot-review-area-mark-button"
+                data-layoutpilot-action="review-comment-area-mark"
+                data-layoutpilot-review-area-mark-id="${escapeHtml(mark.id)}"
+                title="${escapeHtml(t('review.areaMark.comment'))}"
+                aria-label="${escapeHtml(t('review.areaMark.comment'))}"
+              >${icon('edit', 14)}</button>
+              <button
+                type="button"
+                class="layoutpilot-review-area-mark-button layoutpilot-review-area-mark-button--danger"
+                data-layoutpilot-action="review-remove-area-mark"
+                data-layoutpilot-review-area-mark-id="${escapeHtml(mark.id)}"
+                title="${escapeHtml(t('review.areaMark.remove'))}"
+                aria-label="${escapeHtml(t('review.areaMark.remove'))}"
+              >${icon('trash', 14)}</button>
+            </div>
+          </div>
+        `
+      }).join('')
+    }
+
     function renderAnnotations() {
       ensureAnnotationLayer()
       ensureMarkerLayer()
+      renderAreaMarks()
       renderReviewAnnotationBoxes(state)
       renderReviewMarkers(state)
     }
@@ -297,6 +445,38 @@
       hover.style.top = `${Math.round(rect.top)}px`
       hover.style.width = `${Math.round(rect.width)}px`
       hover.style.height = `${Math.round(rect.height)}px`
+    }
+
+    function getAreaSelectionRect(start, current) {
+      const startX = Math.max(0, Math.min(window.innerWidth, start.x))
+      const startY = Math.max(0, Math.min(window.innerHeight, start.y))
+      const currentX = Math.max(0, Math.min(window.innerWidth, current.x))
+      const currentY = Math.max(0, Math.min(window.innerHeight, current.y))
+      const x = Math.min(startX, currentX)
+      const y = Math.min(startY, currentY)
+
+      return {
+        x,
+        y,
+        width: Math.abs(currentX - startX),
+        height: Math.abs(currentY - startY)
+      }
+    }
+
+    function renderAreaSelection(rect) {
+      const box = ensureSelectionBox()
+      box.style.display = 'block'
+      box.style.left = `${Math.round(rect.x)}px`
+      box.style.top = `${Math.round(rect.y)}px`
+      box.style.width = `${Math.round(rect.width)}px`
+      box.style.height = `${Math.round(rect.height)}px`
+    }
+
+    function clearAreaSelection() {
+      state.isSelectingArea = false
+      state.pointerStart = null
+      state.draftSelection = null
+      if (state.selectionBox) state.selectionBox.style.display = 'none'
     }
 
     function renderPanel() {
@@ -510,6 +690,30 @@
       return true
     }
 
+    function commentAreaMark(markId) {
+      const mark = getAreaMark(state, markId)
+      if (!mark) return false
+      if (!canReplaceDraft()) return true
+      if (!canSwitchEditing()) return true
+
+      const rect = getAreaMarkViewportRect(mark)
+      removeAreaMark(state, mark.id)
+      setDraftAnnotation(state, buildAreaAnnotation(rect))
+      state.panelCollapsed = false
+      hideHoverPreview()
+      renderUi({ panel: true })
+      showToast?.(t('toast.draftSelected'))
+      return true
+    }
+
+    function removeFreeAreaMark(markId) {
+      const removed = removeAreaMark(state, markId)
+      if (!removed) return false
+
+      renderUi({ panel: !!state.panel })
+      return true
+    }
+
     async function downloadSnapshot() {
       return downloadReviewSnapshot(state, { showToast, t })
     }
@@ -525,6 +729,7 @@
     function setActiveTool(tool) {
       const nextTool = ['move', 'element', 'area', 'pen'].includes(tool) ? tool : 'element'
       state.activeTool = nextTool
+      clearAreaSelection()
       hideHoverPreview()
       renderUi({ panel: !!state.panel })
       if (nextTool === 'area') showToast?.(t('toast.reviewAreaToolReady'))
@@ -645,6 +850,7 @@
 
     function clearReviewAnnotations() {
       resetReviewState(state)
+      clearAreaSelection()
       hideHoverPreview()
       hideClearConfirmation()
       renderAnnotations()
@@ -652,7 +858,7 @@
     }
 
     function hasReviewContent() {
-      return Boolean(state.annotations.length || state.draftAnnotation)
+      return Boolean(state.annotations.length || state.areaMarks.length || state.draftAnnotation)
     }
 
     function handleReviewAction(action, target) {
@@ -701,6 +907,14 @@
 
       if (action === 'review-toggle-toolbar-pin') {
         return toggleToolbarPinned()
+      }
+
+      if (action === 'review-comment-area-mark') {
+        return commentAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
+      }
+
+      if (action === 'review-remove-area-mark') {
+        return removeFreeAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
       }
 
       if (action === 'review-select') {
@@ -777,6 +991,18 @@
 
     function handlePointerMove(event) {
       if (!state.enabled) return
+      if (state.activeTool === 'area' && state.isSelectingArea && state.pointerStart) {
+        const rect = getAreaSelectionRect(state.pointerStart, {
+          x: event.clientX,
+          y: event.clientY
+        })
+        state.draftSelection = rect
+        renderAreaSelection(rect)
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
+
       if (state.activeTool !== 'element') {
         hideHoverPreview()
         return
@@ -800,6 +1026,34 @@
     function handleDocumentPointerDown(event) {
       if (!state.enabled) return
       if (event.button !== undefined && event.button !== 0) return
+
+      if (state.activeTool === 'area') {
+        const isHitLayerEvent = event.target === state.overlay
+        if (!isHitLayerEvent && isOwnElement(event.target)) return
+        if (!isHitLayerEvent && isEditableTypingTarget(event.target)) return
+        if (!canReplaceDraft() || hasUnsavedEditingChanges(state)) {
+          if (hasUnsavedEditingChanges(state)) showToast?.(t('toast.editHasChanges'))
+          return
+        }
+
+        suppressNextPageClick = true
+        state.isSelectingArea = true
+        state.pointerStart = {
+          x: event.clientX,
+          y: event.clientY
+        }
+        state.draftSelection = {
+          x: event.clientX,
+          y: event.clientY,
+          width: 0,
+          height: 0
+        }
+        renderAreaSelection(state.draftSelection)
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
+
       if (state.activeTool !== 'element') return
 
       const isHitLayerEvent = event.target === state.overlay
@@ -813,6 +1067,36 @@
       event.preventDefault()
       event.stopPropagation()
       createDraftFromElement(element)
+    }
+
+    function handleDocumentPointerUp(event) {
+      if (!state.enabled) return
+      if (state.activeTool !== 'area' || !state.isSelectingArea || !state.pointerStart) return
+
+      const rect = getAreaSelectionRect(state.pointerStart, {
+        x: event.clientX,
+        y: event.clientY
+      })
+      clearAreaSelection()
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (rect.width < MIN_AREA_SELECTION_SIZE && rect.height < MIN_AREA_SELECTION_SIZE) {
+        renderAnnotations()
+        return
+      }
+
+      addAreaMark(state, buildAreaMark(rect))
+      hideHoverPreview()
+      renderUi({ panel: !!state.panel })
+      return true
+    }
+
+    function handleDocumentPointerCancel() {
+      if (!state.enabled) return
+      if (!state.isSelectingArea) return
+      clearAreaSelection()
+      renderAnnotations()
     }
 
     function handleDocumentClick(event) {
@@ -859,6 +1143,8 @@
     function bindListeners() {
       document.addEventListener('pointermove', handlePointerMove, true)
       document.addEventListener('pointerdown', handleDocumentPointerDown, true)
+      document.addEventListener('pointerup', handleDocumentPointerUp, true)
+      document.addEventListener('pointercancel', handleDocumentPointerCancel, true)
       document.addEventListener('click', handleDocumentClick, true)
       document.addEventListener('input', handleNoteInput, true)
       document.addEventListener('wheel', handleScrollLockWheel, { capture: true, passive: false })
@@ -872,6 +1158,8 @@
     function unbindListeners() {
       document.removeEventListener('pointermove', handlePointerMove, true)
       document.removeEventListener('pointerdown', handleDocumentPointerDown, true)
+      document.removeEventListener('pointerup', handleDocumentPointerUp, true)
+      document.removeEventListener('pointercancel', handleDocumentPointerCancel, true)
       document.removeEventListener('click', handleDocumentClick, true)
       document.removeEventListener('input', handleNoteInput, true)
       document.removeEventListener('wheel', handleScrollLockWheel, true)
@@ -947,9 +1235,7 @@
       }
 
       if (normalizedKey === SHORTCUT.CANCEL && (state.isSelectingArea || state.draftSelection)) {
-        state.draftSelection = null
-        state.isSelectingArea = false
-        state.pointerStart = null
+        clearAreaSelection()
         return true
       }
 

@@ -102,9 +102,17 @@
         downloadSnapshot: 'Download image',
         generatePdf: 'Generate PDF'
       },
+      snapshot: {
+        commentsTitle: 'Comments'
+      },
       printReport: {
         imageUnavailable: 'Image unavailable: annotation is outside the captured viewport',
+        areaMarksTitle: 'Marks without comments',
         printButton: 'Print / Save PDF'
+      },
+      areaMark: {
+        comment: 'Comment mark',
+        remove: 'Remove mark'
       },
       toolbar: {
         review: 'LayoutPilot',
@@ -173,7 +181,7 @@
       annotationRemoved: 'Annotation {id} removed',
       draftSelected: 'Draft selected',
       draftCanceled: 'Draft canceled',
-      draftHasNote: 'Draft has text. Save or cancel before selecting another element.',
+      draftHasNote: 'Draft has text. Save or cancel before selecting another item.',
       editHasChanges: 'This annotation has unsaved changes. Save or cancel before editing another item.',
       reviewReportSoon: 'Review report comes in the next step',
       snapshotCaptureFailed: 'Could not capture the screen',
@@ -184,7 +192,7 @@
       printReportGenerating: 'Generating PDF...',
       printReportNoAnnotations: 'No annotations to generate PDF',
       printReportFailed: 'Could not generate PDF',
-      reviewAreaToolReady: 'Area tool prepared',
+      reviewAreaToolReady: 'Drag to select an area',
       reviewPenToolReady: 'Pen tool prepared',
       elementPinned: 'Element pinned',
       elementUnpinned: 'Element unpinned',

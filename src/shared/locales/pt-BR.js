@@ -102,9 +102,17 @@
         downloadSnapshot: 'Baixar imagem',
         generatePdf: 'Gerar PDF'
       },
+      snapshot: {
+        commentsTitle: 'Comentários'
+      },
       printReport: {
         imageUnavailable: 'Imagem indisponível: anotação fora da viewport capturada',
+        areaMarksTitle: 'Marcações sem comentário',
         printButton: 'Imprimir / Salvar PDF'
+      },
+      areaMark: {
+        comment: 'Comentar marcação',
+        remove: 'Remover marcação'
       },
       toolbar: {
         review: 'LayoutPilot',
@@ -173,7 +181,7 @@
       annotationRemoved: 'Anotação {id} removida',
       draftSelected: 'Rascunho selecionado',
       draftCanceled: 'Rascunho cancelado',
-      draftHasNote: 'O rascunho tem texto. Salve ou cancele antes de selecionar outro elemento.',
+      draftHasNote: 'O rascunho tem texto. Salve ou cancele antes de selecionar outro item.',
       editHasChanges: 'Esta anotação tem alterações não salvas. Salve ou cancele antes de editar outro item.',
       reviewReportSoon: 'Relatório de revisão entra na próxima etapa',
       snapshotCaptureFailed: 'Não foi possível capturar a tela',
@@ -184,7 +192,7 @@
       printReportGenerating: 'Gerando PDF...',
       printReportNoAnnotations: 'Nenhuma anotação para gerar PDF',
       printReportFailed: 'Não foi possível gerar PDF',
-      reviewAreaToolReady: 'Ferramenta de área preparada',
+      reviewAreaToolReady: 'Arraste para selecionar uma área',
       reviewPenToolReady: 'Ferramenta caneta preparada',
       elementPinned: 'Elemento fixado',
       elementUnpinned: 'Elemento desfixado',

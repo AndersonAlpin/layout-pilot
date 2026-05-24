@@ -7,6 +7,8 @@
       activeTool: 'element',
       annotations: [],
       nextId: 1,
+      areaMarks: [],
+      nextAreaMarkId: 1,
       selectedAnnotationId: null,
       highlightedAnnotationId: null,
       editingAnnotationId: null,
@@ -19,6 +21,7 @@
       hoverElement: null,
       hoverOverlay: null,
       annotationLayer: null,
+      areaMarkLayer: null,
       markerLayer: null,
       selectionBox: null,
       panel: null,
@@ -40,7 +43,7 @@
   }
 
   function clearReviewState(state) {
-    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toolbar', 'workspaceFrame', 'toast']) {
+    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'areaMarkLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toolbar', 'workspaceFrame', 'toast']) {
       state[key]?.remove?.()
       state[key] = null
     }
@@ -49,6 +52,8 @@
     state.activeTool = 'element'
     state.annotations = []
     state.nextId = 1
+    state.areaMarks = []
+    state.nextAreaMarkId = 1
     state.selectedAnnotationId = null
     state.highlightedAnnotationId = null
     state.editingAnnotationId = null
@@ -73,6 +78,8 @@
   function resetReviewState(state) {
     state.annotations = []
     state.nextId = 1
+    state.areaMarks = []
+    state.nextAreaMarkId = 1
     state.activeTool = 'element'
     state.selectedAnnotationId = null
     state.highlightedAnnotationId = null
@@ -101,6 +108,29 @@
     state.editingNote = ''
     state.draftAnnotation = null
     return nextAnnotation
+  }
+
+  function addAreaMark(state, mark) {
+    const nextMark = {
+      ...mark,
+      id: state.nextAreaMarkId++
+    }
+    state.areaMarks.push(nextMark)
+    return nextMark
+  }
+
+  function getAreaMark(state, markId) {
+    const id = Number(markId)
+    return state.areaMarks.find(mark => mark.id === id) || null
+  }
+
+  function removeAreaMark(state, markId) {
+    const id = Number(markId)
+    const index = state.areaMarks.findIndex(mark => mark.id === id)
+    if (index < 0) return null
+
+    const [removed] = state.areaMarks.splice(index, 1)
+    return removed
   }
 
   function getSelectedAnnotation(state) {
@@ -219,6 +249,9 @@
     clearReviewState,
     resetReviewState,
     addAnnotation,
+    addAreaMark,
+    getAreaMark,
+    removeAreaMark,
     getSelectedAnnotation,
     selectAnnotation,
     setHighlightedAnnotation,
