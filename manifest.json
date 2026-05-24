@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LayoutPilot",
-  "description": "Inspect element dimensions, spacing, classes and colors directly on the page.",
+  "description": "Inspect layouts and create visual annotations, screenshots, and PDF reports on live pages.",
   "version": "0.3.0",
   "minimum_chrome_version": "116",
   "permissions": [
