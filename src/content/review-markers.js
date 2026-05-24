@@ -11,6 +11,7 @@
   const VIEWPORT_MARGIN = 8
   const COLOR_NEAR_DISTANCE = 180
   const MARKER_NEAR_DISTANCE = 48
+  const NESTED_RECT_TOLERANCE = 3
   const ANNOTATION_COLORS = [
     { color: '#FBBF24', rgb: '251, 191, 36', text: '#03111F' },
     { color: '#38BDF8', rgb: '56, 189, 248', text: '#03111F' },
@@ -114,21 +115,32 @@
     return annotation.rect?.viewport || { x: 0, y: 0, width: 0, height: 0 }
   }
 
-  function getBoxMarkup(state, annotation) {
-    const rect = getAnnotationViewportRect(annotation)
+  function getBoxMarkup(state, descriptor) {
+    const {
+      annotation,
+      rect,
+      nestingLevel,
+      parentAnnotationId,
+      hasChildren
+    } = descriptor
     const selectedClass = annotation.id === state.selectedAnnotationId ? ' layoutpilot-review-annotation-box--selected' : ''
     const highlightedClass = annotation.id === state.highlightedAnnotationId ? ' layoutpilot-review-annotation-box--highlighted' : ''
+    const parentClass = hasChildren ? ' layoutpilot-review-annotation-box--parent' : ''
+    const nestedClass = parentAnnotationId ? ' layoutpilot-review-annotation-box--nested' : ''
     const colorStyle = getAnnotationColorStyle(annotation)
 
     return `
       <div
-        class="layoutpilot-review-annotation-box${selectedClass}${highlightedClass}"
+        class="layoutpilot-review-annotation-box${parentClass}${nestedClass}${selectedClass}${highlightedClass}"
+        data-layoutpilot-review-id="${escapeHtml(annotation.id)}"
+        ${parentAnnotationId ? `data-layoutpilot-review-parent-id="${escapeHtml(parentAnnotationId)}"` : ''}
         style="
           ${colorStyle}
           left: ${px(rect.x)};
           top: ${px(rect.y)};
           width: ${px(rect.width)};
           height: ${px(rect.height)};
+          z-index: ${10 + nestingLevel};
         "
         aria-hidden="true"
       ></div>
@@ -153,19 +165,81 @@
     `
   }
 
-  function getAnnotationArea(annotation) {
-    const rect = getAnnotationViewportRect(annotation)
+  function getRectArea(rect) {
     return Math.max(0, rect.width || 0) * Math.max(0, rect.height || 0)
+  }
+
+  function isRectContained(innerRect, outerRect, tolerance = NESTED_RECT_TOLERANCE) {
+    if (!innerRect || !outerRect) return false
+    if (getRectArea(innerRect) >= getRectArea(outerRect)) return false
+
+    return innerRect.x >= outerRect.x - tolerance &&
+      innerRect.y >= outerRect.y - tolerance &&
+      innerRect.x + innerRect.width <= outerRect.x + outerRect.width + tolerance &&
+      innerRect.y + innerRect.height <= outerRect.y + outerRect.height + tolerance
+  }
+
+  function getNestingLevel(descriptor, descriptorById) {
+    let level = 0
+    let current = descriptor
+    const visitedIds = new Set()
+
+    while (current?.parentAnnotationId && !visitedIds.has(current.annotation.id)) {
+      visitedIds.add(current.annotation.id)
+      const parent = descriptorById.get(current.parentAnnotationId)
+      if (!parent) break
+      level += 1
+      current = parent
+    }
+
+    return level
+  }
+
+  function getAnnotationBoxDescriptors(annotations) {
+    const descriptors = annotations.map(annotation => {
+      const rect = getAnnotationViewportRect(annotation)
+      return {
+        annotation,
+        rect,
+        area: getRectArea(rect),
+        parentAnnotationId: null,
+        nestingLevel: 0,
+        hasChildren: false
+      }
+    })
+
+    for (const descriptor of descriptors) {
+      const parent = descriptors
+        .filter(candidate => candidate.annotation.id !== descriptor.annotation.id)
+        .filter(candidate => isRectContained(descriptor.rect, candidate.rect))
+        .sort((candidateA, candidateB) => candidateA.area - candidateB.area)[0]
+
+      if (!parent) continue
+      descriptor.parentAnnotationId = parent.annotation.id
+      parent.hasChildren = true
+    }
+
+    const descriptorById = new Map(descriptors.map(descriptor => [descriptor.annotation.id, descriptor]))
+    for (const descriptor of descriptors) {
+      descriptor.nestingLevel = getNestingLevel(descriptor, descriptorById)
+    }
+
+    return descriptors.sort((descriptorA, descriptorB) => {
+      if (descriptorA.nestingLevel !== descriptorB.nestingLevel) {
+        return descriptorA.nestingLevel - descriptorB.nestingLevel
+      }
+
+      return descriptorB.area - descriptorA.area
+    })
   }
 
   function renderReviewAnnotationBoxes(state) {
     if (!state.annotationLayer) return
     ensureAnnotationColors(state.annotations)
-    const annotationsByPaintOrder = [...state.annotations]
-      .sort((annotationA, annotationB) => getAnnotationArea(annotationB) - getAnnotationArea(annotationA))
+    const descriptorsByPaintOrder = getAnnotationBoxDescriptors(state.annotations)
 
     state.annotationLayer.innerHTML = [
-      ...annotationsByPaintOrder.map(annotation => getBoxMarkup(state, annotation)),
+      ...descriptorsByPaintOrder.map(descriptor => getBoxMarkup(state, descriptor)),
       getDraftBoxMarkup(state.draftAnnotation)
     ].join('')
   }
@@ -184,12 +258,10 @@
       placedMarkers.push({ annotation, rect, marker })
     }
 
-    const connectorMarkup = placedMarkers
-      .filter(placed => shouldShowConnector(placed, placedMarkers))
-      .map(placed => {
-        const connectorClass = placed.annotation.id === state.selectedAnnotationId ? ' layoutpilot-review-connector--selected' : ''
-        return getConnectorMarkup(placed.rect, placed.marker, connectorClass, getAnnotationColorStyle(placed.annotation))
-      })
+    const connectorMarkup = placedMarkers.map(placed => {
+      const connectorClass = placed.annotation.id === state.selectedAnnotationId ? ' layoutpilot-review-connector--selected' : ''
+      return getConnectorMarkup(placed.rect, placed.marker, connectorClass, getAnnotationColorStyle(placed.annotation))
+    })
 
     const markerMarkup = placedMarkers.map(({ annotation, marker }) => {
       const selectedClass = annotation.id === state.selectedAnnotationId ? ' layoutpilot-review-marker--selected' : ''
