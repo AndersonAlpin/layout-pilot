@@ -26,6 +26,7 @@
       toast: null,
       panelPosition: null,
       panelDrag: null,
+      scrollLock: null,
       lastSnapshotCapture: null,
       lastSnapshotCaptureError: null
     }
@@ -52,6 +53,7 @@
     state.panelCollapsed = false
     state.panelPosition = null
     state.panelDrag = null
+    state.scrollLock = null
     state.lastSnapshotCapture = null
     state.lastSnapshotCaptureError = null
   }

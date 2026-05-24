@@ -109,7 +109,8 @@
     UI_SELECTOR: UI_CLASSES.map(className => `.${className}`).join(', '),
     STORAGE_KEYS: {
       INSTALLED_AT: 'layoutPilotInstalledAt',
-      LANGUAGE: 'layoutPilotLanguage'
+      LANGUAGE: 'layoutPilotLanguage',
+      LAST_MODE: 'layoutPilotLastMode'
     }
   }
 })()

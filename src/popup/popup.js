@@ -5,7 +5,7 @@ const modeInspect = document.getElementById('mode-inspect')
 const modeReview = document.getElementById('mode-review')
 const languageSelect = document.getElementById('language-select')
 const shortcutGrid = document.getElementById('shortcut-grid')
-const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES, SHORTCUTS_BY_MODE } = window.LayoutPilotModules.constants
+const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES, SHORTCUTS_BY_MODE, STORAGE_KEYS } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
 const {
   AUTO_LANGUAGE,
@@ -48,6 +48,28 @@ function normalizeMode(mode) {
 
 function getActiveStatusKey(mode) {
   return normalizeMode(mode) === MODE.REVIEW ? 'popup.status.reviewActive' : 'popup.status.inspectActive'
+}
+
+async function loadModePreference() {
+  try {
+    const result = await chrome.storage.local.get(STORAGE_KEYS.LAST_MODE)
+    state.mode = normalizeMode(result?.[STORAGE_KEYS.LAST_MODE])
+  } catch {
+    state.mode = MODE.INSPECT
+  }
+}
+
+async function setModePreference(mode) {
+  const normalizedMode = normalizeMode(mode)
+  state.mode = normalizedMode
+
+  try {
+    await chrome.storage.local.set({ [STORAGE_KEYS.LAST_MODE]: normalizedMode })
+  } catch {
+    // Keep the popup usable even if storage is temporarily unavailable.
+  }
+
+  return normalizedMode
 }
 
 async function getActiveTab() {
@@ -144,7 +166,7 @@ async function refreshStatus() {
   toggleButton.disabled = false
   const response = await sendToTab(tab.id, { type: MESSAGE_TYPE.GET_STATE })
   const enabled = !!response?.enabled
-  const mode = response?.mode || state.mode
+  const mode = enabled ? response?.mode || state.mode : state.mode
   setStatus(enabled, enabled ? getActiveStatusKey(mode) : 'popup.status.inactive', mode)
 }
 
@@ -166,6 +188,9 @@ toggleButton.addEventListener('click', async () => {
     }
 
     const mode = response?.mode || state.mode
+    if (response?.enabled) {
+      await setModePreference(mode)
+    }
     setStatus(
       !!response?.enabled,
       response?.enabled ? getActiveStatusKey(mode) : 'popup.status.inactive',
@@ -180,7 +205,7 @@ toggleButton.addEventListener('click', async () => {
 })
 
 async function handleModeChange(mode) {
-  state.mode = normalizeMode(mode)
+  await setModePreference(mode)
   renderModeSelection()
 
   if (!state.enabled) return
@@ -226,6 +251,7 @@ languageSelect.addEventListener('change', async () => {
 
 async function initializePopup() {
   await loadLanguagePreference()
+  await loadModePreference()
   renderPopupTexts()
   await refreshStatus()
 }

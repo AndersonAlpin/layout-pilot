@@ -85,6 +85,75 @@
       return true
     }
 
+    function lockPageScroll() {
+      if (state.scrollLock) return
+
+      const doc = document.documentElement
+      const body = document.body
+      state.scrollLock = {
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        documentOverflow: doc.style.overflow,
+        documentOverscrollBehavior: doc.style.overscrollBehavior,
+        bodyOverflow: body?.style?.overflow || '',
+        bodyOverscrollBehavior: body?.style?.overscrollBehavior || ''
+      }
+
+      doc.style.overflow = 'hidden'
+      doc.style.overscrollBehavior = 'none'
+      if (body) {
+        body.style.overflow = 'hidden'
+        body.style.overscrollBehavior = 'none'
+      }
+    }
+
+    function unlockPageScroll() {
+      if (!state.scrollLock) return
+
+      const doc = document.documentElement
+      const body = document.body
+      const scrollLock = state.scrollLock
+      doc.style.overflow = scrollLock.documentOverflow
+      doc.style.overscrollBehavior = scrollLock.documentOverscrollBehavior
+      if (body) {
+        body.style.overflow = scrollLock.bodyOverflow
+        body.style.overscrollBehavior = scrollLock.bodyOverscrollBehavior
+      }
+      window.scrollTo(scrollLock.scrollX, scrollLock.scrollY)
+      state.scrollLock = null
+    }
+
+    function shouldAllowReviewUiScroll(target) {
+      return target instanceof Element && isOwnElement(target)
+    }
+
+    function handleScrollLockWheel(event) {
+      if (!state.enabled) return
+      if (shouldAllowReviewUiScroll(event.target)) return
+
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    function handleScrollLockTouchMove(event) {
+      if (!state.enabled) return
+      if (shouldAllowReviewUiScroll(event.target)) return
+
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    function handleScrollLockKeyDown(event) {
+      if (!state.enabled) return
+      if (shouldAllowReviewUiScroll(event.target) || isEditableTypingTarget(event.target)) return
+
+      const scrollKeys = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', ' '])
+      if (!scrollKeys.has(event.key)) return
+
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
     function ensureMarkerLayer() {
       state.markerLayer ||= createElement('layoutpilot-review-marker-layer')
       return state.markerLayer
@@ -640,6 +709,9 @@
       document.addEventListener('pointerdown', handleDocumentPointerDown, true)
       document.addEventListener('click', handleDocumentClick, true)
       document.addEventListener('input', handleNoteInput, true)
+      document.addEventListener('wheel', handleScrollLockWheel, { capture: true, passive: false })
+      document.addEventListener('touchmove', handleScrollLockTouchMove, { capture: true, passive: false })
+      document.addEventListener('keydown', handleScrollLockKeyDown, true)
       window.addEventListener('scroll', handleViewportChange, true)
       window.addEventListener('resize', handleViewportChange)
     }
@@ -649,6 +721,9 @@
       document.removeEventListener('pointerdown', handleDocumentPointerDown, true)
       document.removeEventListener('click', handleDocumentClick, true)
       document.removeEventListener('input', handleNoteInput, true)
+      document.removeEventListener('wheel', handleScrollLockWheel, true)
+      document.removeEventListener('touchmove', handleScrollLockTouchMove, true)
+      document.removeEventListener('keydown', handleScrollLockKeyDown, true)
       window.removeEventListener('scroll', handleViewportChange, true)
       window.removeEventListener('resize', handleViewportChange)
     }
@@ -656,6 +731,7 @@
     function start() {
       if (state.enabled) return
       state.enabled = true
+      lockPageScroll()
       bindListeners()
       renderUi()
       showToast?.(t('toast.reviewOn'))
@@ -665,12 +741,14 @@
       if (!state.enabled) return
       unbindListeners()
       panelDrag.stop()
+      unlockPageScroll()
       clearReviewState(state)
     }
 
     function destroy() {
       unbindListeners()
       panelDrag.stop()
+      unlockPageScroll()
       clearReviewState(state)
     }
 
