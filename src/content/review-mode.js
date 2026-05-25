@@ -36,7 +36,7 @@
   const { renderReviewPanel, renderClearReviewDialog } = root.reviewPanel
   const { renderReviewToolbar } = root.reviewToolbar
   const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
-    const { generateReviewPrintReport } = root.reviewPrintReport
+  const { generateReviewPrintReport } = root.reviewPrintReport
 
   function createReviewMode(options = {}) {
     const {
@@ -51,7 +51,8 @@
     const MIN_PEN_POINT_DISTANCE = 2
     const AREA_MARK_TOOLS_WIDTH = 64
     const AREA_MARK_TOOLS_HEIGHT = 30
-    const PEN_STROKE_TOOLS_SIZE = 30
+    const PEN_STROKE_TOOLS_WIDTH = 64
+    const PEN_STROKE_TOOLS_HEIGHT = 30
     const panelDrag = createDraggablePanel({
       getPanel: () => state.panel,
       getPosition: () => state.panelPosition,
@@ -368,6 +369,58 @@
       }
     }
 
+    function buildPenAnnotation(stroke) {
+      const points = stroke?.points || []
+      const viewportPoints = getPenStrokeViewportPoints(stroke)
+      const bounds = viewportPoints.length
+        ? getPenStrokeBounds(viewportPoints)
+        : { minX: 0, minY: 0, maxX: 0, maxY: 0 }
+      const padding = 8
+      const x = Math.max(0, Math.round(bounds.minX - padding))
+      const y = Math.max(0, Math.round(bounds.minY - padding))
+      const width = Math.max(12, Math.round(bounds.maxX - bounds.minX + padding * 2))
+      const height = Math.max(12, Math.round(bounds.maxY - bounds.minY + padding * 2))
+
+      return {
+        type: 'pen',
+        note: '',
+        createdAt: new Date().toISOString(),
+        page: {
+          url: location.href,
+          title: document.title || '—'
+        },
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          scrollX: Math.round(window.scrollX),
+          scrollY: Math.round(window.scrollY),
+          devicePixelRatio: window.devicePixelRatio || 1
+        },
+        target: {
+          selector: '',
+          name: 'Pen stroke',
+          tag: '',
+          classes: [],
+          text: ''
+        },
+        penStroke: {
+          points: points.map(point => ({
+            x: Math.round(point.x),
+            y: Math.round(point.y)
+          }))
+        },
+        rect: {
+          viewport: { x, y, width, height },
+          page: {
+            x: Math.round(x + window.scrollX),
+            y: Math.round(y + window.scrollY),
+            width,
+            height
+          }
+        }
+      }
+    }
+
     function getAreaMarkViewportRect(mark) {
       if (mark?.rect?.page) {
         return {
@@ -424,8 +477,8 @@
 
     function getPenStrokeToolsPosition(points) {
       const origin = points[0] || { x: 0, y: 0 }
-      const x = Math.max(4, Math.min(window.innerWidth - PEN_STROKE_TOOLS_SIZE - 4, origin.x + 8))
-      const y = Math.max(4, Math.min(window.innerHeight - PEN_STROKE_TOOLS_SIZE - 4, origin.y - PEN_STROKE_TOOLS_SIZE - 6))
+      const x = Math.max(4, Math.min(window.innerWidth - PEN_STROKE_TOOLS_WIDTH - 4, origin.x + 8))
+      const y = Math.max(4, Math.min(window.innerHeight - PEN_STROKE_TOOLS_HEIGHT - 4, origin.y - PEN_STROKE_TOOLS_HEIGHT - 6))
       return { x: Math.round(x), y: Math.round(y) }
     }
 
@@ -491,18 +544,27 @@
           data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
           x="${position.x}"
           y="${position.y}"
-          width="${PEN_STROKE_TOOLS_SIZE}"
-          height="${PEN_STROKE_TOOLS_SIZE}"
+          width="${PEN_STROKE_TOOLS_WIDTH}"
+          height="${PEN_STROKE_TOOLS_HEIGHT}"
         >
-          <button
-            xmlns="http://www.w3.org/1999/xhtml"
-            type="button"
-            class="layoutpilot-review-pen-button layoutpilot-review-pen-button--danger"
-            data-layoutpilot-action="review-remove-pen-stroke"
-            data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
-            title="${escapeHtml(t('review.areaMark.remove'))}"
-            aria-label="${escapeHtml(t('review.areaMark.remove'))}"
-          >${icon('trash', 14)}</button>
+          <div xmlns="http://www.w3.org/1999/xhtml" class="layoutpilot-review-pen-tools-body">
+            <button
+              type="button"
+              class="layoutpilot-review-pen-button"
+              data-layoutpilot-action="review-comment-pen-stroke"
+              data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
+              title="${escapeHtml(t('review.areaMark.comment'))}"
+              aria-label="${escapeHtml(t('review.areaMark.comment'))}"
+            >${icon('edit', 14)}</button>
+            <button
+              type="button"
+              class="layoutpilot-review-pen-button layoutpilot-review-pen-button--danger"
+              data-layoutpilot-action="review-remove-pen-stroke"
+              data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
+              title="${escapeHtml(t('review.areaMark.remove'))}"
+              aria-label="${escapeHtml(t('review.areaMark.remove'))}"
+            >${icon('trash', 14)}</button>
+          </div>
         </foreignObject>
       `
     }
@@ -634,6 +696,15 @@
       panel.querySelector('.layoutpilot-review-header')?.addEventListener('pointerdown', panelDrag.handleStart)
     }
 
+    function focusPanelNote() {
+      const field = state.panel?.querySelector?.('[data-layoutpilot-review-autofocus="true"]')
+      if (!field) return
+
+      field.focus?.({ preventScroll: true })
+      const valueLength = typeof field.value === 'string' ? field.value.length : 0
+      field.setSelectionRange?.(valueLength, valueLength)
+    }
+
     function applyToolbarPosition() {
       const toolbar = ensureToolbar()
       if (state.toolbarPinned === false) {
@@ -749,19 +820,20 @@
       state.confirmDialog = null
     }
 
-    function renderUi({ panel = false } = {}) {
+    function renderUi({ panel = false, focusNote = false } = {}) {
       const hitLayer = ensureHitLayer()
       hitLayer.dataset.layoutpilotReviewTool = state.activeTool
       renderToolbar()
       renderWorkspaceFrame()
       renderAnnotations()
       if (panel || state.panel) renderPanel()
+      if (focusNote) focusPanelNote()
     }
 
     function createDraftFromElement(element) {
       const existingAnnotation = findAnnotationForElement(element)
       if (existingAnnotation) {
-        editAnnotation(existingAnnotation.id, { openPanel: true, scroll: false })
+        editAnnotation(existingAnnotation.id, { openPanel: true, scroll: false, focusNote: true })
         return existingAnnotation
       }
 
@@ -776,7 +848,7 @@
 
       const draft = setDraftAnnotation(state, buildElementAnnotation(element))
       hideHoverPreview()
-      renderUi({ panel: true })
+      renderUi({ panel: true, focusNote: true })
       showToast?.(t('toast.draftSelected'))
       return draft
     }
@@ -815,7 +887,7 @@
         const annotation = getSelectedAnnotation(state)
         if (annotation) scrollAnnotationIntoView(annotation)
       }
-      renderUi({ panel: options.openPanel || !!state.panel })
+      renderUi({ panel: options.openPanel || !!state.panel, focusNote: Boolean(options.focusNote) })
       return true
     }
 
@@ -867,7 +939,7 @@
       setDraftAnnotation(state, buildAreaAnnotation(rect))
       state.panelCollapsed = false
       hideHoverPreview()
-      renderUi({ panel: true })
+      renderUi({ panel: true, focusNote: true })
       showToast?.(t('toast.draftSelected'))
       return true
     }
@@ -877,6 +949,21 @@
       if (!removed) return false
 
       renderUi({ panel: !!state.panel })
+      return true
+    }
+
+    function commentPenStroke(strokeId) {
+      const stroke = state.penStrokes.find(item => item.id === Number(strokeId))
+      if (!stroke) return false
+      if (!canReplaceDraft()) return true
+      if (!canSwitchEditing()) return true
+
+      removePenStroke(state, stroke.id)
+      setDraftAnnotation(state, buildPenAnnotation(stroke))
+      state.panelCollapsed = false
+      hideHoverPreview()
+      renderUi({ panel: true, focusNote: true })
+      showToast?.(t('toast.draftSelected'))
       return true
     }
 
@@ -1105,6 +1192,10 @@
         return removeFreeAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
       }
 
+      if (action === 'review-comment-pen-stroke') {
+        return commentPenStroke(target?.dataset?.layoutpilotReviewPenStrokeId)
+      }
+
       if (action === 'review-remove-pen-stroke') {
         return removeFreePenStroke(target?.dataset?.layoutpilotReviewPenStrokeId)
       }
@@ -1131,7 +1222,7 @@
       }
 
       if (action === 'review-edit') {
-        return editAnnotation(target?.dataset?.layoutpilotReviewId)
+        return editAnnotation(target?.dataset?.layoutpilotReviewId, { openPanel: true, focusNote: true })
       }
 
       if (action === 'review-save-draft') {

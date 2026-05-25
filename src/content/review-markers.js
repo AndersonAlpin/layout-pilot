@@ -1,6 +1,7 @@
 (() => {
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml, px } = root.dom
+  const { icon } = root.icons
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value))
@@ -142,8 +143,26 @@
           height: ${px(rect.height)};
           z-index: ${10 + nestingLevel};
         "
-        aria-hidden="true"
-      ></div>
+      >
+        <div class="layoutpilot-review-annotation-box-tools">
+          <button
+            type="button"
+            class="layoutpilot-review-annotation-box-button"
+            data-layoutpilot-action="review-edit"
+            data-layoutpilot-review-id="${escapeHtml(annotation.id)}"
+            title="Edit annotation"
+            aria-label="Edit annotation ${escapeHtml(annotation.id)}"
+          >${icon('edit', 14)}</button>
+          <button
+            type="button"
+            class="layoutpilot-review-annotation-box-button layoutpilot-review-annotation-box-button--danger"
+            data-layoutpilot-action="review-remove"
+            data-layoutpilot-review-id="${escapeHtml(annotation.id)}"
+            title="Remove annotation"
+            aria-label="Remove annotation ${escapeHtml(annotation.id)}"
+          >${icon('trash', 14)}</button>
+        </div>
+      </div>
     `
   }
 
@@ -162,6 +181,44 @@
         "
         aria-hidden="true"
       ></div>
+    `
+  }
+
+  function getPenStrokeViewportPoints(annotation) {
+    return (annotation?.penStroke?.points || []).map(point => ({
+      x: Math.round(point.x - window.scrollX),
+      y: Math.round(point.y - window.scrollY)
+    }))
+  }
+
+  function getPenStrokePath(points) {
+    if (!points.length) return ''
+    return points.map((point, index) =>
+      `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+    ).join(' ')
+  }
+
+  function getAnnotationPenStrokeMarkup(annotation, className = '') {
+    if (annotation?.type !== 'pen') return ''
+
+    const points = getPenStrokeViewportPoints(annotation)
+    if (!points.length) return ''
+
+    const colorStyle = getAnnotationColorStyle(annotation)
+    const selectedClass = className ? ` ${className}` : ''
+    if (points.length === 1) {
+      const [point] = points
+      return `
+        <svg class="layoutpilot-review-annotation-pen${selectedClass}" viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" style="${colorStyle}" aria-hidden="true">
+          <circle class="layoutpilot-review-annotation-pen-dot" cx="${point.x}" cy="${point.y}" r="3"></circle>
+        </svg>
+      `
+    }
+
+    return `
+      <svg class="layoutpilot-review-annotation-pen${selectedClass}" viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" style="${colorStyle}" aria-hidden="true">
+        <path class="layoutpilot-review-annotation-pen-stroke" d="${getPenStrokePath(points)}"></path>
+      </svg>
     `
   }
 
@@ -239,6 +296,8 @@
     const descriptorsByPaintOrder = getAnnotationBoxDescriptors(state.annotations)
 
     state.annotationLayer.innerHTML = [
+      ...state.annotations.map(annotation => getAnnotationPenStrokeMarkup(annotation)),
+      getAnnotationPenStrokeMarkup(state.draftAnnotation, 'layoutpilot-review-annotation-pen--draft'),
       ...descriptorsByPaintOrder.map(descriptor => getBoxMarkup(state, descriptor)),
       getDraftBoxMarkup(state.draftAnnotation)
     ].join('')

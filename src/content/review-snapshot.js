@@ -10,6 +10,7 @@
     '.layoutpilot-review-confirm',
     '.layoutpilot-review-hover',
     '.layoutpilot-review-selection-box',
+    '.layoutpilot-review-annotation-box-tools',
     '.layoutpilot-review-area-mark-tools',
     '.layoutpilot-review-pen-tools',
     '.layoutpilot-review-draft-box',

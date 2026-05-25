@@ -37,6 +37,7 @@
             id="layoutpilot-review-note-${annotation.id}"
             data-layoutpilot-review-note="${annotation.id}"
             data-layoutpilot-review-edit="true"
+            data-layoutpilot-review-autofocus="true"
             rows="4"
             placeholder="${escapeHtml(t('review.panel.notePlaceholder'))}"
           >${escapeHtml(state.editingNote)}</textarea>
@@ -116,6 +117,7 @@
           id="layoutpilot-review-draft-note"
           data-layoutpilot-review-note="draft"
           data-layoutpilot-review-draft="true"
+          data-layoutpilot-review-autofocus="true"
           rows="4"
           placeholder="${escapeHtml(t('review.panel.draftPlaceholder'))}"
         >${escapeHtml(draft.note)}</textarea>

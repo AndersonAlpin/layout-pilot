@@ -782,22 +782,41 @@
   pointer-events: auto;
 }
 
+.layoutpilot-review-pen-tools-body {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 7px;
+  background: rgba(10, 15, 28, 0.96);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.38);
+}
+
 .layoutpilot-review-pen-button {
   all: unset;
   box-sizing: border-box;
   display: grid;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   place-items: center;
   border: 1px solid rgba(148, 163, 184, 0.26);
-  border-radius: 6px;
-  color: #fecaca;
-  background: rgba(10, 15, 28, 0.96);
-  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.38);
+  border-radius: 5px;
+  color: #bfdbfe;
+  background: rgba(15, 23, 42, 0.82);
   cursor: pointer;
 }
 
 .layoutpilot-review-pen-button:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #e0f2fe;
+  background: rgba(14, 165, 233, 0.22);
+}
+
+.layoutpilot-review-pen-button--danger {
+  color: #fecaca;
+}
+
+.layoutpilot-review-pen-button--danger:hover {
   border-color: rgba(248, 113, 113, 0.6);
   color: #fee2e2;
   background: rgba(127, 29, 29, 0.34);
@@ -912,7 +931,105 @@
   border: 2px solid var(--layoutpilot-review-color, rgba(251, 191, 36, 0.96));
   background: transparent;
   box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.65);
+  pointer-events: auto;
+}
+
+.layoutpilot-review-annotation-pen {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
   pointer-events: none;
+}
+
+.layoutpilot-review-annotation-pen--draft {
+  opacity: 0.9;
+}
+
+.layoutpilot-review-annotation-pen-stroke {
+  fill: none;
+  stroke: var(--layoutpilot-review-color, #fbbf24);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 0 rgba(2, 6, 23, 0.7));
+}
+
+.layoutpilot-review-annotation-pen-dot {
+  fill: var(--layoutpilot-review-color, #fbbf24);
+  filter: drop-shadow(0 1px 0 rgba(2, 6, 23, 0.7));
+}
+
+.layoutpilot-review-annotation-box-tools {
+  position: absolute;
+  right: -2px;
+  top: -34px;
+  z-index: 30;
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 7px;
+  background: rgba(10, 15, 28, 0.96);
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.38);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(2px);
+  transition: opacity 140ms ease 360ms, transform 140ms ease 360ms, visibility 0s linear 500ms;
+  pointer-events: none;
+}
+
+.layoutpilot-review-annotation-box:hover .layoutpilot-review-annotation-box-tools,
+.layoutpilot-review-annotation-box:focus-within .layoutpilot-review-annotation-box-tools {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+  pointer-events: auto;
+}
+
+.layoutpilot-review-annotation-box-button {
+  all: unset;
+  box-sizing: border-box;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 5px;
+  color: #bfdbfe;
+  background: rgba(15, 23, 42, 0.82);
+  cursor: pointer;
+}
+
+.layoutpilot-review-annotation-box-button:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #e0f2fe;
+  background: rgba(14, 165, 233, 0.22);
+}
+
+.layoutpilot-review-annotation-box-button--danger {
+  color: #fecaca;
+}
+
+.layoutpilot-review-annotation-box-button--danger:hover {
+  border-color: rgba(248, 113, 113, 0.6);
+  color: #fee2e2;
+  background: rgba(127, 29, 29, 0.34);
+}
+
+.layoutpilot-review-annotation-box-button svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .layoutpilot-review-annotation-box--nested {
