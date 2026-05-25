@@ -184,44 +184,6 @@
     `
   }
 
-  function getPenStrokeViewportPoints(annotation) {
-    return (annotation?.penStroke?.points || []).map(point => ({
-      x: Math.round(point.x - window.scrollX),
-      y: Math.round(point.y - window.scrollY)
-    }))
-  }
-
-  function getPenStrokePath(points) {
-    if (!points.length) return ''
-    return points.map((point, index) =>
-      `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
-    ).join(' ')
-  }
-
-  function getAnnotationPenStrokeMarkup(annotation, className = '') {
-    if (annotation?.type !== 'pen') return ''
-
-    const points = getPenStrokeViewportPoints(annotation)
-    if (!points.length) return ''
-
-    const colorStyle = getAnnotationColorStyle(annotation)
-    const selectedClass = className ? ` ${className}` : ''
-    if (points.length === 1) {
-      const [point] = points
-      return `
-        <svg class="layoutpilot-review-annotation-pen${selectedClass}" viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" style="${colorStyle}" aria-hidden="true">
-          <circle class="layoutpilot-review-annotation-pen-dot" cx="${point.x}" cy="${point.y}" r="3"></circle>
-        </svg>
-      `
-    }
-
-    return `
-      <svg class="layoutpilot-review-annotation-pen${selectedClass}" viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" style="${colorStyle}" aria-hidden="true">
-        <path class="layoutpilot-review-annotation-pen-stroke" d="${getPenStrokePath(points)}"></path>
-      </svg>
-    `
-  }
-
   function getRectArea(rect) {
     return Math.max(0, rect.width || 0) * Math.max(0, rect.height || 0)
   }
@@ -296,8 +258,6 @@
     const descriptorsByPaintOrder = getAnnotationBoxDescriptors(state.annotations)
 
     state.annotationLayer.innerHTML = [
-      ...state.annotations.map(annotation => getAnnotationPenStrokeMarkup(annotation)),
-      getAnnotationPenStrokeMarkup(state.draftAnnotation, 'layoutpilot-review-annotation-pen--draft'),
       ...descriptorsByPaintOrder.map(descriptor => getBoxMarkup(state, descriptor)),
       getDraftBoxMarkup(state.draftAnnotation)
     ].join('')
