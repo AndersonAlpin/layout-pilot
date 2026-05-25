@@ -107,7 +107,24 @@
     ])
   }
 
-  function requestVisibleTabCapture() {
+  function waitForCaptureRepaint() {
+    return new Promise(resolve => {
+      if (typeof window.requestAnimationFrame !== 'function') {
+        window.setTimeout(resolve, 50)
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          window.setTimeout(resolve, 0)
+        })
+      })
+    })
+  }
+
+  async function requestVisibleTabCapture() {
+    await waitForCaptureRepaint()
+
     return new Promise((resolve, reject) => {
       try {
         chrome.runtime.sendMessage({ type: MESSAGE_TYPE.CAPTURE_VISIBLE_TAB }, response => {
