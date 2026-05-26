@@ -89,7 +89,8 @@
   }
 
   function renderAnnotationList(state, t) {
-    if (!state.annotations.length && !state.draftAnnotation) {
+    const hasFreeMarks = Boolean(state.areaMarks?.length || state.penStrokes?.length)
+    if (!state.annotations.length && !state.draftAnnotation && !hasFreeMarks) {
       return `
         <div class="layoutpilot-review-empty">
           <strong>${escapeHtml(t('review.panel.emptyTitle'))}</strong>
@@ -102,6 +103,75 @@
       <div class="layoutpilot-review-list">
         ${state.annotations.map(annotation => renderAnnotationCard(annotation, state, t)).join('')}
       </div>
+    `
+  }
+
+  function getFreeMarkCount(state) {
+    return (state.areaMarks?.length || 0) + (state.penStrokes?.length || 0)
+  }
+
+  function renderFreeMarkCard(item, state, t) {
+    const { mark, type, index } = item
+    const isArea = type === 'area'
+    const isSelected = state.selectedFreeMark?.type === type && state.selectedFreeMark?.id === mark.id
+    const selectedClass = isSelected ? ' layoutpilot-review-free-mark-card--selected' : ''
+    const focusAction = isArea ? 'review-focus-area-mark' : 'review-focus-pen-stroke'
+    const removeAction = isArea ? 'review-remove-area-mark' : 'review-remove-pen-stroke'
+    const idName = isArea ? 'layoutpilot-review-area-mark-id' : 'layoutpilot-review-pen-stroke-id'
+    const typeLabel = isArea ? t('review.panel.freeMarkArea') : t('review.panel.freeMarkPen')
+    const typeIcon = isArea ? icon('area', 14) : icon('pen', 14)
+
+    return `
+      <section class="layoutpilot-review-free-mark-card${selectedClass}">
+        <button
+          type="button"
+          class="layoutpilot-review-free-mark-main"
+          data-layoutpilot-action="${focusAction}"
+          data-${idName}="${escapeHtml(mark.id)}"
+          title="${escapeHtml(t('review.panel.focusFreeMark'))}"
+          aria-label="${escapeHtml(t('review.panel.focusFreeMark'))}"
+        >
+          <span class="layoutpilot-review-free-mark-type">${typeIcon}${escapeHtml(typeLabel)}</span>
+          <small>${escapeHtml(t('review.panel.freeMarkIndex', { index }))}</small>
+        </button>
+        <div class="layoutpilot-review-card-tools">
+          ${isArea ? renderIconButton({
+            iconHtml: icon('edit', 14),
+            label: t('review.panel.addAnnotation'),
+            action: 'review-comment-area-mark',
+            className: 'layoutpilot-review-card-icon',
+            data: { 'layoutpilot-review-area-mark-id': mark.id }
+          }) : ''}
+          ${renderIconButton({
+            iconHtml: icon('trash', 14),
+            label: t('review.panel.removeFreeMark'),
+            action: removeAction,
+            className: 'layoutpilot-review-card-icon layoutpilot-review-card-icon--danger',
+            data: { [idName]: mark.id }
+          })}
+        </div>
+      </section>
+    `
+  }
+
+  function renderFreeMarksList(state, t) {
+    const count = getFreeMarkCount(state)
+    if (!count) return ''
+    const freeMarkItems = [
+      ...(state.areaMarks || []).map(mark => ({ type: 'area', mark })),
+      ...(state.penStrokes || []).map(mark => ({ type: 'pen', mark }))
+    ].map((item, index) => ({ ...item, index: index + 1 }))
+
+    return `
+      <section class="layoutpilot-review-free-marks">
+        <div class="layoutpilot-review-section-heading">
+          <strong>${escapeHtml(t('review.panel.freeMarksTitle'))}</strong>
+          <small>${escapeHtml(t('review.panel.freeMarksCount', { count }))}</small>
+        </div>
+        <div class="layoutpilot-review-list">
+          ${freeMarkItems.map(item => renderFreeMarkCard(item, state, t)).join('')}
+        </div>
+      </section>
     `
   }
 
@@ -161,6 +231,7 @@
         <div class="layoutpilot-review-body">
           ${renderDraftAnnotation(state, t)}
           ${renderAnnotationList(state, t)}
+          ${renderFreeMarksList(state, t)}
         </div>
       `}
     `

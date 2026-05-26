@@ -13,6 +13,7 @@
       nextPenStrokeId: 1,
       activePenStrokeId: null,
       selectedAnnotationId: null,
+      selectedFreeMark: null,
       highlightedAnnotationId: null,
       editingAnnotationId: null,
       editingNote: '',
@@ -62,6 +63,7 @@
     state.nextPenStrokeId = 1
     state.activePenStrokeId = null
     state.selectedAnnotationId = null
+    state.selectedFreeMark = null
     state.highlightedAnnotationId = null
     state.editingAnnotationId = null
     state.editingNote = ''
@@ -98,6 +100,7 @@
     state.activePenStrokeId = null
     state.activeTool = 'element'
     state.selectedAnnotationId = null
+    state.selectedFreeMark = null
     state.highlightedAnnotationId = null
     state.editingAnnotationId = null
     state.editingNote = ''
@@ -121,6 +124,7 @@
     }
     state.annotations.push(nextAnnotation)
     state.selectedAnnotationId = nextAnnotation.id
+    state.selectedFreeMark = null
     state.editingAnnotationId = null
     state.editingNote = ''
     state.draftAnnotation = null
@@ -136,6 +140,29 @@
     return nextMark
   }
 
+  function restoreAreaMark(state, mark) {
+    if (!mark) return null
+    const id = Number(mark.id)
+    const existing = state.areaMarks.find(item => item.id === id)
+    if (existing) {
+      state.selectedFreeMark = { type: 'area', id }
+      state.selectedAnnotationId = null
+      state.highlightedAnnotationId = null
+      return existing
+    }
+
+    const restored = {
+      ...mark,
+      id
+    }
+    state.areaMarks.push(restored)
+    state.nextAreaMarkId = Math.max(state.nextAreaMarkId, id + 1)
+    state.selectedFreeMark = { type: 'area', id }
+    state.selectedAnnotationId = null
+    state.highlightedAnnotationId = null
+    return restored
+  }
+
   function getAreaMark(state, markId) {
     const id = Number(markId)
     return state.areaMarks.find(mark => mark.id === id) || null
@@ -147,6 +174,9 @@
     if (index < 0) return null
 
     const [removed] = state.areaMarks.splice(index, 1)
+    if (state.selectedFreeMark?.type === 'area' && state.selectedFreeMark.id === id) {
+      state.selectedFreeMark = null
+    }
     return removed
   }
 
@@ -213,6 +243,9 @@
       state.activePenStrokeId = null
       state.isDrawingPen = false
     }
+    if (state.selectedFreeMark?.type === 'pen' && state.selectedFreeMark.id === id) {
+      state.selectedFreeMark = null
+    }
     return removed
   }
 
@@ -223,7 +256,33 @@
   function selectAnnotation(state, annotationId) {
     const id = Number(annotationId)
     state.selectedAnnotationId = state.annotations.some(annotation => annotation.id === id) ? id : null
+    if (state.selectedAnnotationId) state.selectedFreeMark = null
     return getSelectedAnnotation(state)
+  }
+
+  function selectFreeMark(state, type, markId) {
+    const id = Number(markId)
+    if (state.selectedFreeMark?.type === type && state.selectedFreeMark.id === id) {
+      state.selectedFreeMark = null
+      return null
+    }
+
+    const list = type === 'area'
+      ? state.areaMarks
+      : type === 'pen'
+        ? state.penStrokes
+        : []
+    const exists = list.some(mark => mark.id === id)
+    state.selectedFreeMark = exists ? { type, id } : null
+    if (state.selectedFreeMark) {
+      state.selectedAnnotationId = null
+      state.highlightedAnnotationId = null
+    }
+    return state.selectedFreeMark
+  }
+
+  function clearSelectedFreeMark(state) {
+    state.selectedFreeMark = null
   }
 
   function setHighlightedAnnotation(state, annotationId) {
@@ -292,6 +351,7 @@
   function setDraftAnnotation(state, annotation) {
     state.draftAnnotation = annotation
     state.selectedAnnotationId = null
+    state.selectedFreeMark = null
     state.editingAnnotationId = null
     state.editingNote = ''
     return state.draftAnnotation
@@ -333,6 +393,7 @@
     resetReviewState,
     addAnnotation,
     addAreaMark,
+    restoreAreaMark,
     getAreaMark,
     removeAreaMark,
     startPenStroke,
@@ -342,6 +403,8 @@
     removePenStroke,
     getSelectedAnnotation,
     selectAnnotation,
+    selectFreeMark,
+    clearSelectedFreeMark,
     setHighlightedAnnotation,
     toggleHighlightedAnnotation,
     getEditingAnnotation,

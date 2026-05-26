@@ -7,6 +7,7 @@
     resetReviewState,
     addAnnotation,
     addAreaMark,
+    restoreAreaMark,
     getAreaMark,
     removeAreaMark,
     startPenStroke,
@@ -16,6 +17,8 @@
     removePenStroke,
     getSelectedAnnotation,
     selectAnnotation,
+    selectFreeMark,
+    clearSelectedFreeMark,
     setHighlightedAnnotation,
     toggleHighlightedAnnotation,
     startEditingAnnotation,
@@ -406,6 +409,24 @@
       ).join(' ')
     }
 
+    function getPenStrokeViewportRect(stroke) {
+      const points = getPenStrokeViewportPoints(stroke)
+      if (!points.length) return { x: 0, y: 0, width: 0, height: 0 }
+
+      const xs = points.map(point => point.x)
+      const ys = points.map(point => point.y)
+      const minX = Math.min(...xs)
+      const minY = Math.min(...ys)
+      const maxX = Math.max(...xs)
+      const maxY = Math.max(...ys)
+      return {
+        x: minX,
+        y: minY,
+        width: Math.max(1, maxX - minX),
+        height: Math.max(1, maxY - minY)
+      }
+    }
+
     function getPenStrokeToolsPosition(points) {
       const origin = points[0] || { x: 0, y: 0 }
       const x = Math.max(4, Math.min(window.innerWidth - PEN_STROKE_TOOLS_SIZE - 4, origin.x + 8))
@@ -427,6 +448,9 @@
       for (const stroke of strokes) {
         const points = getPenStrokeViewportPoints(stroke)
         if (!points.length) continue
+        const selectedClass = state.selectedFreeMark?.type === 'pen' && state.selectedFreeMark.id === stroke.id
+          ? ' layoutpilot-review-pen-stroke-wrap--selected'
+          : ''
 
         const toolsPosition = getPenStrokeToolsPosition(points)
         toolItems.push(renderPenStrokeTools(stroke.id, toolsPosition))
@@ -434,7 +458,7 @@
         if (points.length === 1) {
           const [point] = points
           strokeItems.push(`
-            <g class="layoutpilot-review-pen-stroke-wrap" data-layoutpilot-review-pen-stroke-id="${escapeHtml(stroke.id)}">
+            <g class="layoutpilot-review-pen-stroke-wrap${selectedClass}" data-layoutpilot-review-pen-stroke-id="${escapeHtml(stroke.id)}">
               <circle class="layoutpilot-review-pen-dot" cx="${point.x}" cy="${point.y}" r="2.5"></circle>
               <circle class="layoutpilot-review-pen-hit-dot" cx="${point.x}" cy="${point.y}" r="10"></circle>
             </g>
@@ -444,7 +468,7 @@
 
         const path = getPenStrokePath(points)
         strokeItems.push(`
-          <g class="layoutpilot-review-pen-stroke-wrap" data-layoutpilot-review-pen-stroke-id="${escapeHtml(stroke.id)}">
+          <g class="layoutpilot-review-pen-stroke-wrap${selectedClass}" data-layoutpilot-review-pen-stroke-id="${escapeHtml(stroke.id)}">
             <path class="layoutpilot-review-pen-stroke" d="${path}"></path>
             <path class="layoutpilot-review-pen-hit-stroke" d="${path}"></path>
           </g>
@@ -497,9 +521,12 @@
       layer.innerHTML = state.areaMarks.map(mark => {
         const rect = getAreaMarkViewportRect(mark)
         const toolsStyle = getAreaMarkToolsStyle(rect)
+        const selectedClass = state.selectedFreeMark?.type === 'area' && state.selectedFreeMark.id === mark.id
+          ? ' layoutpilot-review-area-mark-wrap--focused'
+          : ''
         return `
           <div
-            class="layoutpilot-review-area-mark-wrap"
+            class="layoutpilot-review-area-mark-wrap${selectedClass}"
             data-layoutpilot-review-area-mark-id="${escapeHtml(mark.id)}"
             style="
               left: ${Math.round(rect.x)}px;
@@ -622,10 +649,14 @@
       const previousRect = state.panelPosition ? panel.getBoundingClientRect() : null
       const previousBottomGap = previousRect?.height ? window.innerHeight - previousRect.bottom : null
       const shouldPreserveBottom = previousRect?.height && previousBottomGap < previousRect.top
+      const previousBody = panel.querySelector('.layoutpilot-review-body')
+      const previousBodyScrollTop = previousBody?.scrollTop || 0
 
       panel.classList.toggle('layoutpilot-review-panel--collapsed', Boolean(state.panelCollapsed))
       panel.innerHTML = renderReviewPanel(state, { t })
       panel.style.display = 'flex'
+      const nextBody = panel.querySelector('.layoutpilot-review-body')
+      if (nextBody) nextBody.scrollTop = previousBodyScrollTop
       if (shouldPreserveBottom) {
         const nextRect = panel.getBoundingClientRect()
         panelDrag.updatePosition(previousRect.left, window.innerHeight - previousBottomGap - nextRect.height)
@@ -801,7 +832,8 @@
     function saveDraftAnnotation() {
       if (!state.draftAnnotation) return false
 
-      const annotation = addAnnotation(state, state.draftAnnotation)
+      const { freeMarkSource, ...draftAnnotation } = state.draftAnnotation
+      const annotation = addAnnotation(state, draftAnnotation)
       renderUi({ panel: true })
       showToast?.(t('toast.annotationCreated', { id: annotation.id }))
       return true
@@ -839,10 +871,29 @@
       return true
     }
 
+    function restoreDraftAreaMark() {
+      const source = state.draftAnnotation?.freeMarkSource
+      if (source?.type !== 'area' || !source.mark) return false
+
+      restoreAreaMark(state, source.mark)
+      return true
+    }
+
+    function cancelFreeMarkDraft({ render = true } = {}) {
+      if (!state.draftAnnotation?.freeMarkSource) return false
+
+      restoreDraftAreaMark()
+      clearDraftAnnotation(state)
+      if (render) renderUi({ panel: !!state.panel })
+      return true
+    }
+
     function cancelDraftAnnotation() {
       if (!state.draftAnnotation) return false
 
-      clearDraftAnnotation(state)
+      if (!cancelFreeMarkDraft({ render: false })) {
+        clearDraftAnnotation(state)
+      }
       renderUi({ panel: !!state.panel })
       showToast?.(t('toast.draftCanceled'))
       return true
@@ -866,8 +917,14 @@
       if (!canSwitchEditing()) return true
 
       const rect = getAreaMarkViewportRect(mark)
-      removeAreaMark(state, mark.id)
-      setDraftAnnotation(state, buildAreaAnnotation(rect))
+      const removed = removeAreaMark(state, mark.id)
+      setDraftAnnotation(state, {
+        ...buildAreaAnnotation(rect),
+        freeMarkSource: {
+          type: 'area',
+          mark: removed
+        }
+      })
       state.panelCollapsed = false
       hideHoverPreview()
       renderUi({ panel: true, focusNote: true })
@@ -891,20 +948,68 @@
       return true
     }
 
+    function scrollRectIntoView(rect) {
+      if (isRectVisible(rect)) return
+
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + rect.y - window.innerHeight / 2 + rect.height / 2),
+        left: Math.max(0, window.scrollX + rect.x - window.innerWidth / 2 + rect.width / 2),
+        behavior: 'smooth'
+      })
+    }
+
+    function focusAreaMark(markId) {
+      const mark = getAreaMark(state, markId)
+      if (!mark) return false
+
+      const selected = selectFreeMark(state, 'area', mark.id)
+      if (selected) scrollRectIntoView(getAreaMarkViewportRect(mark))
+      renderUi({ panel: !!state.panel })
+      return true
+    }
+
+    function focusPenStroke(strokeId) {
+      const stroke = state.penStrokes.find(item => item.id === Number(strokeId))
+      if (!stroke) return false
+
+      const selected = selectFreeMark(state, 'pen', stroke.id)
+      if (selected) scrollRectIntoView(getPenStrokeViewportRect(stroke))
+      renderUi({ panel: !!state.panel })
+      return true
+    }
+
+    async function withNeutralFreeMarkSelection(callback) {
+      const selectedFreeMark = state.selectedFreeMark
+      if (!selectedFreeMark) return callback()
+
+      state.selectedFreeMark = null
+      renderAnnotations()
+
+      try {
+        return await callback()
+      } finally {
+        state.selectedFreeMark = selectedFreeMark
+        renderAnnotations()
+      }
+    }
+
     async function downloadSnapshot() {
-      return downloadReviewSnapshot(state, { showToast, t })
+      return withNeutralFreeMarkSelection(() => downloadReviewSnapshot(state, { showToast, t }))
     }
 
     async function copySnapshot() {
-      return copyReviewSnapshot(state, { showToast, t })
+      return withNeutralFreeMarkSelection(() => copyReviewSnapshot(state, { showToast, t }))
     }
 
     async function generatePdfReport() {
-      return generateReviewPrintReport(state, { showToast, t })
+      return withNeutralFreeMarkSelection(() => generateReviewPrintReport(state, { showToast, t }))
     }
 
     function setActiveTool(tool) {
       const nextTool = ['move', 'element', 'area', 'pen'].includes(tool) ? tool : 'element'
+      if (state.draftAnnotation?.freeMarkSource) {
+        cancelFreeMarkDraft({ render: false })
+      }
       if (state.draftAnnotation?.note?.trim()) {
         showToast?.(t('toast.draftHasNote'))
         return true
@@ -1040,6 +1145,7 @@
 
     function clearReviewAnnotations() {
       resetReviewState(state, { keepAreaMarks: true, keepPenStrokes: true })
+      clearSelectedFreeMark(state)
       clearAreaSelection()
       cancelPenDrawing()
       hideHoverPreview()
@@ -1104,8 +1210,16 @@
         return commentAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
       }
 
+      if (action === 'review-focus-area-mark') {
+        return focusAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
+      }
+
       if (action === 'review-remove-area-mark') {
         return removeFreeAreaMark(target?.dataset?.layoutpilotReviewAreaMarkId)
+      }
+
+      if (action === 'review-focus-pen-stroke') {
+        return focusPenStroke(target?.dataset?.layoutpilotReviewPenStrokeId)
       }
 
       if (action === 'review-remove-pen-stroke') {
@@ -1234,6 +1348,16 @@
     function handleDocumentPointerDown(event) {
       if (!state.enabled) return
       if (event.button !== undefined && event.button !== 0) return
+      if (state.draftAnnotation?.freeMarkSource &&
+        !isReviewInteractiveUiTarget(event.target) &&
+        !isEditableTypingTarget(event.target)
+      ) {
+        cancelFreeMarkDraft()
+        suppressNextPageClick = true
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
 
       if (state.activeTool === 'area') {
         const isHitLayerEvent = event.target === state.overlay
@@ -1301,8 +1425,12 @@
       if (!state.enabled) return
       if (state.activeTool === 'pen' && state.isDrawingPen) {
         appendPenStrokePoint(state, buildPenPoint(event), MIN_PEN_POINT_DISTANCE)
-        finishPenStroke(state)
-        renderPenStrokes()
+        const stroke = finishPenStroke(state)
+        if (stroke) {
+          selectFreeMark(state, 'pen', stroke.id)
+          state.panelCollapsed = false
+        }
+        renderUi({ panel: true })
         event.preventDefault()
         event.stopPropagation()
         return true
@@ -1323,9 +1451,11 @@
         return
       }
 
-      addAreaMark(state, buildAreaMark(rect))
+      const mark = addAreaMark(state, buildAreaMark(rect))
+      selectFreeMark(state, 'area', mark.id)
+      state.panelCollapsed = false
       hideHoverPreview()
-      renderUi({ panel: !!state.panel })
+      renderUi({ panel: true })
       return true
     }
 
@@ -1362,6 +1492,14 @@
       if (isOwnElement(event.target)) return
       if (isEditableTypingTarget(event.target)) return
       if (event.detail > 1) return
+
+      if (state.draftAnnotation?.freeMarkSource) {
+        cancelFreeMarkDraft()
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
+
       if (state.activeTool !== 'element') return
 
       const element = getElementAtPoint(event)
