@@ -532,9 +532,26 @@
       }).join('')
     }
 
+    function syncCanvasLayerTool() {
+      const annotationLayer = ensureAnnotationLayer()
+      const areaMarkLayer = ensureAreaMarkLayer()
+      const penLayer = ensurePenLayer()
+      const markerLayer = ensureMarkerLayer()
+
+      annotationLayer.dataset.layoutpilotReviewTool = state.activeTool
+      areaMarkLayer.dataset.layoutpilotReviewTool = state.activeTool
+      penLayer.dataset.layoutpilotReviewTool = state.activeTool
+      markerLayer.dataset.layoutpilotReviewTool = state.activeTool
+
+      if (state.activeTool !== 'move') {
+        clearPenToolsHideTimer()
+      }
+    }
+
     function renderAnnotations() {
       ensureAnnotationLayer()
       ensureMarkerLayer()
+      syncCanvasLayerTool()
       renderAreaMarks()
       renderPenStrokes()
       renderReviewAnnotationBoxes(state)
@@ -664,6 +681,7 @@
     }
 
     function showPenStrokeTools(strokeId) {
+      if (state.activeTool !== 'move') return
       clearPenToolsHideTimer()
       state.penLayer?.querySelectorAll?.('.layoutpilot-review-pen-tools')
         .forEach(element => {
