@@ -13,7 +13,6 @@
 .layoutpilot-review-marker-layer,
 .layoutpilot-review-panel,
 .layoutpilot-review-toolbar,
-.layoutpilot-review-workspace-frame,
 .layoutpilot-review-confirm,
 .layoutpilot-toast {
   all: initial;
@@ -39,7 +38,6 @@
 .layoutpilot-review-marker-layer *,
 .layoutpilot-review-panel *,
 .layoutpilot-review-toolbar *,
-.layoutpilot-review-workspace-frame *,
 .layoutpilot-review-confirm *,
 .layoutpilot-toast * {
   box-sizing: border-box;
@@ -660,41 +658,6 @@
 .layoutpilot-review-toolbar--unpinned:hover,
 .layoutpilot-review-toolbar--unpinned:focus-within {
   opacity: 1;
-}
-
-.layoutpilot-review-workspace-frame {
-  inset: 10px;
-  display: none;
-  z-index: 2147483642;
-  border: 2px dashed rgba(56, 189, 248, 0.82);
-  border-radius: 10px;
-  box-shadow:
-    0 0 0 1px rgba(248, 250, 252, 0.42),
-    inset 0 0 0 1px rgba(125, 211, 252, 0.2);
-  pointer-events: none;
-}
-
-.layoutpilot-review-workspace-frame--visible::before,
-.layoutpilot-review-workspace-frame--visible::after {
-  content: '';
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 2px solid rgba(56, 189, 248, 0.92);
-  border-radius: 999px;
-  background: #f8fafc;
-}
-
-.layoutpilot-review-workspace-frame--visible::before {
-  left: 50%;
-  top: -7px;
-  transform: translateX(-50%);
-}
-
-.layoutpilot-review-workspace-frame--visible::after {
-  right: -7px;
-  top: 50%;
-  transform: translateY(-50%);
 }
 
 .layoutpilot-review-hover {

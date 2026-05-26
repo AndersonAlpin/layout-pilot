@@ -37,7 +37,6 @@
       toolbarDrag: null,
       toolbarPinned: true,
       toolbarAutoVisible: false,
-      workspaceFrame: null,
       toast: null,
       panelPosition: null,
       panelDrag: null,
@@ -48,7 +47,7 @@
   }
 
   function clearReviewState(state) {
-    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'areaMarkLayer', 'penLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toolbar', 'workspaceFrame', 'toast']) {
+    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'areaMarkLayer', 'penLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toolbar', 'toast']) {
       state[key]?.remove?.()
       state[key] = null
     }

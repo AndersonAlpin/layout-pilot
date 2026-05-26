@@ -7,7 +7,6 @@
   const REPORT_HIDDEN_SELECTORS = [
     '.layoutpilot-review-panel',
     '.layoutpilot-review-toolbar',
-    '.layoutpilot-review-workspace-frame',
     '.layoutpilot-review-confirm',
     '.layoutpilot-review-hover',
     '.layoutpilot-review-selection-box',

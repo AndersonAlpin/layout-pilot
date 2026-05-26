@@ -239,11 +239,6 @@
       return state.toolbar
     }
 
-    function ensureWorkspaceFrame() {
-      state.workspaceFrame ||= createElement('layoutpilot-review-workspace-frame')
-      return state.workspaceFrame
-    }
-
     function ensureSelectionBox() {
       state.selectionBox ||= createElement('layoutpilot-review-selection-box')
       return state.selectionBox
@@ -728,14 +723,6 @@
       toolbar.onfocusout = scheduleToolbarAutoHide
     }
 
-    function renderWorkspaceFrame() {
-      const frame = ensureWorkspaceFrame()
-      const isFreeTool = state.activeTool === 'area' || state.activeTool === 'pen'
-      frame.classList.toggle('layoutpilot-review-workspace-frame--visible', isFreeTool)
-      frame.style.display = isFreeTool ? 'block' : 'none'
-      frame.setAttribute('aria-hidden', 'true')
-    }
-
     function showClearConfirmation() {
       const dialog = ensureConfirmDialog()
       dialog.innerHTML = renderClearReviewDialog(t)
@@ -751,7 +738,6 @@
       const hitLayer = ensureHitLayer()
       hitLayer.dataset.layoutpilotReviewTool = state.activeTool
       renderToolbar()
-      renderWorkspaceFrame()
       renderAnnotations()
       if (panel || state.panel) renderPanel()
       if (focusNote) focusPanelNote()
