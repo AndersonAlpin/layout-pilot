@@ -109,6 +109,35 @@
     }
   }
 
+  function getElementBandAlignment(baseRect, targetRect, options = {}) {
+    const tolerance = options.tolerance ?? 1
+    const topDelta = targetRect.top - baseRect.top
+    const bottomDelta = targetRect.bottom - baseRect.bottom
+    const roundedOffset = Math.round((topDelta + bottomDelta) / 2)
+
+    if (Math.abs(topDelta) <= tolerance && Math.abs(bottomDelta) <= tolerance) {
+      return {
+        aligned: true,
+        offset: 0,
+        direction: 'aligned'
+      }
+    }
+
+    if (Math.abs(topDelta - bottomDelta) <= tolerance) {
+      return {
+        aligned: false,
+        offset: Math.abs(roundedOffset),
+        direction: roundedOffset > 0 ? 'below' : 'above'
+      }
+    }
+
+    return {
+      aligned: false,
+      offset: 0,
+      direction: 'misaligned'
+    }
+  }
+
   function setBox(element, rect) {
     element.style.display = 'block'
     element.style.left = px(rect.left)
@@ -203,6 +232,7 @@
     px,
     getAnchoredTooltipPosition,
     getDistanceLabelPosition,
+    getElementBandAlignment,
     setBox,
     escapeHtml,
     formatBoxValues,

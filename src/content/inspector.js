@@ -19,6 +19,7 @@
     px,
     getAnchoredTooltipPosition,
     getDistanceLabelPosition,
+    getElementBandAlignment,
     setBox,
     escapeHtml,
     formatColor
@@ -217,6 +218,14 @@
     `
   }
 
+  function formatAlignmentText(alignment) {
+    if (!alignment) return ''
+    if (alignment.direction === 'aligned') return t('tooltip.alignment.aligned')
+    if (alignment.direction === 'above') return t('tooltip.alignment.above', { offset: alignment.offset })
+    if (alignment.direction === 'below') return t('tooltip.alignment.below', { offset: alignment.offset })
+    return t('tooltip.alignment.misaligned')
+  }
+
   function getHelpShortcuts() {
     const shortcuts = SHORTCUTS_BY_MODE[state.mode] || SHORTCUTS_BY_MODE[MODE.INSPECT]
     return shortcuts.map(shortcut => ({
@@ -279,6 +288,7 @@
     const info = collectElementInfo(element)
     const selectedRect = state.selectedElement?.isConnected ? state.selectedElement.getBoundingClientRect() : null
     const spacing = selectedRect && state.selectedElement !== element ? getSpacingBetween(selectedRect, info.rect) : null
+    const alignment = selectedRect && state.selectedElement !== element ? getElementBandAlignment(selectedRect, info.rect) : null
     const isPinned = state.selectedElement === element
     const layoutExtra = info.gap !== '—' ? info.gap : `${info.display} / ${info.position}`
 
@@ -315,6 +325,10 @@
           <span class="layoutpilot-label">${TECHNICAL_TOOLTIP_LABEL.spacing}</span>
           <span class="layoutpilot-value">H ${spacing.horizontal}px - V ${spacing.vertical}px</span>
         ` : ''}
+        ${alignment ? `
+          <span class="layoutpilot-label">${escapeHtml(t('tooltip.alignment.label'))}</span>
+          <span class="layoutpilot-value ${alignment.aligned ? 'layoutpilot-alignment-ok' : 'layoutpilot-alignment-miss'}">${escapeHtml(formatAlignmentText(alignment))}</span>
+        ` : ''}
       </div>
       <div class="layoutpilot-divider"></div>
       <div class="layoutpilot-help">${escapeHtml(isPinned ? t('tooltip.clickToUnpin') : t('tooltip.clickToPin'))} ${escapeHtml(t('tooltip.help'))}</div>
@@ -334,9 +348,10 @@
     setBox(state.selectedOverlay, state.selectedElement.getBoundingClientRect())
   }
 
-  function addDistanceLine(className, left, top, width, height, label) {
+  function addDistanceLine(className, left, top, width, height, label, options = {}) {
     const line = document.createElement('div')
     line.className = `layoutpilot-distance-line ${className}`
+    if (options.aligned) line.classList.add('layoutpilot-distance-line--aligned')
     line.style.left = px(left)
     line.style.top = px(top)
     line.style.width = px(width)
@@ -345,6 +360,7 @@
 
     const labelElement = document.createElement('div')
     labelElement.className = `layoutpilot-distance-label layoutpilot-distance-label--${className}`
+    if (options.aligned) labelElement.classList.add('layoutpilot-distance-label--aligned')
     labelElement.textContent = label
     state.distanceLayer.appendChild(labelElement)
 
@@ -372,13 +388,14 @@
     const a = state.selectedElement.getBoundingClientRect()
     const b = element.getBoundingClientRect()
     const spacing = getSpacingBetween(a, b)
+    const alignment = getElementBandAlignment(a, b)
     let hasDistance = false
 
     if (spacing.horizontal > 0) {
       const left = b.left > a.right ? a.right : b.right
       const right = b.left > a.right ? b.left : a.left
       const y = Math.max(Math.min(a.top + a.height / 2, b.bottom), b.top)
-      addDistanceLine('horizontal', left, y, right - left, 2, `${spacing.horizontal}px`)
+      addDistanceLine('horizontal', left, y, right - left, 2, `${spacing.horizontal}px`, { aligned: alignment.aligned })
       hasDistance = true
     }
 

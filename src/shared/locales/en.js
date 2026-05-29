@@ -165,7 +165,14 @@
     tooltip: {
       clickToPin: 'Click to pin.',
       clickToUnpin: 'Click again to unpin.',
-      help: 'D details - C simple context - H help - Q quit'
+      help: 'D details - C simple context - H help - Q quit',
+      alignment: {
+        label: 'Alignment',
+        aligned: 'Aligned',
+        above: '{offset}px above',
+        below: '{offset}px below',
+        misaligned: 'Misaligned'
+      }
     },
     context: {
       issue: {

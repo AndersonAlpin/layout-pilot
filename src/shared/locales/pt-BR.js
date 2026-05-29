@@ -165,7 +165,14 @@
     tooltip: {
       clickToPin: 'Clique para fixar.',
       clickToUnpin: 'Clique de novo para desfixar.',
-      help: 'D detalhes - C contexto simples - H atalhos - Q sair'
+      help: 'D detalhes - C contexto simples - H atalhos - Q sair',
+      alignment: {
+        label: 'Alinhamento',
+        aligned: 'Alinhados',
+        above: '{offset}px acima',
+        below: '{offset}px abaixo',
+        misaligned: 'Desalinhados'
+      }
     },
     context: {
       issue: {

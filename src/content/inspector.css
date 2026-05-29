@@ -122,6 +122,16 @@
   font-weight: 800;
 }
 
+.layoutpilot-tooltip .layoutpilot-alignment-ok {
+  color: #86efac;
+  font-weight: 800;
+}
+
+.layoutpilot-tooltip .layoutpilot-alignment-miss {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
 .layoutpilot-tooltip .layoutpilot-muted {
   color: #94a3b8;
 }
@@ -155,6 +165,11 @@
   width: 2px;
 }
 
+.layoutpilot-distance-line--aligned {
+  background: #22c55e;
+  box-shadow: 0 0 0 1px rgba(5, 46, 22, 0.7);
+}
+
 .layoutpilot-distance-label {
   position: fixed;
   padding: 2px 6px;
@@ -163,6 +178,11 @@
   background: #fbbf24;
   font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.35);
+}
+
+.layoutpilot-distance-label--aligned {
+  color: #052e16;
+  background: #86efac;
 }
 
 .layoutpilot-distance-label--above {
