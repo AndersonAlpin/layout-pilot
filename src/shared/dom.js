@@ -22,6 +22,44 @@
     return `${Math.round(value)}px`
   }
 
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max)
+  }
+
+  function getAnchoredTooltipPosition(pointer, anchorRect, tooltipRect, viewport, options = {}) {
+    const offset = options.offset ?? 14
+    const margin = options.margin ?? 12
+    const width = tooltipRect.width || 0
+    const height = tooltipRect.height || 0
+    const viewportWidth = viewport.width
+    const viewportHeight = viewport.height
+    const maxLeft = Math.max(margin, viewportWidth - width - margin)
+    const maxTop = Math.max(margin, viewportHeight - height - margin)
+    const rightFromPointer = pointer.x + offset
+    const bottomFromPointer = pointer.y + offset
+    const leftOfAnchor = anchorRect.left - width - offset
+    const topOfAnchor = anchorRect.top - height - offset
+    const leftOfPointer = pointer.x - width - offset
+    const topOfPointer = pointer.y - height - offset
+
+    const left = rightFromPointer + width <= viewportWidth - margin
+      ? rightFromPointer
+      : leftOfAnchor >= margin
+        ? leftOfAnchor
+        : clamp(leftOfPointer, margin, maxLeft)
+
+    const top = bottomFromPointer + height <= viewportHeight - margin
+      ? bottomFromPointer
+      : topOfAnchor >= margin
+        ? topOfAnchor
+        : clamp(topOfPointer, margin, maxTop)
+
+    return {
+      left: Math.round(left),
+      top: Math.round(top)
+    }
+  }
+
   function setBox(element, rect) {
     element.style.display = 'block'
     element.style.left = px(rect.left)
@@ -114,6 +152,7 @@
     createElement,
     isTypingTarget,
     px,
+    getAnchoredTooltipPosition,
     setBox,
     escapeHtml,
     formatBoxValues,

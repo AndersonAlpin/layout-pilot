@@ -17,6 +17,7 @@
   const {
     createElement,
     px,
+    getAnchoredTooltipPosition,
     setBox,
     escapeHtml,
     formatColor
@@ -254,19 +255,22 @@
     }
   }
 
-  function positionTooltip(event) {
-    const offset = 14
+  function positionTooltip(event, elementRect) {
     state.tooltip.style.display = 'block'
     state.tooltip.style.visibility = 'hidden'
     state.tooltip.style.left = '0px'
     state.tooltip.style.top = '0px'
 
     const tooltipRect = state.tooltip.getBoundingClientRect()
-    const left = Math.min(event.clientX + offset, window.innerWidth - tooltipRect.width - offset)
-    const top = Math.min(event.clientY + offset, window.innerHeight - tooltipRect.height - offset)
+    const position = getAnchoredTooltipPosition(
+      { x: event.clientX, y: event.clientY },
+      elementRect,
+      tooltipRect,
+      { width: window.innerWidth, height: window.innerHeight }
+    )
 
-    state.tooltip.style.left = px(Math.max(12, left))
-    state.tooltip.style.top = px(Math.max(12, top))
+    state.tooltip.style.left = px(position.left)
+    state.tooltip.style.top = px(position.top)
     state.tooltip.style.visibility = 'visible'
   }
 
@@ -315,7 +319,7 @@
       <div class="layoutpilot-help">${escapeHtml(isPinned ? t('tooltip.clickToUnpin') : t('tooltip.clickToPin'))} ${escapeHtml(t('tooltip.help'))}</div>
     `
 
-    positionTooltip(event)
+    positionTooltip(event, info.rect)
   }
 
   function renderSelectedOverlay() {
