@@ -18,6 +18,7 @@
     createElement,
     px,
     getAnchoredTooltipPosition,
+    getDistanceLabelPosition,
     setBox,
     escapeHtml,
     formatColor
@@ -343,11 +344,20 @@
     state.distanceLayer.appendChild(line)
 
     const labelElement = document.createElement('div')
-    labelElement.className = 'layoutpilot-distance-label'
+    labelElement.className = `layoutpilot-distance-label layoutpilot-distance-label--${className}`
     labelElement.textContent = label
-    labelElement.style.left = px(left + width / 2)
-    labelElement.style.top = px(top + height / 2)
     state.distanceLayer.appendChild(labelElement)
+
+    const labelPosition = getDistanceLabelPosition(
+      className,
+      { left, top, width, height },
+      labelElement.getBoundingClientRect(),
+      { width: window.innerWidth, height: window.innerHeight }
+    )
+
+    labelElement.classList.add(`layoutpilot-distance-label--${labelPosition.placement}`)
+    labelElement.style.left = px(labelPosition.left)
+    labelElement.style.top = px(labelPosition.top)
   }
 
   function renderDistances(element) {

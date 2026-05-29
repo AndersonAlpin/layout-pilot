@@ -157,13 +157,28 @@
 
 .layoutpilot-distance-label {
   position: fixed;
-  transform: translate(-50%, -50%);
   padding: 2px 6px;
   border-radius: 999px;
   color: #0f172a;
   background: #fbbf24;
   font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.35);
+}
+
+.layoutpilot-distance-label--above {
+  transform: translate(-50%, -100%);
+}
+
+.layoutpilot-distance-label--below {
+  transform: translate(-50%, 0);
+}
+
+.layoutpilot-distance-label--left {
+  transform: translate(-100%, -50%);
+}
+
+.layoutpilot-distance-label--right {
+  transform: translate(0, -50%);
 }
 
 .layoutpilot-detail-panel {

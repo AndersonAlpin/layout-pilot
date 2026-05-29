@@ -60,6 +60,55 @@
     }
   }
 
+  function getDistanceLabelPosition(orientation, lineRect, labelRect, viewport, options = {}) {
+    const offset = options.offset ?? 8
+    const margin = options.margin ?? 8
+    const labelWidth = labelRect.width || 0
+    const labelHeight = labelRect.height || 0
+    const centerX = lineRect.left + lineRect.width / 2
+    const centerY = lineRect.top + lineRect.height / 2
+
+    if (orientation === 'vertical') {
+      const minY = margin + labelHeight / 2
+      const maxY = Math.max(minY, viewport.height - margin - labelHeight / 2)
+      const leftPlacement = lineRect.left - offset
+
+      if (leftPlacement - labelWidth >= margin) {
+        return {
+          left: Math.round(leftPlacement),
+          top: Math.round(clamp(centerY, minY, maxY)),
+          placement: 'left'
+        }
+      }
+
+      return {
+        left: Math.round(lineRect.left + lineRect.width + offset),
+        top: Math.round(clamp(centerY, minY, maxY)),
+        placement: 'right'
+      }
+    }
+
+    const minX = margin + labelWidth / 2
+    const maxX = Math.max(minX, viewport.width - margin - labelWidth / 2)
+    const abovePlacement = lineRect.top - offset
+
+    if (abovePlacement - labelHeight >= margin) {
+      return {
+        left: Math.round(clamp(centerX, minX, maxX)),
+        top: Math.round(abovePlacement),
+        placement: 'above'
+      }
+    }
+
+    const maxTop = Math.max(margin, viewport.height - margin - labelHeight)
+
+    return {
+      left: Math.round(clamp(centerX, minX, maxX)),
+      top: Math.round(clamp(lineRect.top + lineRect.height + offset, margin, maxTop)),
+      placement: 'below'
+    }
+  }
+
   function setBox(element, rect) {
     element.style.display = 'block'
     element.style.left = px(rect.left)
@@ -153,6 +202,7 @@
     isTypingTarget,
     px,
     getAnchoredTooltipPosition,
+    getDistanceLabelPosition,
     setBox,
     escapeHtml,
     formatBoxValues,
