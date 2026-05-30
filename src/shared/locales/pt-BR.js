@@ -29,6 +29,7 @@
       status: {
         checking: 'Verificando aba atual...',
         unsupported: 'Abra uma página http/https para inspecionar.',
+        injectionFailed: 'Não foi possível iniciar o LayoutPilot nesta página.',
         active: 'Modo Inspeção ativo.',
         inspectActive: 'Modo Inspeção ativo.',
         reviewActive: 'Modo Revisão ativo.',
@@ -190,7 +191,6 @@
       noElement: 'Nenhum elemento selecionado',
       inspectOn: 'Modo inspeção ativo',
       reviewOn: 'Modo revisão ativo',
-      reviewSoon: 'Modo revisão em breve',
       annotationCreated: 'Anotação {id} criada',
       annotationSaved: 'Anotação {id} salva',
       annotationRemoved: 'Anotação {id} removida',

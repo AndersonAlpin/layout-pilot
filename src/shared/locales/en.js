@@ -29,6 +29,7 @@
       status: {
         checking: 'Checking current tab...',
         unsupported: 'Open an http/https page to inspect.',
+        injectionFailed: 'Could not start LayoutPilot on this page.',
         active: 'Inspect Mode active.',
         inspectActive: 'Inspect Mode active.',
         reviewActive: 'Review Mode active.',
@@ -190,7 +191,6 @@
       noElement: 'No element selected',
       inspectOn: 'Inspect mode on',
       reviewOn: 'Review mode on',
-      reviewSoon: 'Review mode coming soon',
       annotationCreated: 'Annotation {id} created',
       annotationSaved: 'Annotation {id} saved',
       annotationRemoved: 'Annotation {id} removed',

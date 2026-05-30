@@ -29,6 +29,7 @@
       status: {
         checking: 'Comprobando pestaña actual...',
         unsupported: 'Abre una página http/https para inspeccionar.',
+        injectionFailed: 'No se pudo iniciar LayoutPilot en esta página.',
         active: 'Modo Inspección activo.',
         inspectActive: 'Modo Inspección activo.',
         reviewActive: 'Modo Revisión activo.',
@@ -190,7 +191,6 @@
       noElement: 'Ningún elemento seleccionado',
       inspectOn: 'Modo inspección activo',
       reviewOn: 'Modo revisión activo',
-      reviewSoon: 'Modo revisión próximamente',
       annotationCreated: 'Anotación {id} creada',
       annotationSaved: 'Anotación {id} guardada',
       annotationRemoved: 'Anotación {id} eliminada',

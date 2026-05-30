@@ -261,6 +261,8 @@ toggleButton.addEventListener('click', async () => {
     if (response?.enabled) {
       window.close()
     }
+  } catch {
+    setStatus(false, 'popup.status.injectionFailed', state.mode)
   } finally {
     toggleButton.disabled = false
   }

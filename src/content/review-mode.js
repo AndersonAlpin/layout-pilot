@@ -1466,7 +1466,7 @@
       event.preventDefault()
       event.stopPropagation()
 
-      if (rect.width < MIN_AREA_SELECTION_SIZE && rect.height < MIN_AREA_SELECTION_SIZE) {
+      if (rect.width < MIN_AREA_SELECTION_SIZE || rect.height < MIN_AREA_SELECTION_SIZE) {
         renderAnnotations()
         return
       }
