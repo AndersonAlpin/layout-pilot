@@ -207,28 +207,35 @@
   }
 
   function wrapText(ctx, value, maxWidth) {
-    const text = String(value || '').replace(/\s+/g, ' ').trim()
-    if (!text) return ['']
-
+    const paragraphs = String(value || '').replace(/\r\n?/g, '\n').split('\n')
     const lines = []
-    let current = ''
 
-    for (const token of text.split(' ')) {
-      const candidates = ctx.measureText(token).width > maxWidth ? breakLongToken(ctx, token, maxWidth) : [token]
+    for (const paragraph of paragraphs) {
+      const text = paragraph.replace(/\s+/g, ' ').trim()
+      if (!text) {
+        lines.push('')
+        continue
+      }
 
-      for (const candidate of candidates) {
-        const next = current ? `${current} ${candidate}` : candidate
-        if (current && ctx.measureText(next).width > maxWidth) {
-          lines.push(current)
-          current = candidate
-        } else {
-          current = next
+      let current = ''
+      for (const token of text.split(' ')) {
+        const candidates = ctx.measureText(token).width > maxWidth ? breakLongToken(ctx, token, maxWidth) : [token]
+
+        for (const candidate of candidates) {
+          const next = current ? `${current} ${candidate}` : candidate
+          if (current && ctx.measureText(next).width > maxWidth) {
+            lines.push(current)
+            current = candidate
+          } else {
+            current = next
+          }
         }
       }
+
+      if (current) lines.push(current)
     }
 
-    if (current) lines.push(current)
-    return lines
+    return lines.length ? lines : ['']
   }
 
   function drawLines(ctx, lines, x, y, lineHeight, draw) {
@@ -249,7 +256,7 @@
 
   function getSidebarDetails(state, t) {
     return {
-      eyebrow: 'LayoutPilot Review',
+      eyebrow: 'LayoutPilot',
       title: t('review.snapshot.commentsTitle'),
       annotations: state.annotations.map(annotation => ({
         number: annotation.id,
@@ -320,22 +327,28 @@
     const cardHeight = Math.max(badgeSize + cardPadding * 2, textHeight + cardPadding * 2)
 
     if (draw) {
+      const cardRadius = Math.round(8 * scale)
+
       ctx.save()
       ctx.shadowColor = 'rgba(0, 0, 0, 0.28)'
       ctx.shadowBlur = Math.round(16 * scale)
       ctx.shadowOffsetY = Math.round(8 * scale)
-      drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, Math.round(10 * scale))
+      drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, cardRadius)
       ctx.fillStyle = '#0B1220'
       ctx.fill()
       ctx.restore()
 
-      drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, Math.round(10 * scale))
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.24)'
+      drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, cardRadius)
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)'
       ctx.lineWidth = Math.max(1, Math.round(scale))
       ctx.stroke()
 
+      ctx.save()
+      drawRoundedRect(ctx, cardX, y, cardWidth, cardHeight, cardRadius)
+      ctx.clip()
       ctx.fillStyle = item.color.color
-      ctx.fillRect(cardX, y + Math.round(10 * scale), Math.round(4 * scale), cardHeight - Math.round(20 * scale))
+      ctx.fillRect(cardX, y, Math.max(2, Math.round(3 * scale)), cardHeight)
+      ctx.restore()
 
       ctx.beginPath()
       ctx.arc(cardX + cardPadding + badgeSize / 2, y + cardPadding + badgeSize / 2, badgeSize / 2, 0, Math.PI * 2)

@@ -1340,6 +1340,10 @@
   text-align: left;
 }
 
+.layoutpilot-review-card span.layoutpilot-review-card-note {
+  white-space: pre-line;
+}
+
 .layoutpilot-review-card small {
   color: #fde68a;
   font-weight: 800;
