@@ -1,3 +1,11 @@
+.layoutpilot-hit-shield {
+  inset: 0;
+  display: block;
+  background: transparent;
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
 .layoutpilot-overlay {
   border: 2px solid #38bdf8;
   background: rgba(56, 189, 248, 0.08);

@@ -1,5 +1,6 @@
 .layoutpilot-overlay,
 .layoutpilot-selected-overlay,
+.layoutpilot-hit-shield,
 .layoutpilot-tooltip,
 .layoutpilot-ui-tooltip,
 .layoutpilot-distance-layer,
@@ -28,6 +29,7 @@
 
 .layoutpilot-overlay *,
 .layoutpilot-selected-overlay *,
+.layoutpilot-hit-shield *,
 .layoutpilot-tooltip *,
 .layoutpilot-ui-tooltip *,
 .layoutpilot-distance-layer *,

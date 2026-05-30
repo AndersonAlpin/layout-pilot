@@ -91,6 +91,7 @@
   const UI_CLASSES = [
     'layoutpilot-overlay',
     'layoutpilot-selected-overlay',
+    'layoutpilot-hit-shield',
     'layoutpilot-tooltip',
     'layoutpilot-distance-layer',
     'layoutpilot-detail-panel',

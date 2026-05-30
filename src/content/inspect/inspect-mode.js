@@ -63,6 +63,7 @@
       selectedElement: null,
       overlay: null,
       selectedOverlay: null,
+      hitShield: null,
       tooltip: null,
       distanceLayer: null,
       detailPanel: null,
@@ -84,6 +85,7 @@
     })
 
     function ensureUi() {
+      state.hitShield ||= createElement('layoutpilot-hit-shield')
       state.overlay ||= createElement('layoutpilot-overlay')
       state.selectedOverlay ||= createElement('layoutpilot-selected-overlay')
       state.tooltip ||= createElement('layoutpilot-tooltip')
@@ -109,7 +111,7 @@
     }
 
     function hideUi() {
-      for (const key of ['overlay', 'selectedOverlay', 'tooltip', 'distanceLayer', 'detailPanel']) {
+      for (const key of ['hitShield', 'overlay', 'selectedOverlay', 'tooltip', 'distanceLayer', 'detailPanel']) {
         removeElement(key)
       }
       state.hoveredElement = null
@@ -119,6 +121,14 @@
 
     function isOwnElement(element) {
       return isLayoutPilotElement(element)
+    }
+
+    function isInspectHitShieldTarget(element) {
+      return element === state.hitShield
+    }
+
+    function isBlockedOwnTarget(element) {
+      return isOwnElement(element) && !isInspectHitShieldTarget(element)
     }
 
     function getElementAtPoint(event) {
@@ -426,7 +436,7 @@
     }
 
     function inspectAtEvent(event) {
-      if (!state.enabled || isOwnElement(event.target)) return
+      if (!state.enabled || isBlockedOwnTarget(event.target)) return
 
       const element = getElementAtPoint(event)
       if (!element) return
@@ -467,7 +477,7 @@
 
     function handleClick(event) {
       if (!state.enabled) return
-      if (isOwnElement(event.target)) return
+      if (isBlockedOwnTarget(event.target)) return
 
       const element = getElementAtPoint(event)
       if (!element) return
@@ -482,7 +492,7 @@
 
     function handleDoubleClick(event) {
       if (!state.enabled) return
-      if (isOwnElement(event.target)) return
+      if (isBlockedOwnTarget(event.target)) return
 
       const element = getElementAtPoint(event)
       if (!element) return
