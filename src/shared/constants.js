@@ -47,7 +47,9 @@
   }
 
   const CONTENT_CSS_FILES = [
-    'src/content/inspector.css'
+    'src/content/base.css',
+    'src/content/inspect/inspect.css',
+    'src/content/review/review.css'
   ]
 
   const CONTENT_SCRIPT_FILES = [
@@ -63,22 +65,24 @@
     'src/shared/ui/button.js',
     'src/shared/ui/panel-section.js',
     'src/shared/ui/shortcut-key.js',
-    'src/content/selector-utils.js',
-    'src/content/element-inspector.js',
-    'src/content/context-export.js',
-    'src/content/css-export.js',
-    'src/content/clipboard.js',
-    'src/content/shortcuts.js',
-    'src/content/detail-panel.js',
-    'src/content/draggable-panel.js',
-    'src/content/review-state.js',
-    'src/content/review-markers.js',
-    'src/content/review-panel.js',
-    'src/content/review-toolbar.js',
-    'src/content/review-snapshot.js',
-    'src/content/review-print-report.js',
-    'src/content/review-mode.js',
-    'src/content/inspector.js'
+    'src/content/core/selector-utils.js',
+    'src/content/core/element-inspector.js',
+    'src/content/core/draggable-panel.js',
+    'src/content/core/clipboard.js',
+    'src/content/core/shortcuts.js',
+    'src/content/core/modal-shield.js',
+    'src/content/inspect/context-export.js',
+    'src/content/inspect/css-export.js',
+    'src/content/inspect/detail-panel.js',
+    'src/content/inspect/inspect-mode.js',
+    'src/content/review/review-state.js',
+    'src/content/review/review-markers.js',
+    'src/content/review/review-panel.js',
+    'src/content/review/review-toolbar.js',
+    'src/content/review/review-snapshot.js',
+    'src/content/review/review-print-report.js',
+    'src/content/review/review-mode.js',
+    'src/content/core/orchestrator.js'
   ]
 
   const UI_CLASSES = [

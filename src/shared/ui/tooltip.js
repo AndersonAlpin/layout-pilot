@@ -10,6 +10,12 @@
   let showTimer = null
   let isPointerDown = false
   let lastPointerMoveTime = 0
+  let boundListeners = []
+
+  function bind(target, type, handler, options) {
+    target.addEventListener(type, handler, options)
+    boundListeners.push({ target, type, handler, options })
+  }
 
   function getTooltipElement() {
     let element = document.getElementById(TOOLTIP_ID)
@@ -205,90 +211,112 @@
     return attrs
   }
 
+  function handleGlobalPointerDown() {
+    isPointerDown = true
+    hideTooltip()
+  }
+
+  function handleGlobalPointerUp() {
+    isPointerDown = false
+  }
+
+  function handleGlobalPointerCancel() {
+    isPointerDown = false
+    hideTooltip()
+  }
+
+  function handlePointerOver(event) {
+    lastPointerMoveTime = getNow()
+    const target = getTooltipTarget(event.target)
+    if (target) scheduleTooltip(target)
+  }
+
+  function handlePointerMove(event) {
+    lastPointerMoveTime = getNow()
+    if (event.buttons > 0) {
+      isPointerDown = true
+      hideTooltip()
+      return
+    }
+    isPointerDown = false
+
+    const target = getTooltipTarget(event.target)
+    if (!target) {
+      clearPendingTooltip()
+      return
+    }
+
+    const delay = parseTooltipDelay(target.dataset?.layoutpilotTooltipDelay)
+    if (delay <= 0 || activeTarget === target) return
+    scheduleTooltip(target)
+  }
+
+  function handlePointerOut(event) {
+    clearPendingTooltip()
+    if (!activeTarget) return
+    const nextTarget = getTooltipTarget(event.relatedTarget)
+    if (nextTarget === activeTarget) return
+    hideTooltip()
+  }
+
+  function handleFocusIn(event) {
+    const target = getTooltipTarget(event.target)
+    if (target) {
+      clearPendingTooltip()
+      if (parseTooltipDelay(target.dataset?.layoutpilotTooltipDelay) > 0) {
+        scheduleTooltip(target)
+      } else {
+        updateTooltipPosition(target)
+      }
+    }
+  }
+
+  function handleFocusOut(event) {
+    clearPendingTooltip()
+    if (!activeTarget) return
+    const nextTarget = getTooltipTarget(event.relatedTarget)
+    if (nextTarget === activeTarget) return
+    hideTooltip()
+  }
+
+  function handleSelectionChange() {
+    if (hasActiveTextSelection()) hideTooltip()
+  }
+
   function initTooltips() {
     if (isBound || typeof document === 'undefined') return
     isBound = true
     getTooltipElement()
 
-    document.addEventListener('pointerdown', () => {
-      isPointerDown = true
-      hideTooltip()
-    }, true)
+    bind(document, 'pointerdown', handleGlobalPointerDown, true)
+    bind(window, 'pointerup', handleGlobalPointerUp, true)
+    bind(window, 'pointercancel', handleGlobalPointerCancel, true)
+    bind(document, 'pointerover', handlePointerOver)
+    bind(document, 'pointermove', handlePointerMove)
+    bind(document, 'pointerout', handlePointerOut)
+    bind(document, 'focusin', handleFocusIn)
+    bind(document, 'focusout', handleFocusOut)
+    bind(document, 'selectionchange', handleSelectionChange)
+    bind(window, 'scroll', hideTooltip, true)
+    bind(window, 'resize', hideTooltip)
+  }
 
-    window.addEventListener('pointerup', () => {
-      isPointerDown = false
-    }, true)
-
-    window.addEventListener('pointercancel', () => {
-      isPointerDown = false
-      hideTooltip()
-    }, true)
-
-    document.addEventListener('pointerover', event => {
-      lastPointerMoveTime = getNow()
-      const target = getTooltipTarget(event.target)
-      if (target) scheduleTooltip(target)
-    })
-
-    document.addEventListener('pointermove', event => {
-      lastPointerMoveTime = getNow()
-      if (event.buttons > 0) {
-        isPointerDown = true
-        hideTooltip()
-        return
-      }
-      isPointerDown = false
-
-      const target = getTooltipTarget(event.target)
-      if (!target) {
-        clearPendingTooltip()
-        return
-      }
-
-      const delay = parseTooltipDelay(target.dataset?.layoutpilotTooltipDelay)
-      if (delay <= 0 || activeTarget === target) return
-      scheduleTooltip(target)
-    })
-
-    document.addEventListener('pointerout', event => {
-      clearPendingTooltip()
-      if (!activeTarget) return
-      const nextTarget = getTooltipTarget(event.relatedTarget)
-      if (nextTarget === activeTarget) return
-      hideTooltip()
-    })
-
-    document.addEventListener('focusin', event => {
-      const target = getTooltipTarget(event.target)
-      if (target) {
-        clearPendingTooltip()
-        if (parseTooltipDelay(target.dataset?.layoutpilotTooltipDelay) > 0) {
-          scheduleTooltip(target)
-        } else {
-          updateTooltipPosition(target)
-        }
-      }
-    })
-
-    document.addEventListener('focusout', event => {
-      clearPendingTooltip()
-      if (!activeTarget) return
-      const nextTarget = getTooltipTarget(event.relatedTarget)
-      if (nextTarget === activeTarget) return
-      hideTooltip()
-    })
-
-    document.addEventListener('selectionchange', () => {
-      if (hasActiveTextSelection()) hideTooltip()
-    })
-
-    window.addEventListener('scroll', hideTooltip, true)
-    window.addEventListener('resize', hideTooltip)
+  function teardownTooltips() {
+    for (const { target, type, handler, options } of boundListeners) {
+      target.removeEventListener(type, handler, options)
+    }
+    boundListeners = []
+    clearPendingTooltip()
+    hideTooltip()
+    isPointerDown = false
+    activeTarget = null
+    isBound = false
   }
 
   Object.assign(ui, {
     getTooltipAttrs,
     initTooltips,
+    teardownTooltips,
     hideTooltip
   })
 })()
