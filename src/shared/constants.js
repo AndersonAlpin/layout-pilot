@@ -18,7 +18,6 @@
   const SHORTCUT = {
     INSPECT: 'i',
     HELP: 'h',
-    QUIT: 'q',
     CANCEL: 'Escape',
     COPY_CONTEXT: 'c',
     PIN: 'p',
@@ -29,22 +28,18 @@
 
   const SHORTCUTS_BY_MODE = {
     [MODE.INSPECT]: [
-      { key: 'I', labelKey: 'shortcuts.inspect' },
       { key: 'H', labelKey: 'shortcuts.help' },
-      { key: 'Q', labelKey: 'shortcuts.quit' },
       { key: 'Esc', labelKey: 'shortcuts.cancel' },
+      { key: 'D', labelKey: 'shortcuts.details' },
+      { key: 'I', labelKey: 'shortcuts.inspect' },
       { key: 'C', labelKey: 'shortcuts.context' },
-      { key: 'P', labelKey: 'shortcuts.pin' },
-      { key: 'D', labelKey: 'shortcuts.details' }
+      { key: 'P', labelKey: 'shortcuts.pin' }
     ],
     [MODE.REVIEW]: [
-      { key: 'I', labelKey: 'shortcuts.toggleLayoutPilot' },
       { key: 'H', labelKey: 'shortcuts.help' },
-      { key: 'Q', labelKey: 'shortcuts.quit' },
       { key: 'Esc', labelKey: 'shortcuts.cancel' },
       { key: 'D', labelKey: 'shortcuts.reviewPanel' },
       { key: 'Delete', labelKey: 'shortcuts.removeAnnotation' },
-      { key: 'P', labelKey: 'shortcuts.pin' },
       { key: 'S', labelKey: 'shortcuts.copyImage' },
       { key: 'Shift+S', labelKey: 'shortcuts.downloadImage' },
       { key: 'G', labelKey: 'shortcuts.generatePdf' }

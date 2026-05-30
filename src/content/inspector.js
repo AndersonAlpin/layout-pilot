@@ -23,6 +23,8 @@
     getElementBandAlignment,
     getContainedRectPair,
     getContainedDistanceSegments,
+    isLayoutPilotElement,
+    getModalInteractionNode,
     setBox,
     escapeHtml,
     formatColor
@@ -168,14 +170,8 @@
     state.lastPointerEvent = null
   }
 
-  function hasLayoutPilotClass(element) {
-    return element instanceof Element &&
-      Array.from(element.classList || []).some(className => className.startsWith('layoutpilot-'))
-  }
-
   function isOwnElement(element) {
-    if (!(element instanceof Element)) return false
-    return hasLayoutPilotClass(element) || !!element.closest?.('[class*="layoutpilot-"]')
+    return isLayoutPilotElement(element)
   }
 
   function getElementAtPoint(event) {
@@ -481,18 +477,6 @@
     renderHelpPanel()
   }
 
-  function quitLayoutPilot() {
-    if (state.enabled) {
-      setEnabled(false)
-      return
-    }
-
-    state.hoveredElement = null
-    state.selectedElement = null
-    state.lastPointerEvent = null
-    hideUi()
-  }
-
   function showToast(message) {
     const toast = ensureToast()
     toast.textContent = message
@@ -629,12 +613,24 @@
     if (action === 'copy-css') copyCssSummary()
   }
 
+  // Reka/Nuxt UI modals listen on document during bubble to close on outside
+  // interaction and to pull focus back into the modal. LayoutPilot floats
+  // outside that modal subtree, so stop only events involving our own UI at
+  // <html>. For focusout, the destination is relatedTarget, not target.
+  const REKA_MODAL_SOURCE_EVENTS = ['pointerdown', 'click', 'focusin', 'focusout']
+
+  function stopOwnUiInteractionFromDismissingModals(event) {
+    if (isOwnElement(getModalInteractionNode(event))) event.stopPropagation()
+  }
+
   function handleKeyDown(event) {
-    if (shouldIgnoreShortcut(event)) return
-
     const normalized = normalizeKey(event)
+    const isReviewMode = state.enabled && state.mode === MODE.REVIEW
+    const allowReviewCancel = isReviewMode && normalized === SHORTCUT.CANCEL
 
-    if (state.enabled && state.mode === MODE.REVIEW && reviewController.blocksGlobalShortcuts?.()) {
+    if (shouldIgnoreShortcut(event) && !allowReviewCancel) return
+
+    if (isReviewMode && reviewController.blocksGlobalShortcuts?.()) {
       consumeShortcut(event)
       reviewController.handleKeyDown(event, normalized)
       return
@@ -646,14 +642,10 @@
       return
     }
 
-    if (normalized === SHORTCUT.QUIT) {
-      consumeShortcut(event)
-      quitLayoutPilot()
-      return
-    }
-
     if (normalized === SHORTCUT.INSPECT) {
       consumeShortcut(event)
+      if (isReviewMode) return
+
       if (state.enabled) {
         setEnabled(false)
         return
@@ -679,6 +671,7 @@
 
       if (normalized === SHORTCUT.CANCEL) {
         consumeShortcut(event)
+        setEnabled(false)
       }
       return
     }
@@ -849,6 +842,9 @@
     unbindInspectListeners()
     document.removeEventListener('keydown', handleKeyDown, true)
     document.removeEventListener('click', handleUiClick, true)
+    for (const type of REKA_MODAL_SOURCE_EVENTS) {
+      document.documentElement.removeEventListener(type, stopOwnUiInteractionFromDismissingModals)
+    }
     window.removeEventListener('pagehide', handleLifecycleCleanup)
     window.removeEventListener('beforeunload', handleLifecycleCleanup)
     state.enabled = false
@@ -869,6 +865,9 @@
 
   document.addEventListener('keydown', handleKeyDown, true)
   document.addEventListener('click', handleUiClick, true)
+  for (const type of REKA_MODAL_SOURCE_EVENTS) {
+    document.documentElement.addEventListener(type, stopOwnUiInteractionFromDismissingModals)
+  }
   window.addEventListener('pagehide', handleLifecycleCleanup)
   window.addEventListener('beforeunload', handleLifecycleCleanup)
   startHealthCheck()

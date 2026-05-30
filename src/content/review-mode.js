@@ -910,6 +910,18 @@
       return true
     }
 
+    function removeSelectedFreeMark() {
+      if (state.selectedFreeMark?.type === 'area') {
+        return removeFreeAreaMark(state.selectedFreeMark.id)
+      }
+
+      if (state.selectedFreeMark?.type === 'pen') {
+        return removeFreePenStroke(state.selectedFreeMark.id)
+      }
+
+      return false
+    }
+
     function commentAreaMark(markId) {
       const mark = getAreaMark(state, markId)
       if (!mark) return false
@@ -1072,17 +1084,18 @@
       }
 
       const matches = state.annotations.filter(annotation => {
+        // The exact DOM node is the only reliable identity while the element reference is alive.
         if (annotation.element?.isConnected && annotation.element === element) return true
-        if (annotation.target?.selector && annotation.target.selector === info.selector) return true
-        if (
+        // Fallback for when the element reference was lost (e.g. after a re-render): require the
+        // full element signature AND a near-identical rect together. The previous standalone
+        // `selector` and `isSimilarRect` checks were far too loose -- sibling elements that share
+        // tag+classes (common with utility CSS) produce the same `best` selector, so clicking a
+        // brand-new element matched, and re-opened, the annotation of a different element.
+        return annotation.type === 'element' &&
           annotation.target?.tag === info.tag &&
           annotation.target?.classes === info.classes &&
           annotation.target?.name === info.name &&
           isSimilarRect(getAnnotationViewportRect(annotation), clickedRect)
-        ) {
-          return true
-        }
-        return isSimilarRect(getAnnotationViewportRect(annotation), clickedRect)
       })
 
       return matches.sort((a, b) =>
@@ -1144,7 +1157,7 @@
     }
 
     function clearReviewAnnotations() {
-      resetReviewState(state, { keepAreaMarks: true, keepPenStrokes: true })
+      resetReviewState(state)
       clearSelectedFreeMark(state)
       clearAreaSelection()
       cancelPenDrawing()
@@ -1155,13 +1168,16 @@
     }
 
     function hasReviewContent() {
-      return Boolean(state.annotations.length || state.draftAnnotation)
+      return Boolean(
+        state.annotations.length ||
+        state.areaMarks.length ||
+        state.penStrokes.length
+      )
     }
 
     function handleReviewAction(action, target) {
       if (action === 'review-request-clear') {
         if (!hasReviewContent()) {
-          closePanel()
           return true
         }
         showClearConfirmation()
@@ -1593,17 +1609,6 @@
         return true
       }
 
-      if (normalizedKey === SHORTCUT.PIN) {
-        if (state.activeTool !== 'element') return true
-        if (!state.hoverElement?.isConnected) {
-          showToast?.(t('toast.noElement'))
-          return true
-        }
-
-        createDraftFromElement(state.hoverElement)
-        return true
-      }
-
       if (normalizedKey === SHORTCUT.PDF_REPORT) {
         generatePdfReport()
         return true
@@ -1624,7 +1629,7 @@
       }
 
       if (normalizedKey === 'Delete' || normalizedKey === 'Backspace') {
-        return removeReviewAnnotation()
+        return removeReviewAnnotation() || removeSelectedFreeMark()
       }
 
       if (normalizedKey === SHORTCUT.CANCEL && state.isDrawingPen) {

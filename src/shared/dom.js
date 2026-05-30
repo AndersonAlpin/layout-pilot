@@ -18,6 +18,20 @@
       !!target.closest?.('[contenteditable="true"], [role="textbox"]')
   }
 
+  function hasLayoutPilotClass(element) {
+    return element instanceof Element &&
+      Array.from(element.classList || []).some(className => className.startsWith('layoutpilot-'))
+  }
+
+  function isLayoutPilotElement(element) {
+    if (!(element instanceof Element)) return false
+    return hasLayoutPilotClass(element) || !!element.closest?.('[class*="layoutpilot-"]')
+  }
+
+  function getModalInteractionNode(event) {
+    return event?.type === 'focusout' ? event.relatedTarget : event?.target
+  }
+
   function px(value) {
     return `${Math.round(value)}px`
   }
@@ -397,6 +411,8 @@
   root.dom = {
     createElement,
     isTypingTarget,
+    isLayoutPilotElement,
+    getModalInteractionNode,
     px,
     getAnchoredTooltipPosition,
     getContainedTooltipPosition,

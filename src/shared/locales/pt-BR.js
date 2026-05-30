@@ -53,7 +53,6 @@
     shortcuts: {
       inspect: 'Inspeção',
       help: 'Atalhos',
-      quit: 'Desativar',
       cancel: 'Cancelar',
       context: 'Contexto simples',
       pin: 'Fixar',
@@ -82,7 +81,7 @@
         close: 'Fechar painel de revisão',
         collapse: 'Recolher painel',
         expand: 'Expandir painel',
-        clearReview: 'Limpar anotações',
+        clearReview: 'Limpar revisão',
         emptyTitle: 'Nenhuma anotação ainda',
         emptyDescription: 'Clique em um elemento da página para selecioná-lo para anotação.',
         draft: 'Rascunho',
@@ -139,10 +138,10 @@
         generatePdf: 'Gerar PDF'
       },
       clearConfirm: {
-        title: 'Limpar anotações?',
-        description: 'Isso removerá as anotações desta revisão.',
+        title: 'Remover tudo da revisão?',
+        description: 'Isso removerá todos os comentários, marcações de área e desenhos feitos nesta revisão.',
         cancel: 'Cancelar',
-        confirm: 'Limpar anotações'
+        confirm: 'Remover tudo'
       }
     },
     help: {
@@ -151,7 +150,6 @@
       shortcuts: {
         inspect: 'Ativar/desativar inspeção',
         help: 'Mostrar/ocultar atalhos',
-        quit: 'Desativar LayoutPilot',
         cancel: 'Cancelar ação atual',
         context: 'Copiar contexto simples',
         details: 'Abrir/fechar detalhes',
@@ -165,7 +163,7 @@
     tooltip: {
       clickToPin: 'Clique para fixar.',
       clickToUnpin: 'Clique de novo para desfixar.',
-      help: 'D detalhes - C contexto simples - H atalhos - Q sair',
+      help: 'D detalhes - C contexto simples - H atalhos - Esc cancelar',
       alignment: {
         label: 'Alinhamento',
         aligned: 'Alinhados',

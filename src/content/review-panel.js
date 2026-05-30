@@ -2,7 +2,7 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
   const { icon } = root.icons
-  const { renderButton, renderCloseButton, renderIconButton } = root.ui
+  const { renderButton, renderIconButton } = root.ui
   const { ensureAnnotationColors, getAnnotationColorStyle } = root.reviewMarkers
 
   function renderCardNumber(annotation, t) {
@@ -204,6 +204,11 @@
     ensureAnnotationColors(state.annotations)
 
     const count = state.annotations.length
+    const hasReviewContent = Boolean(
+      state.annotations.length ||
+      state.areaMarks?.length ||
+      state.penStrokes?.length
+    )
     const collapseLabel = state.panelCollapsed ? t('review.panel.expand') : t('review.panel.collapse')
     const collapseIcon = state.panelCollapsed ? '+' : '&minus;'
 
@@ -220,10 +225,13 @@
             action: 'review-toggle-collapse',
             className: 'layoutpilot-review-header-button'
           })}
-          ${renderCloseButton({
+          ${renderIconButton({
+            iconHtml: icon('trash', 14),
             action: 'review-request-clear',
             label: t('review.panel.clearReview'),
-            title: t('review.panel.clearReview')
+            title: t('review.panel.clearReview'),
+            className: 'layoutpilot-review-header-button layoutpilot-review-header-button--danger',
+            disabled: !hasReviewContent
           })}
         </div>
       </div>

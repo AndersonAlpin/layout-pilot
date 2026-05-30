@@ -53,7 +53,6 @@
     shortcuts: {
       inspect: 'Inspect',
       help: 'Shortcuts',
-      quit: 'Deactivate',
       cancel: 'Cancel',
       context: 'Simple context',
       pin: 'Pin',
@@ -82,7 +81,7 @@
         close: 'Close review panel',
         collapse: 'Collapse panel',
         expand: 'Expand panel',
-        clearReview: 'Clear annotations',
+        clearReview: 'Clear review',
         emptyTitle: 'No annotations yet',
         emptyDescription: 'Click an element on the page to select it for annotation.',
         draft: 'Draft',
@@ -139,10 +138,10 @@
         generatePdf: 'Generate PDF'
       },
       clearConfirm: {
-        title: 'Clear annotations?',
-        description: 'This will remove the annotations from this review.',
+        title: 'Remove everything from this review?',
+        description: 'This will remove every comment, area mark, and freehand drawing from this review.',
         cancel: 'Cancel',
-        confirm: 'Clear annotations'
+        confirm: 'Remove everything'
       }
     },
     help: {
@@ -151,7 +150,6 @@
       shortcuts: {
         inspect: 'Activate/deactivate inspect',
         help: 'Show/hide shortcuts',
-        quit: 'Deactivate LayoutPilot',
         cancel: 'Cancel current action',
         context: 'Copy simple context',
         details: 'Open/close details',
@@ -165,7 +163,7 @@
     tooltip: {
       clickToPin: 'Click to pin.',
       clickToUnpin: 'Click again to unpin.',
-      help: 'D details - C simple context - H help - Q quit',
+      help: 'D details - C simple context - H help - Esc cancel',
       alignment: {
         label: 'Alignment',
         aligned: 'Aligned',

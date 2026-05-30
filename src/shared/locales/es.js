@@ -53,7 +53,6 @@
     shortcuts: {
       inspect: 'Inspección',
       help: 'Atajos',
-      quit: 'Desactivar',
       cancel: 'Cancelar',
       context: 'Contexto simple',
       pin: 'Fijar',
@@ -82,7 +81,7 @@
         close: 'Cerrar panel de revisión',
         collapse: 'Contraer panel',
         expand: 'Expandir panel',
-        clearReview: 'Limpiar anotaciones',
+        clearReview: 'Limpiar revisión',
         emptyTitle: 'Aún no hay anotaciones',
         emptyDescription: 'Haz clic en un elemento de la página para seleccionarlo para anotación.',
         draft: 'Borrador',
@@ -139,10 +138,10 @@
         generatePdf: 'Generar PDF'
       },
       clearConfirm: {
-        title: '¿Limpiar anotaciones?',
-        description: 'Esto eliminará las anotaciones de esta revisión.',
+        title: '¿Eliminar todo de esta revisión?',
+        description: 'Esto eliminará todos los comentarios, marcas de área y dibujos a mano alzada de esta revisión.',
         cancel: 'Cancelar',
-        confirm: 'Limpiar anotaciones'
+        confirm: 'Eliminar todo'
       }
     },
     help: {
@@ -151,7 +150,6 @@
       shortcuts: {
         inspect: 'Activar/desactivar inspección',
         help: 'Mostrar/ocultar atajos',
-        quit: 'Desactivar LayoutPilot',
         cancel: 'Cancelar acción actual',
         context: 'Copiar contexto simple',
         details: 'Abrir/cerrar detalles',
@@ -165,7 +163,7 @@
     tooltip: {
       clickToPin: 'Clic para fijar.',
       clickToUnpin: 'Clic otra vez para desfijar.',
-      help: 'D detalles - C contexto simple - H atajos - Q salir',
+      help: 'D detalles - C contexto simple - H atajos - Esc cancelar',
       alignment: {
         label: 'Alineación',
         aligned: 'Alineados',
