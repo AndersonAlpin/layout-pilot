@@ -1,6 +1,6 @@
 {
   "name": "layout-pilot-extension",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "package": "node tools/package-extension.js",

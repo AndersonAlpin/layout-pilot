@@ -124,7 +124,7 @@ The extension uses a small set of Chrome permissions:
 
 ## Version
 
-Current extension version: `0.3.0`
+Current extension version: `1.0.0`
 
 ## License
 
