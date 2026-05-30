@@ -171,6 +171,8 @@
         aligned: 'Aligned',
         above: '{offset}px above',
         below: '{offset}px below',
+        left: '{offset}px left',
+        right: '{offset}px right',
         misaligned: 'Misaligned'
       }
     },

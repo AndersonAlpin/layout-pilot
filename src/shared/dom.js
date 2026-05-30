@@ -110,12 +110,43 @@
   }
 
   function getElementBandAlignment(baseRect, targetRect, options = {}) {
-    const tolerance = options.tolerance ?? 1
-    const topDelta = targetRect.top - baseRect.top
-    const bottomDelta = targetRect.bottom - baseRect.bottom
-    const roundedOffset = Math.round((topDelta + bottomDelta) / 2)
+    const centerTolerance = options.centerTolerance ?? options.tolerance ?? 0.5
+    const bandTolerance = options.bandTolerance ?? options.tolerance ?? 0.5
+    const horizontalGap = targetRect.left > baseRect.right
+      ? targetRect.left - baseRect.right
+      : baseRect.left > targetRect.right
+        ? baseRect.left - targetRect.right
+        : 0
+    const verticalGap = targetRect.top > baseRect.bottom
+      ? targetRect.top - baseRect.bottom
+      : baseRect.top > targetRect.bottom
+        ? baseRect.top - targetRect.bottom
+        : 0
+    const compareVerticalBand = verticalGap > horizontalGap
+    const baseCenterX = baseRect.left + baseRect.width / 2
+    const targetCenterX = targetRect.left + targetRect.width / 2
+    const centerDelta = targetCenterX - baseCenterX
+    const startDelta = targetRect.top - baseRect.top
+    const endDelta = targetRect.bottom - baseRect.bottom
+    const averageBandDelta = (startDelta + endDelta) / 2
 
-    if (Math.abs(topDelta) <= tolerance && Math.abs(bottomDelta) <= tolerance) {
+    if (compareVerticalBand) {
+      if (Math.abs(centerDelta) < centerTolerance) {
+        return {
+          aligned: true,
+          offset: 0,
+          direction: 'aligned'
+        }
+      }
+
+      return {
+        aligned: false,
+        offset: Math.round(Math.abs(centerDelta)),
+        direction: centerDelta > 0 ? 'right' : 'left'
+      }
+    }
+
+    if (Math.abs(startDelta) < bandTolerance && Math.abs(endDelta) < bandTolerance) {
       return {
         aligned: true,
         offset: 0,
@@ -123,11 +154,11 @@
       }
     }
 
-    if (Math.abs(topDelta - bottomDelta) <= tolerance) {
+    if (Math.abs(startDelta - endDelta) <= bandTolerance) {
       return {
         aligned: false,
-        offset: Math.abs(roundedOffset),
-        direction: roundedOffset > 0 ? 'below' : 'above'
+        offset: Math.round(Math.abs(averageBandDelta)),
+        direction: averageBandDelta > 0 ? 'below' : 'above'
       }
     }
 

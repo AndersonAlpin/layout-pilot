@@ -223,6 +223,8 @@
     if (alignment.direction === 'aligned') return t('tooltip.alignment.aligned')
     if (alignment.direction === 'above') return t('tooltip.alignment.above', { offset: alignment.offset })
     if (alignment.direction === 'below') return t('tooltip.alignment.below', { offset: alignment.offset })
+    if (alignment.direction === 'left') return t('tooltip.alignment.left', { offset: alignment.offset })
+    if (alignment.direction === 'right') return t('tooltip.alignment.right', { offset: alignment.offset })
     return t('tooltip.alignment.misaligned')
   }
 
@@ -403,7 +405,7 @@
       const top = b.top > a.bottom ? a.bottom : b.bottom
       const bottom = b.top > a.bottom ? b.top : a.top
       const x = Math.max(Math.min(a.left + a.width / 2, b.right), b.left)
-      addDistanceLine('vertical', x, top, 2, bottom - top, `${spacing.vertical}px`)
+      addDistanceLine('vertical', x, top, 2, bottom - top, `${spacing.vertical}px`, { aligned: alignment.aligned })
       hasDistance = true
     }
 
