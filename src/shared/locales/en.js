@@ -82,6 +82,7 @@
         collapse: 'Collapse panel',
         expand: 'Expand panel',
         clearReview: 'Clear review',
+        clearReviewEmpty: 'No annotations to remove',
         emptyTitle: 'No annotations yet',
         emptyDescription: 'Click an element on the page to select it for annotation.',
         draft: 'Draft',

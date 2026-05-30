@@ -2,6 +2,7 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml, px } = root.dom
   const { icon } = root.icons
+  const { renderAttrs } = root.ui
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value))
@@ -129,6 +130,8 @@
     const parentClass = hasChildren ? ' layoutpilot-review-annotation-box--parent' : ''
     const nestedClass = parentAnnotationId ? ' layoutpilot-review-annotation-box--nested' : ''
     const colorStyle = getAnnotationColorStyle(annotation)
+    const editLabel = 'Edit annotation'
+    const removeLabel = 'Remove annotation'
 
     return `
       <div
@@ -150,7 +153,7 @@
             class="layoutpilot-review-annotation-box-button"
             data-layoutpilot-action="review-edit"
             data-layoutpilot-review-id="${escapeHtml(annotation.id)}"
-            title="Edit annotation"
+            ${renderAttrs({ 'data-layoutpilot-tooltip': editLabel })}
             aria-label="Edit annotation ${escapeHtml(annotation.id)}"
           >${icon('edit', 14)}</button>
           <button
@@ -158,7 +161,7 @@
             class="layoutpilot-review-annotation-box-button layoutpilot-review-annotation-box-button--danger"
             data-layoutpilot-action="review-remove"
             data-layoutpilot-review-id="${escapeHtml(annotation.id)}"
-            title="Remove annotation"
+            ${renderAttrs({ 'data-layoutpilot-tooltip': removeLabel })}
             aria-label="Remove annotation ${escapeHtml(annotation.id)}"
           >${icon('trash', 14)}</button>
         </div>
@@ -285,6 +288,7 @@
     const markerMarkup = placedMarkers.map(({ annotation, marker }) => {
       const selectedClass = annotation.id === state.selectedAnnotationId ? ' layoutpilot-review-marker--selected' : ''
       const colorStyle = getAnnotationColorStyle(annotation)
+      const label = `Annotation ${annotation.id}`
 
       return `
         <button
@@ -293,8 +297,8 @@
           data-layoutpilot-action="review-focus"
           data-layoutpilot-review-id="${annotation.id}"
           style="${colorStyle} left: ${px(marker.x)}; top: ${px(marker.y)};"
-          aria-label="Annotation ${annotation.id}"
-          title="Annotation ${annotation.id}"
+          aria-label="${escapeHtml(label)}"
+          ${renderAttrs({ 'data-layoutpilot-tooltip': label })}
         >${escapeHtml(annotation.id)}</button>
       `
     })

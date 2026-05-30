@@ -82,6 +82,7 @@
         collapse: 'Contraer panel',
         expand: 'Expandir panel',
         clearReview: 'Limpiar revisión',
+        clearReviewEmpty: 'No hay anotaciones para eliminar',
         emptyTitle: 'Aún no hay anotaciones',
         emptyDescription: 'Haz clic en un elemento de la página para seleccionarlo para anotación.',
         draft: 'Borrador',

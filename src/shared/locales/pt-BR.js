@@ -82,6 +82,7 @@
         collapse: 'Recolher painel',
         expand: 'Expandir painel',
         clearReview: 'Limpar revisão',
+        clearReviewEmpty: 'Nenhuma anotação para remover',
         emptyTitle: 'Nenhuma anotação ainda',
         emptyDescription: 'Clique em um elemento da página para selecioná-lo para anotação.',
         draft: 'Rascunho',

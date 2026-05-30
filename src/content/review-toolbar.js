@@ -2,6 +2,7 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
   const { icon } = root.icons
+  const { getTooltipAttrs, renderAttrs } = root.ui
 
   const TOOL_ICON_NAME = {
     move: 'view',
@@ -18,7 +19,6 @@
         type="button"
         class="layoutpilot-review-toolbar-button${activeClass}${className ? ` ${className}` : ''}"
         data-layoutpilot-action="${escapeHtml(action)}"
-        title="${escapeHtml(label)}"
         aria-label="${escapeHtml(label)}"
         aria-pressed="${active ? 'true' : 'false'}"
         ${disabledAttr}
@@ -47,10 +47,12 @@
     const isPinned = state.toolbarPinned !== false
     const pinLabel = isPinned ? t('review.toolbar.unpin') : t('review.toolbar.pin')
     const pinIcon = icon(isPinned ? 'pin-off' : 'pin')
+    const dragTooltipAttr = renderAttrs(getTooltipAttrs(t('review.toolbar.drag'), { delayMs: 500 }))
+    const pinTooltipAttr = renderAttrs(getTooltipAttrs(pinLabel, { delayMs: 500 }))
 
     return `
       <div class="layoutpilot-review-toolbar-shell">
-        <div class="layoutpilot-review-toolbar-grip" data-layoutpilot-toolbar-drag-handle="true" title="${escapeHtml(t('review.toolbar.drag'))}">
+        <div class="layoutpilot-review-toolbar-grip" data-layoutpilot-toolbar-drag-handle="true" ${dragTooltipAttr}>
           <img class="layoutpilot-review-toolbar-brand-logo" src="${escapeHtml(brandLogoUrl)}" alt="LayoutPilot" />
         </div>
         <div class="layoutpilot-review-toolbar-group" role="group" aria-label="${escapeHtml(t('review.toolbar.tools'))}">
@@ -66,7 +68,7 @@
           type="button"
           class="layoutpilot-review-toolbar-pin${isPinned ? ' layoutpilot-review-toolbar-pin--active' : ''}"
           data-layoutpilot-action="review-toggle-toolbar-pin"
-          title="${escapeHtml(pinLabel)}"
+          ${pinTooltipAttr}
           aria-label="${escapeHtml(pinLabel)}"
           aria-pressed="${isPinned ? 'true' : 'false'}"
         >${pinIcon}</button>

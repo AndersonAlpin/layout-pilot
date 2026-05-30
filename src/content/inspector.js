@@ -41,6 +41,7 @@
   const { createCssSummary } = cssExport
   const { copyText } = clipboard
   const { normalizeKey, shouldIgnoreShortcut, consumeShortcut } = shortcuts
+  const { initTooltips } = ui
   const { renderDetailPanelContent } = detailPanel
   const { createDraggablePanel } = draggablePanel
   const { createReviewMode } = reviewMode
@@ -870,6 +871,7 @@
   }
   window.addEventListener('pagehide', handleLifecycleCleanup)
   window.addEventListener('beforeunload', handleLifecycleCleanup)
+  initTooltips()
   startHealthCheck()
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

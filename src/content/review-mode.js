@@ -40,6 +40,7 @@
   const { renderReviewToolbar } = root.reviewToolbar
   const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
   const { generateReviewPrintReport } = root.reviewPrintReport
+  const { renderAttrs } = root.ui
 
   function createReviewMode(options = {}) {
     const {
@@ -493,6 +494,7 @@
     }
 
     function renderPenStrokeTools(strokeId, position) {
+      const removeLabel = t('review.areaMark.remove')
       return `
         <foreignObject
           class="layoutpilot-review-pen-tools"
@@ -508,8 +510,8 @@
             class="layoutpilot-review-pen-button layoutpilot-review-pen-button--danger"
             data-layoutpilot-action="review-remove-pen-stroke"
             data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
-            title="${escapeHtml(t('review.areaMark.remove'))}"
-            aria-label="${escapeHtml(t('review.areaMark.remove'))}"
+            ${renderAttrs({ 'data-layoutpilot-tooltip': removeLabel })}
+            aria-label="${escapeHtml(removeLabel)}"
           >${icon('trash', 14)}</button>
         </foreignObject>
       `
@@ -521,6 +523,8 @@
       layer.innerHTML = state.areaMarks.map(mark => {
         const rect = getAreaMarkViewportRect(mark)
         const toolsStyle = getAreaMarkToolsStyle(rect)
+        const commentLabel = t('review.areaMark.comment')
+        const removeLabel = t('review.areaMark.remove')
         const selectedClass = state.selectedFreeMark?.type === 'area' && state.selectedFreeMark.id === mark.id
           ? ' layoutpilot-review-area-mark-wrap--focused'
           : ''
@@ -542,16 +546,16 @@
                 class="layoutpilot-review-area-mark-button"
                 data-layoutpilot-action="review-comment-area-mark"
                 data-layoutpilot-review-area-mark-id="${escapeHtml(mark.id)}"
-                title="${escapeHtml(t('review.areaMark.comment'))}"
-                aria-label="${escapeHtml(t('review.areaMark.comment'))}"
+                ${renderAttrs({ 'data-layoutpilot-tooltip': commentLabel })}
+                aria-label="${escapeHtml(commentLabel)}"
               >${icon('edit', 14)}</button>
               <button
                 type="button"
                 class="layoutpilot-review-area-mark-button layoutpilot-review-area-mark-button--danger"
                 data-layoutpilot-action="review-remove-area-mark"
                 data-layoutpilot-review-area-mark-id="${escapeHtml(mark.id)}"
-                title="${escapeHtml(t('review.areaMark.remove'))}"
-                aria-label="${escapeHtml(t('review.areaMark.remove'))}"
+                ${renderAttrs({ 'data-layoutpilot-tooltip': removeLabel })}
+                aria-label="${escapeHtml(removeLabel)}"
               >${icon('trash', 14)}</button>
             </div>
           </div>

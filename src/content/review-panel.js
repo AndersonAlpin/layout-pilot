@@ -2,7 +2,7 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
   const { icon } = root.icons
-  const { renderButton, renderIconButton } = root.ui
+  const { renderAttrs, renderButton, renderIconButton } = root.ui
   const { ensureAnnotationColors, getAnnotationColorStyle } = root.reviewMarkers
 
   function renderCardNumber(annotation, t) {
@@ -120,6 +120,7 @@
     const idName = isArea ? 'layoutpilot-review-area-mark-id' : 'layoutpilot-review-pen-stroke-id'
     const typeLabel = isArea ? t('review.panel.freeMarkArea') : t('review.panel.freeMarkPen')
     const typeIcon = isArea ? icon('area', 14) : icon('pen', 14)
+    const focusLabel = t('review.panel.focusFreeMark')
 
     return `
       <section class="layoutpilot-review-free-mark-card${selectedClass}">
@@ -128,8 +129,8 @@
           class="layoutpilot-review-free-mark-main"
           data-layoutpilot-action="${focusAction}"
           data-${idName}="${escapeHtml(mark.id)}"
-          title="${escapeHtml(t('review.panel.focusFreeMark'))}"
-          aria-label="${escapeHtml(t('review.panel.focusFreeMark'))}"
+          ${renderAttrs({ 'data-layoutpilot-tooltip': focusLabel })}
+          aria-label="${escapeHtml(focusLabel)}"
         >
           <span class="layoutpilot-review-free-mark-type">${typeIcon}${escapeHtml(typeLabel)}</span>
           <small>${escapeHtml(t('review.panel.freeMarkIndex', { index }))}</small>
@@ -211,6 +212,9 @@
     )
     const collapseLabel = state.panelCollapsed ? t('review.panel.expand') : t('review.panel.collapse')
     const collapseIcon = state.panelCollapsed ? '+' : '&minus;'
+    const clearReviewLabel = hasReviewContent
+      ? t('review.panel.clearReview')
+      : t('review.panel.clearReviewEmpty')
 
     return `
       <div class="layoutpilot-review-header">
@@ -228,8 +232,8 @@
           ${renderIconButton({
             iconHtml: icon('trash', 14),
             action: 'review-request-clear',
-            label: t('review.panel.clearReview'),
-            title: t('review.panel.clearReview'),
+            label: clearReviewLabel,
+            title: clearReviewLabel,
             className: 'layoutpilot-review-header-button layoutpilot-review-header-button--danger',
             disabled: !hasReviewContent
           })}

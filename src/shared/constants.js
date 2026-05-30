@@ -59,6 +59,7 @@
     'src/shared/dom.js',
     'src/shared/icons.js',
     'src/shared/ui/render.js',
+    'src/shared/ui/tooltip.js',
     'src/shared/ui/button.js',
     'src/shared/ui/panel-section.js',
     'src/shared/ui/shortcut-key.js',
@@ -98,6 +99,7 @@
     'layoutpilot-review-toolbar',
     'layoutpilot-review-workspace-frame',
     'layoutpilot-review-confirm',
+    'layoutpilot-ui-tooltip',
     'layoutpilot-toast'
   ]
 

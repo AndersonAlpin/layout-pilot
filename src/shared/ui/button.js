@@ -1,7 +1,7 @@
 (() => {
   const root = window.LayoutPilotModules ||= {}
   const ui = root.ui ||= {}
-  const { joinClasses, renderAttrs, renderDataAttrs, renderText } = ui
+  const { getTooltipAttrs, joinClasses, renderAttrs, renderDataAttrs, renderText } = ui
 
   function renderButton({
     label,
@@ -27,7 +27,7 @@
     const classes = joinClasses(className, attrs?.class)
     if (classes) resolvedAttrs.class = classes
     if (disabled) resolvedAttrs.disabled = true
-    if (title != null) resolvedAttrs.title = title
+    if (title != null) Object.assign(resolvedAttrs, getTooltipAttrs(title))
     if (ariaLabel != null) resolvedAttrs['aria-label'] = ariaLabel
 
     const attributes = joinClasses(renderAttrs(resolvedAttrs), renderDataAttrs(dataAttrs))
@@ -39,7 +39,7 @@
     label,
     className = 'layoutpilot-icon-button',
     text = 'x',
-    title,
+    title = label,
     attrs,
     data
   } = {}) {
