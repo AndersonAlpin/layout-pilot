@@ -24,6 +24,7 @@ const state = {
   mode: MODE.INSPECT,
   statusKey: 'popup.status.checking'
 }
+let languageCloseTimer = null
 
 const textBindings = {
   'mode-title': 'popup.mode.title',
@@ -36,10 +37,18 @@ const textBindings = {
 }
 
 const languageOptions = {
-  auto: { icon: '🌐', labelKey: 'language.auto' },
+  auto: { labelKey: 'language.auto' },
   'pt-BR': { flagSrc: '../assets/flags/pt-BR.png', labelKey: 'language.portuguese' },
   en: { flagSrc: '../assets/flags/en.png', labelKey: 'language.english' },
   es: { flagSrc: '../assets/flags/es.png', labelKey: 'language.spanish' }
+}
+
+for (const language of Object.values(languageOptions)) {
+  if (!language.flagSrc) continue
+  const image = new Image(20, 14)
+  image.decoding = 'sync'
+  image.loading = 'eager'
+  image.src = language.flagSrc
 }
 
 function normalizeMode(mode) {
@@ -87,15 +96,34 @@ function setElementText(id, value) {
 }
 
 function closeLanguageMenu() {
+  window.clearTimeout(languageCloseTimer)
+  if (languageMenu.hidden) {
+    languagePicker.classList.remove('is-open')
+    languageToggle.setAttribute('aria-expanded', 'false')
+    return
+  }
+
   languagePicker.classList.remove('is-open')
   languageToggle.setAttribute('aria-expanded', 'false')
-  languageMenu.hidden = true
+  languageCloseTimer = window.setTimeout(() => {
+    languageMenu.hidden = true
+    languageCloseTimer = null
+  }, 160)
 }
 
 function toggleLanguageMenu() {
-  const isOpen = languagePicker.classList.toggle('is-open')
-  languageToggle.setAttribute('aria-expanded', String(isOpen))
-  languageMenu.hidden = !isOpen
+  const isOpen = !languagePicker.classList.contains('is-open')
+  if (!isOpen) {
+    closeLanguageMenu()
+    return
+  }
+
+  window.clearTimeout(languageCloseTimer)
+  languageMenu.hidden = false
+  languageToggle.setAttribute('aria-expanded', 'true')
+  window.requestAnimationFrame(() => {
+    languagePicker.classList.add('is-open')
+  })
 }
 
 async function chooseLanguagePreference(preference) {
@@ -117,6 +145,11 @@ function getLanguageOptionIcon(language, className) {
   if (language.flagSrc) {
     const image = document.createElement('img')
     image.className = className
+    image.width = 20
+    image.height = 14
+    image.decoding = 'sync'
+    image.loading = 'eager'
+    image.draggable = false
     image.src = language.flagSrc
     image.alt = ''
     image.setAttribute('aria-hidden', 'true')
@@ -124,9 +157,28 @@ function getLanguageOptionIcon(language, className) {
   }
 
   const span = document.createElement('span')
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+  const horizontal = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  const vertical = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+
   span.className = className
   span.setAttribute('aria-hidden', 'true')
-  span.textContent = language.icon || ''
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('width', '14')
+  svg.setAttribute('height', '14')
+  svg.setAttribute('fill', 'none')
+  svg.setAttribute('stroke', 'currentColor')
+  svg.setAttribute('stroke-width', '2')
+  svg.setAttribute('stroke-linecap', 'round')
+  svg.setAttribute('stroke-linejoin', 'round')
+  circle.setAttribute('cx', '12')
+  circle.setAttribute('cy', '12')
+  circle.setAttribute('r', '9')
+  horizontal.setAttribute('d', 'M3 12h18')
+  vertical.setAttribute('d', 'M12 3c2.3 2.6 3.5 5.6 3.5 9S14.3 18.4 12 21c-2.3-2.6-3.5-5.6-3.5-9S9.7 5.6 12 3Z')
+  svg.append(circle, horizontal, vertical)
+  span.append(svg)
   return span
 }
 

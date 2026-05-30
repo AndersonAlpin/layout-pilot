@@ -102,9 +102,15 @@ body {
   border-bottom: 2px solid var(--text);
   pointer-events: none;
   transform: translateY(-70%) rotate(45deg);
+  transition: transform 180ms ease;
+}
+
+.language-picker.is-open .language-chevron {
+  transform: translateY(-30%) rotate(225deg);
 }
 
 .language-current-flag {
+  display: block;
   position: absolute;
   left: 11px;
   top: 50%;
@@ -129,6 +135,17 @@ body {
   border-radius: 10px;
   background: #0b1220;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transform-origin: 100% 0;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.language-picker.is-open .language-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .language-menu[hidden] {
@@ -170,16 +187,24 @@ body {
   width: 20px;
   height: 14px;
   place-items: center;
+  line-height: 0;
 }
 
 .language-option-flag {
+  display: block;
   border-radius: 2px;
   object-fit: contain;
+  vertical-align: top;
 }
 
 .language-option-auto {
-  font-size: 14px;
-  line-height: 1;
+  color: #7dd3fc;
+}
+
+.language-option-auto svg {
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 
 p {

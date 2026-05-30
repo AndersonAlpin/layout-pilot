@@ -66,12 +66,13 @@
     let suppressNextPageClick = false
     let toolbarAutoHideTimer = null
     let penToolsHideTimer = null
+    let popoverCloseTimer = null
     let colorPreferencesReady = loadReviewColorPreferences()
     const MIN_AREA_SELECTION_SIZE = 2
     const MIN_PEN_POINT_DISTANCE = 2
     const AREA_MARK_TOOLS_WIDTH = 64
     const AREA_MARK_TOOLS_HEIGHT = 30
-    const PEN_STROKE_TOOLS_SIZE = 30
+    const PEN_STROKE_TOOLS_SIZE = 32
 
     function clamp(value, min, max) {
       return Math.min(Math.max(value, min), max)
@@ -568,7 +569,8 @@
           width="${PEN_STROKE_TOOLS_SIZE}"
           height="${PEN_STROKE_TOOLS_SIZE}"
         >
-          <button
+          <div xmlns="http://www.w3.org/1999/xhtml" class="layoutpilot-review-pen-tools-shell">
+            <button
             xmlns="http://www.w3.org/1999/xhtml"
             type="button"
             class="layoutpilot-review-pen-button layoutpilot-review-pen-button--danger"
@@ -576,7 +578,8 @@
             data-layoutpilot-review-pen-stroke-id="${escapeHtml(strokeId)}"
             ${renderAttrs({ 'data-layoutpilot-tooltip': removeLabel })}
             aria-label="${escapeHtml(removeLabel)}"
-          >${icon('trash', 14)}</button>
+            >${icon('trash', 14)}</button>
+          </div>
         </foreignObject>
       `
     }
@@ -869,6 +872,7 @@
       if (!anchorRect) return
       popover.style.display = 'block'
       popover.style.visibility = 'hidden'
+      popover.classList.remove('layoutpilot-review-popover--visible')
       popover.style.left = '0px'
       popover.style.top = '0px'
 
@@ -887,17 +891,54 @@
       popover.style.left = `${Math.round(left)}px`
       popover.style.top = `${Math.round(top)}px`
       popover.style.visibility = 'visible'
+      window.requestAnimationFrame(() => {
+        if (popover.isConnected) popover.classList.add('layoutpilot-review-popover--visible')
+      })
     }
 
     function closePopover(options = {}) {
       const { updateToolbar = true } = options
       const hadExportPopover = state.activePopover?.type === 'export'
       const hadColorPopover = state.activePopover?.type === 'colors'
-      state.popover?.remove?.()
+      const popover = state.popover
+      if (popover) {
+        window.clearTimeout(popoverCloseTimer)
+        popover.classList.remove('layoutpilot-review-popover--visible')
+        popoverCloseTimer = window.setTimeout(() => {
+          if (popover !== state.popover) popover.remove()
+          popoverCloseTimer = null
+        }, 160)
+      }
       state.popover = null
       state.activePopover = null
       if (hadColorPopover) state.reviewColorDraft = null
-      if (updateToolbar && hadExportPopover && state.toolbar) renderToolbar()
+      if (updateToolbar && hadExportPopover && state.toolbar) syncExportButtonState()
+    }
+
+    function syncExportButtonState() {
+      const button = state.toolbar?.querySelector?.('[data-layoutpilot-action="review-toggle-export-menu"]')
+      if (!button) return
+
+      const active = state.activePopover?.type === 'export'
+      const wasActive = button.dataset.layoutpilotExportActive === 'true'
+      const changed = wasActive !== active
+      button.dataset.layoutpilotExportActive = String(active)
+      button.classList.toggle('layoutpilot-review-toolbar-button--active', active)
+      button.setAttribute('aria-pressed', String(active))
+
+      const chevron = button.querySelector('.layoutpilot-review-toolbar-chevron')
+      if (changed && chevron?.animate) {
+        chevron.animate(
+          [
+            { transform: `rotate(${wasActive ? 180 : 0}deg)` },
+            { transform: `rotate(${active ? 180 : 0}deg)` }
+          ],
+          {
+            duration: 180,
+            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
+          }
+        )
+      }
     }
 
     function renderPopover() {
@@ -908,6 +949,7 @@
       }
 
       const isMenu = active.type === 'annotation-color' || active.type === 'export'
+      if (state.popover && !state.popover.isConnected) state.popover = null
       const popover = ensurePopover(isMenu ? 'layoutpilot-review-menu' : 'layoutpilot-review-popover')
       if (active.type === 'colors') {
         popover.innerHTML = renderColorSettingsPopover(state, t)
@@ -944,7 +986,7 @@
           color: normalizeColorReference(state.reviewDefaultColor)
         }
       }
-      if ((type === 'export' || hadExportPopover) && state.toolbar) renderToolbar()
+      if ((type === 'export' || hadExportPopover) && state.toolbar) syncExportButtonState()
       renderPopover()
     }
 
