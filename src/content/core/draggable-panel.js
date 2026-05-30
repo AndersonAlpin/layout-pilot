@@ -15,18 +15,45 @@
       setDrag
     } = options
 
-    function getClampedPosition(x, y) {
+    function getEdgeAnchors(x, y) {
       const panel = getPanel()
-      if (!panel) return { x, y }
+      if (!panel) return {}
+
+      const edgeMargin = 32
+      const rect = panel.getBoundingClientRect()
+      const rightGap = window.innerWidth - (x + rect.width)
+      const bottomGap = window.innerHeight - (y + rect.height)
+
+      return {
+        rightGap,
+        bottomGap,
+        anchorRight: rightGap <= edgeMargin,
+        anchorBottom: bottomGap <= edgeMargin
+      }
+    }
+
+    function getClampedPosition(x, y, sourcePosition = {}) {
+      const panel = getPanel()
+      if (!panel) return { ...sourcePosition, x, y }
 
       const margin = 8
       const rect = panel.getBoundingClientRect()
       const maxX = Math.max(margin, window.innerWidth - rect.width - margin)
       const maxY = Math.max(margin, window.innerHeight - rect.height - margin)
+      const nextX = sourcePosition.anchorRight
+        ? window.innerWidth - rect.width - sourcePosition.rightGap
+        : x
+      const nextY = sourcePosition.anchorBottom
+        ? window.innerHeight - rect.height - sourcePosition.bottomGap
+        : y
+      const clampedX = clamp(nextX, margin, maxX)
+      const clampedY = clamp(nextY, margin, maxY)
 
       return {
-        x: clamp(x, margin, maxX),
-        y: clamp(y, margin, maxY)
+        ...sourcePosition,
+        ...getEdgeAnchors(clampedX, clampedY),
+        x: clampedX,
+        y: clampedY
       }
     }
 
@@ -35,7 +62,7 @@
       const position = getPosition()
       if (!panel || !position) return
 
-      const clampedPosition = getClampedPosition(position.x, position.y)
+      const clampedPosition = getClampedPosition(position.x, position.y, position)
       setPosition(clampedPosition)
       panel.style.left = px(clampedPosition.x)
       panel.style.top = px(clampedPosition.y)

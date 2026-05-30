@@ -1,6 +1,6 @@
 (() => {
   const root = window.LayoutPilotModules ||= {}
-  const { escapeHtml } = root.dom
+  const { MESSAGE_TYPE } = root.constants
   const { ensureAnnotationColors, getAnnotationColor, getAnnotationViewportRect } = root.reviewMarkers
   const { requestVisibleTabCapture } = root.reviewSnapshot
 
@@ -145,186 +145,35 @@
     })
   }
 
-  function buildPrintableHtml(sections, t) {
-    const unavailableMessage = t('review.printReport.imageUnavailable')
-    const printButton = t('review.printReport.printButton')
-
-    return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LayoutPilot Review</title>
-  <style>
-    :root {
-      color: #111827;
-      background: #ffffff;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  function openPrintableReport(sections, t) {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    const payload = {
+      title: 'LayoutPilot Review',
+      printButton: t('review.printReport.printButton'),
+      unavailableMessage: t('review.printReport.imageUnavailable'),
+      sections
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({
+        type: MESSAGE_TYPE.STORE_REVIEW_REPORT,
+        id,
+        payload
+      }, response => {
+        const runtimeError = chrome.runtime.lastError
+        if (runtimeError) {
+          reject(new Error(runtimeError.message))
+          return
+        }
 
-    body {
-      margin: 0;
-      background: #ffffff;
-      color: #111827;
-    }
+        if (!response?.ok) {
+          reject(new Error(response?.error?.message || 'Unable to open review report.'))
+          return
+        }
 
-    main {
-      width: min(920px, calc(100% - 48px));
-      margin: 0 auto;
-      padding: 36px 0 48px;
-    }
-
-    header {
-      margin-bottom: 28px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    h1 {
-      margin: 0;
-      color: #0f172a;
-      font-size: 28px;
-      line-height: 1.15;
-      font-weight: 900;
-      letter-spacing: 0;
-    }
-
-    .actions {
-      display: flex;
-      justify-content: flex-end;
-      margin: 0 0 20px;
-    }
-
-    .actions button {
-      min-height: 36px;
-      padding: 8px 13px;
-      border: 1px solid #0ea5e9;
-      border-radius: 7px;
-      color: #075985;
-      background: #e0f2fe;
-      font: 800 13px/1.2 ui-sans-serif, system-ui, sans-serif;
-      cursor: pointer;
-    }
-
-    .annotation {
-      break-inside: avoid;
-      page-break-inside: avoid;
-      margin: 0 0 32px;
-      padding: 0 0 28px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .annotation-heading {
-      margin-bottom: 12px;
-    }
-
-    .comment {
-      margin: 0;
-      color: #1f2937;
-      font-size: 15px;
-      font-weight: 400;
-      line-height: 1.55;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-    }
-
-    .comment strong {
-      color: #0f172a;
-      font-weight: 900;
-    }
-
-    .capture {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: #ffffff;
-    }
-
-    .unavailable {
-      padding: 14px 16px;
-      border: 1px dashed #cbd5e1;
-      border-radius: 8px;
-      color: #64748b;
-      background: #f8fafc;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    @media print {
-      main {
-        width: 100%;
-        padding: 0;
-      }
-
-      .actions {
-        display: none;
-      }
-
-      .annotation {
-        margin-bottom: 24px;
-        padding-bottom: 24px;
-      }
-
-      .capture {
-        border-color: #cbd5e1;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main>
-    <div class="actions">
-      <button type="button" onclick="window.print()">${escapeHtml(printButton)}</button>
-    </div>
-    <header>
-      <h1>LayoutPilot Review</h1>
-    </header>
-    ${sections.map(section => `
-      <section class="annotation">
-        <div class="annotation-heading">
-          <p class="comment">${section.type === 'areaMarks'
-            ? `<strong>${escapeHtml(section.title)}</strong>`
-            : `<strong>${escapeHtml(section.number)}.</strong> ${escapeHtml(section.comment)}`}</p>
-        </div>
-        ${section.imageDataUrl
-          ? `<img class="capture" src="${section.imageDataUrl}" alt="">`
-          : `<div class="unavailable">${escapeHtml(unavailableMessage)}</div>`}
-      </section>
-    `).join('')}
-  </main>
-  <script>
-    window.addEventListener('load', () => {
-      window.setTimeout(() => window.print(), 350)
+        resolve(response)
+      })
     })
-  </script>
-</body>
-</html>`
-  }
-
-  function openPrintableReport(html) {
-    const blob = new Blob([html], { type: 'text/html' })
-    const objectUrl = URL.createObjectURL(blob)
-    let opened = window.open(objectUrl, '_blank')
-
-    if (!opened) {
-      const link = document.createElement('a')
-      link.href = objectUrl
-      link.target = '_blank'
-      link.rel = 'noopener'
-      link.style.display = 'none'
-      document.documentElement.append(link)
-      link.click()
-      link.remove()
-      opened = true
-    }
-
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60000)
   }
 
   async function generateReviewPrintReport(state, options = {}) {
@@ -363,7 +212,7 @@
         })
       }
 
-      openPrintableReport(buildPrintableHtml(sections, t))
+      await openPrintableReport(sections, t)
       return { ok: true, sections }
     } catch (error) {
       const serializedError = serializeError(error)

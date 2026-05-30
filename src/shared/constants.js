@@ -12,7 +12,10 @@
     TOGGLE: 'layoutpilot:toggle',
     SET_ENABLED: 'layoutpilot:set-enabled',
     SET_LANGUAGE: 'layoutpilot:set-language',
-    CAPTURE_VISIBLE_TAB: 'layoutpilot:capture-visible-tab'
+    CAPTURE_VISIBLE_TAB: 'layoutpilot:capture-visible-tab',
+    STORE_REVIEW_REPORT: 'layoutpilot:store-review-report',
+    GET_REVIEW_REPORT: 'layoutpilot:get-review-report',
+    CLEAR_REVIEW_REPORT: 'layoutpilot:clear-review-report'
   }
 
   const SHORTCUT = {
