@@ -148,7 +148,7 @@
   function openPrintableReport(sections, t) {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
     const payload = {
-      title: 'LayoutPilot Review',
+      title: 'LayoutPilot',
       printButton: t('review.printReport.printButton'),
       unavailableMessage: t('review.printReport.imageUnavailable'),
       sections

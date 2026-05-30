@@ -62,7 +62,7 @@ function renderAnnotationHeading(section) {
 }
 
 function renderReport(payload) {
-  title.textContent = payload.title || 'LayoutPilot Review'
+  title.textContent = payload.title || 'LayoutPilot'
   printButton.textContent = payload.printButton || 'Print / Save PDF'
   content.textContent = ''
 
