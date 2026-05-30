@@ -117,6 +117,7 @@
         modeDefault: 'Color predeterminado',
         automaticToggle: 'Colores automáticos',
         confirm: 'Confirmar',
+        noChanges: 'No se realizaron cambios',
         autoConfirmTitle: '¿Activar colores automáticos?',
         autoConfirmDescription: 'Los colores individuales se eliminarán y las anotaciones actuales volverán a recibir colores automáticos.',
         defaultConfirmTitle: '¿Aplicar color predeterminado?',

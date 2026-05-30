@@ -117,6 +117,7 @@
         modeDefault: 'Default color',
         automaticToggle: 'Automatic colors',
         confirm: 'Confirm',
+        noChanges: 'No changes made',
         autoConfirmTitle: 'Enable automatic colors?',
         autoConfirmDescription: 'Individual colors will be removed and current annotations will receive automatic colors again.',
         defaultConfirmTitle: 'Apply default color?',

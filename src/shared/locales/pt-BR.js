@@ -117,6 +117,7 @@
         modeDefault: 'Cor padrão',
         automaticToggle: 'Cores automáticas',
         confirm: 'Confirmar',
+        noChanges: 'Nenhuma alteração realizada',
         autoConfirmTitle: 'Ativar cores automáticas?',
         autoConfirmDescription: 'As cores individuais serão removidas e as marcações atuais voltarão a receber cores automaticamente.',
         defaultConfirmTitle: 'Aplicar cor padrão?',

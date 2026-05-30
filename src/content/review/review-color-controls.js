@@ -2,7 +2,7 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
   const { icon } = root.icons
-  const { renderAttrs, renderButton, renderIconButton, renderSwitch } = root.ui
+  const { getTooltipAttrs, renderAttrs, renderButton, renderIconButton, renderSwitch } = root.ui
   const {
     ANNOTATION_COLORS,
     COLOR_MODE,
@@ -65,6 +65,14 @@
     const colorB = normalizeColorReference(referenceB)
     return colorA.type === colorB.type &&
       (colorA.type === 'custom' ? colorA.value === colorB.value : colorA.index === colorB.index)
+  }
+
+  function hasColorSettingsChanges(state, draft) {
+    const savedMode = state.reviewColorMode === COLOR_MODE.DEFAULT ? COLOR_MODE.DEFAULT : COLOR_MODE.AUTO
+    const draftMode = draft.mode === COLOR_MODE.DEFAULT ? COLOR_MODE.DEFAULT : COLOR_MODE.AUTO
+    if (savedMode !== draftMode) return true
+    if (draftMode === COLOR_MODE.AUTO) return false
+    return !isSameColorReference(state.reviewDefaultColor, draft.color)
   }
 
   function renderPaletteSwatches({
@@ -212,6 +220,7 @@
     }
     const automaticActive = draft.mode === COLOR_MODE.AUTO
     const draftColor = colorFromReference(draft.color)
+    const hasChanges = hasColorSettingsChanges(state, draft)
 
     return `
       <div class="layoutpilot-review-popover-inner">
@@ -258,8 +267,15 @@
         </fieldset>
         ${renderButton({
           label: t('review.colors.confirm'),
-          action: 'review-request-color-settings-confirm',
-          className: 'layoutpilot-review-popover-action'
+          action: hasChanges ? 'review-request-color-settings-confirm' : null,
+          className: `layoutpilot-review-popover-action${hasChanges ? '' : ' layoutpilot-review-popover-action--disabled'}`,
+          attrs: hasChanges
+            ? {}
+            : {
+                'aria-disabled': 'true',
+                tabindex: '-1',
+                ...getTooltipAttrs(t('review.colors.noChanges'))
+              }
         })}
       </div>
     `

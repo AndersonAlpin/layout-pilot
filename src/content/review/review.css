@@ -1335,7 +1335,8 @@
   text-align: center;
 }
 
-.layoutpilot-review-popover-action:disabled {
+.layoutpilot-review-popover-action:disabled,
+.layoutpilot-review-popover-action--disabled {
   color: #64748b;
   background: rgba(15, 23, 42, 0.5);
   cursor: not-allowed;

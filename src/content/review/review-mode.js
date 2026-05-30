@@ -1413,6 +1413,47 @@
       return state.reviewColorDraft
     }
 
+    function isSameColorReference(referenceA, referenceB) {
+      const colorA = normalizeColorReference(referenceA)
+      const colorB = normalizeColorReference(referenceB)
+      return colorA.type === colorB.type &&
+        (colorA.type === 'custom' ? colorA.value === colorB.value : colorA.index === colorB.index)
+    }
+
+    function hasColorSettingsChanges(draft = getColorSettingsDraft()) {
+      const savedMode = normalizeColorMode(state.reviewColorMode)
+      const draftMode = normalizeColorMode(draft.mode)
+      if (savedMode !== draftMode) return true
+      if (draftMode === COLOR_MODE.AUTO) return false
+      return !isSameColorReference(state.reviewDefaultColor, draft.color)
+    }
+
+    function syncColorSettingsConfirmButton() {
+      const button = state.popover?.querySelector?.('.layoutpilot-review-popover-action')
+      if (!button) return
+
+      if (hasColorSettingsChanges()) {
+        button.classList.remove('layoutpilot-review-popover-action--disabled')
+        button.dataset.layoutpilotAction = 'review-request-color-settings-confirm'
+        button.removeAttribute('aria-disabled')
+        button.removeAttribute('tabindex')
+        button.removeAttribute('data-layoutpilot-tooltip')
+        button.removeAttribute('data-layoutpilot-tooltip-delay')
+        return
+      }
+
+      button.classList.add('layoutpilot-review-popover-action--disabled')
+      delete button.dataset.layoutpilotAction
+      button.setAttribute('aria-disabled', 'true')
+      button.setAttribute('tabindex', '-1')
+      button.dataset.layoutpilotTooltip = t('review.colors.noChanges')
+    }
+
+    function updateColorInputPreview(field, colorReference) {
+      const hexButton = field.closest?.('.layoutpilot-review-color-custom')?.querySelector?.('.layoutpilot-review-color-hex')
+      if (hexButton) hexButton.textContent = colorReference.value
+    }
+
     function toggleAutomaticColorDraft() {
       const draft = getColorSettingsDraft()
       draft.mode = draft.mode === COLOR_MODE.AUTO ? COLOR_MODE.DEFAULT : COLOR_MODE.AUTO
@@ -1689,6 +1730,27 @@
       return false
     }
 
+    function handleColorInput(event) {
+      const field = event.target?.closest?.('[data-layoutpilot-review-color-input]')
+      if (!field) return false
+
+      const colorReference = normalizeColorReference({
+        type: 'custom',
+        value: field.value
+      })
+      updateColorInputPreview(field, colorReference)
+
+      if (field.dataset.layoutpilotReviewColorInput === 'default') {
+        const draft = getColorSettingsDraft()
+        draft.mode = COLOR_MODE.DEFAULT
+        draft.color = colorReference
+        syncColorSettingsConfirmButton()
+        return true
+      }
+
+      return field.dataset.layoutpilotReviewColorInput === 'annotation'
+    }
+
     function handleNoteInput(event) {
       const textarea = event.target?.closest?.('[data-layoutpilot-review-note]')
       if (!textarea) return
@@ -1945,6 +2007,7 @@
       document.addEventListener('pointerup', handleDocumentPointerUp, true)
       document.addEventListener('pointercancel', handleDocumentPointerCancel, true)
       document.addEventListener('click', handleDocumentClick, true)
+      document.addEventListener('input', handleColorInput, true)
       document.addEventListener('input', handleNoteInput, true)
       document.addEventListener('change', handleColorChange, true)
       document.addEventListener('wheel', handleScrollLockWheel, { capture: true, passive: false })
@@ -1961,6 +2024,7 @@
       document.removeEventListener('pointerup', handleDocumentPointerUp, true)
       document.removeEventListener('pointercancel', handleDocumentPointerCancel, true)
       document.removeEventListener('click', handleDocumentClick, true)
+      document.removeEventListener('input', handleColorInput, true)
       document.removeEventListener('input', handleNoteInput, true)
       document.removeEventListener('change', handleColorChange, true)
       document.removeEventListener('wheel', handleScrollLockWheel, true)
