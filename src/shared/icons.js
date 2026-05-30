@@ -10,6 +10,8 @@
     copy: '<rect x="9" y="9" width="10" height="10" rx="1.5"/><path d="M5 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V5"/>',
     download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 20h14"/>',
     pdf: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h4"/><path d="M9 16h6M9 12h3"/>',
+    palette: '<path d="M12 3a9 9 0 0 0 0 18h1.5a1.8 1.8 0 0 0 1.2-3.15 1.2 1.2 0 0 1 .8-2.1H17a4 4 0 0 0 4-4A8.8 8.8 0 0 0 12 3Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="14.5" cy="7.5" r="1"/><circle cx="16.5" cy="11" r="1"/>',
+    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
     pin: '<path d="M12 3v5"/><path d="M7 8h10"/><path d="m9 8 1 7h4l1-7"/><path d="M12 15v6"/>',
     'pin-off': '<path d="M12 3v5"/><path d="M7 8h10"/><path d="m9 8 1 7h4l1-7"/><path d="M12 15v6"/><path d="m5 5 14 14"/>',
     edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"/>',

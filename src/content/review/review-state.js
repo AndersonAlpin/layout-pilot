@@ -7,6 +7,10 @@
       activeTool: 'element',
       annotations: [],
       nextId: 1,
+      reviewColorMode: 'auto',
+      reviewDefaultColor: { type: 'palette', index: 0 },
+      reviewColorDraft: null,
+      reviewRecentColors: [],
       areaMarks: [],
       nextAreaMarkId: 1,
       penStrokes: [],
@@ -33,6 +37,9 @@
       panel: null,
       panelCollapsed: false,
       confirmDialog: null,
+      confirmPayload: null,
+      popover: null,
+      activePopover: null,
       toolbar: null,
       toolbarPosition: null,
       toolbarDrag: null,
@@ -48,7 +55,11 @@
   }
 
   function clearReviewState(state) {
-    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'areaMarkLayer', 'penLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'toolbar', 'toast']) {
+    const reviewColorMode = state.reviewColorMode
+    const reviewDefaultColor = state.reviewDefaultColor
+    const reviewRecentColors = state.reviewRecentColors
+
+    for (const key of ['overlay', 'hoverOverlay', 'annotationLayer', 'areaMarkLayer', 'penLayer', 'markerLayer', 'selectionBox', 'panel', 'confirmDialog', 'popover', 'toolbar', 'toast']) {
       state[key]?.remove?.()
       state[key] = null
     }
@@ -57,6 +68,10 @@
     state.activeTool = 'element'
     state.annotations = []
     state.nextId = 1
+    state.reviewColorMode = reviewColorMode
+    state.reviewDefaultColor = reviewDefaultColor
+    state.reviewColorDraft = null
+    state.reviewRecentColors = reviewRecentColors
     state.areaMarks = []
     state.nextAreaMarkId = 1
     state.penStrokes = []
@@ -76,6 +91,8 @@
     state.panelCollapsed = false
     state.panelPosition = null
     state.panelDrag = null
+    state.confirmPayload = null
+    state.activePopover = null
     state.toolbarPosition = null
     state.toolbarDrag = null
     state.toolbarPinned = true
@@ -113,15 +130,23 @@
     state.panelCollapsed = false
     state.toolbarPinned = true
     state.toolbarAutoVisible = false
+    state.confirmPayload = null
+    state.activePopover = null
+    state.reviewColorDraft = null
     state.lastSnapshotCapture = null
     state.lastSnapshotCaptureError = null
   }
 
   function addAnnotation(state, annotation) {
+    const id = state.nextId
     const nextAnnotation = {
       ...annotation,
-      id: state.nextId++
+      id
     }
+    if (!nextAnnotation.color && !Number.isInteger(nextAnnotation.colorIndex)) {
+      nextAnnotation.color = root.reviewColors.getNextAnnotationColorReference(state, nextAnnotation, state.annotations)
+    }
+    state.nextId += 1
     state.annotations.push(nextAnnotation)
     state.selectedAnnotationId = nextAnnotation.id
     state.selectedFreeMark = null

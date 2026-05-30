@@ -15,6 +15,8 @@
 .layoutpilot-review-panel,
 .layoutpilot-review-toolbar,
 .layoutpilot-review-confirm,
+.layoutpilot-review-popover,
+.layoutpilot-review-menu,
 .layoutpilot-toast {
   all: initial;
   box-sizing: border-box;
@@ -41,6 +43,8 @@
 .layoutpilot-review-panel *,
 .layoutpilot-review-toolbar *,
 .layoutpilot-review-confirm *,
+.layoutpilot-review-popover *,
+.layoutpilot-review-menu *,
 .layoutpilot-toast * {
   box-sizing: border-box;
 }

@@ -110,6 +110,30 @@
         downloadSnapshot: 'Download image',
         generatePdf: 'Generate PDF'
       },
+      colors: {
+        settings: 'Configure colors',
+        title: 'Annotation colors',
+        modeAuto: 'Automatic',
+        modeDefault: 'Default color',
+        automaticToggle: 'Automatic colors',
+        confirm: 'Confirm',
+        autoConfirmTitle: 'Enable automatic colors?',
+        autoConfirmDescription: 'Individual colors will be removed and current annotations will receive automatic colors again.',
+        defaultConfirmTitle: 'Apply default color?',
+        defaultConfirmDescription: 'The selected color will be applied to current annotations and used for new annotations.',
+        applyAll: 'Apply to all',
+        applyAllConfirmTitle: 'Apply color to all annotations?',
+        applyAllConfirmDescription: 'This replaces individual colors and cannot be undone.',
+        applyAllConfirm: 'Apply color',
+        custom: 'Custom',
+        hex: 'HEX',
+        invalidColor: 'Invalid color',
+        swatch: 'Annotation color',
+        defaultColor: 'Default color',
+        palette: 'Palette',
+        recent: 'Recent',
+        recentColor: 'Recent color'
+      },
       snapshot: {
         commentsTitle: 'Annotations'
       },
@@ -135,6 +159,7 @@
         element: 'Element',
         area: 'Area',
         pen: 'Pen',
+        export: 'Export',
         copyImage: 'Copy image',
         downloadImage: 'Download image',
         generatePdf: 'Generate PDF'

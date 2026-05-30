@@ -3,6 +3,11 @@
   const { escapeHtml, px } = root.dom
   const { icon } = root.icons
   const { renderAttrs } = root.ui
+  const {
+    ensureAnnotationColors,
+    getAnnotationColor,
+    getAnnotationColorStyle
+  } = root.reviewColors
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value))
@@ -11,68 +16,8 @@
   const MARKER_SIZE = 28
   const MARKER_GAP = 6
   const VIEWPORT_MARGIN = 8
-  const COLOR_NEAR_DISTANCE = 180
   const MARKER_NEAR_DISTANCE = 48
   const NESTED_RECT_TOLERANCE = 3
-  const ANNOTATION_COLORS = [
-    { color: '#FBBF24', rgb: '251, 191, 36', text: '#03111F' },
-    { color: '#38BDF8', rgb: '56, 189, 248', text: '#03111F' },
-    { color: '#34D399', rgb: '52, 211, 153', text: '#03111F' },
-    { color: '#A78BFA', rgb: '167, 139, 250', text: '#F8FAFC' },
-    { color: '#FB923C', rgb: '251, 146, 60', text: '#03111F' },
-    { color: '#F472B6', rgb: '244, 114, 182', text: '#03111F' }
-  ]
-
-  function ensureAnnotationColors(annotations = []) {
-    const assignedAnnotations = []
-
-    for (const annotation of annotations) {
-      if (!annotation) continue
-
-      if (!Number.isInteger(annotation.colorIndex)) {
-        annotation.colorIndex = chooseAnnotationColorIndex(annotation, assignedAnnotations)
-      }
-
-      assignedAnnotations.push(annotation)
-    }
-  }
-
-  function chooseAnnotationColorIndex(annotation, assignedAnnotations) {
-    const preferredIndex = getPreferredColorIndex(annotation.id)
-    const nearbyColorIndexes = new Set(
-      assignedAnnotations
-        .filter(assigned => areAnnotationsNear(annotation, assigned))
-        .map(assigned => assigned.colorIndex)
-        .filter(Number.isInteger)
-    )
-
-    for (let offset = 0; offset < ANNOTATION_COLORS.length; offset += 1) {
-      const candidateIndex = (preferredIndex + offset) % ANNOTATION_COLORS.length
-      if (!nearbyColorIndexes.has(candidateIndex)) {
-        return candidateIndex
-      }
-    }
-
-    return preferredIndex
-  }
-
-  function getPreferredColorIndex(id) {
-    const numericId = Number(id)
-    return Math.max(0, (Number.isFinite(numericId) ? numericId : 1) - 1) % ANNOTATION_COLORS.length
-  }
-
-  function getAnnotationColor(annotationOrId) {
-    const storedIndex = typeof annotationOrId === 'object' ? annotationOrId?.colorIndex : null
-    const index = Number.isInteger(storedIndex)
-      ? storedIndex % ANNOTATION_COLORS.length
-      : getPreferredColorIndex(typeof annotationOrId === 'object' ? annotationOrId?.id : annotationOrId)
-    return ANNOTATION_COLORS[index]
-  }
-
-  function getAnnotationColorStyle(annotationOrId) {
-    const color = getAnnotationColor(annotationOrId)
-    return `--layoutpilot-review-color: ${color.color}; --layoutpilot-review-color-rgb: ${color.rgb}; --layoutpilot-review-text-color: ${color.text};`
-  }
 
   function queryAnnotationElement(annotation) {
     const selector = annotation?.target?.selector
@@ -257,7 +202,7 @@
 
   function renderReviewAnnotationBoxes(state) {
     if (!state.annotationLayer) return
-    ensureAnnotationColors(state.annotations)
+    ensureAnnotationColors(state.annotations, getAnnotationViewportRect)
     const descriptorsByPaintOrder = getAnnotationBoxDescriptors(state.annotations)
 
     state.annotationLayer.innerHTML = [
@@ -268,7 +213,7 @@
 
   function renderReviewMarkers(state) {
     if (!state.markerLayer) return
-    ensureAnnotationColors(state.annotations)
+    ensureAnnotationColors(state.annotations, getAnnotationViewportRect)
 
     const occupiedRects = []
     const placedMarkers = []
@@ -332,28 +277,6 @@
       right: rect.x + rect.width,
       bottom: rect.y + rect.height
     }
-  }
-
-  function getRectCenter(rect) {
-    return {
-      x: rect.x + rect.width / 2,
-      y: rect.y + rect.height / 2
-    }
-  }
-
-  function getDistance(pointA, pointB) {
-    const deltaX = pointA.x - pointB.x
-    const deltaY = pointA.y - pointB.y
-    return Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-  }
-
-  function areAnnotationsNear(annotationA, annotationB) {
-    const rectA = getAnnotationViewportRect(annotationA)
-    const rectB = getAnnotationViewportRect(annotationB)
-    const distance = getDistance(getRectCenter(rectA), getRectCenter(rectB))
-
-    return distance <= COLOR_NEAR_DISTANCE ||
-      intersects(expandRect(rectFromViewportRect(rectA), 24), rectFromViewportRect(rectB))
   }
 
   function getMarkerRect(x, y) {

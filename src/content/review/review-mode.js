@@ -1,6 +1,6 @@
 (() => {
   const root = window.LayoutPilotModules ||= {}
-  const { SHORTCUT } = root.constants
+  const { SHORTCUT, STORAGE_KEYS } = root.constants
   const {
     createReviewState,
     clearReviewState,
@@ -36,7 +36,22 @@
   const { collectElementInfo } = root.elementInspector
   const { createDraggablePanel } = root.draggablePanel
   const { getAnnotationViewportRect, renderReviewAnnotationBoxes, renderReviewMarkers } = root.reviewMarkers
-  const { renderReviewPanel, renderClearReviewDialog } = root.reviewPanel
+  const {
+    COLOR_MODE,
+    addRecentCustomColor,
+    applyColorToAnnotations,
+    normalizeRecentCustomColors,
+    normalizeColorMode,
+    normalizeColorReference,
+    resetAnnotationsToAutomaticColors,
+    setAnnotationColor
+  } = root.reviewColors
+  const {
+    renderAnnotationColorMenu,
+    renderColorSettingsPopover,
+    renderExportMenu
+  } = root.reviewColorControls
+  const { renderReviewPanel, renderConfirmDialog } = root.reviewPanel
   const { renderReviewToolbar } = root.reviewToolbar
   const { downloadReviewSnapshot, copyReviewSnapshot } = root.reviewSnapshot
   const { generateReviewPrintReport } = root.reviewPrintReport
@@ -51,11 +66,17 @@
     let suppressNextPageClick = false
     let toolbarAutoHideTimer = null
     let penToolsHideTimer = null
+    let colorPreferencesReady = loadReviewColorPreferences()
     const MIN_AREA_SELECTION_SIZE = 2
     const MIN_PEN_POINT_DISTANCE = 2
     const AREA_MARK_TOOLS_WIDTH = 64
     const AREA_MARK_TOOLS_HEIGHT = 30
     const PEN_STROKE_TOOLS_SIZE = 30
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max)
+    }
+
     const panelDrag = createDraggablePanel({
       getPanel: () => state.panel,
       getPosition: () => state.panelPosition,
@@ -78,6 +99,35 @@
         state.toolbarDrag = drag
       }
     })
+
+    async function loadReviewColorPreferences() {
+      try {
+        const result = await chrome.storage.local.get([
+          STORAGE_KEYS.REVIEW_COLOR_MODE,
+          STORAGE_KEYS.REVIEW_DEFAULT_COLOR,
+          STORAGE_KEYS.REVIEW_RECENT_COLORS
+        ])
+        state.reviewColorMode = normalizeColorMode(result?.[STORAGE_KEYS.REVIEW_COLOR_MODE])
+        state.reviewDefaultColor = normalizeColorReference(result?.[STORAGE_KEYS.REVIEW_DEFAULT_COLOR])
+        state.reviewRecentColors = normalizeRecentCustomColors(result?.[STORAGE_KEYS.REVIEW_RECENT_COLORS])
+      } catch {
+        state.reviewColorMode = COLOR_MODE.AUTO
+        state.reviewDefaultColor = normalizeColorReference()
+        state.reviewRecentColors = []
+      }
+    }
+
+    function persistReviewColorPreferences() {
+      try {
+        Promise.resolve(chrome.storage.local.set({
+          [STORAGE_KEYS.REVIEW_COLOR_MODE]: normalizeColorMode(state.reviewColorMode),
+          [STORAGE_KEYS.REVIEW_DEFAULT_COLOR]: normalizeColorReference(state.reviewDefaultColor),
+          [STORAGE_KEYS.REVIEW_RECENT_COLORS]: normalizeRecentCustomColors(state.reviewRecentColors)
+        })).catch(() => {})
+      } catch {
+        // Preference persistence is best-effort; review mode must keep working without storage.
+      }
+    }
 
     function hasLayoutPilotClass(element) {
       return element instanceof Element &&
@@ -164,8 +214,14 @@
         '.layoutpilot-review-panel',
         '.layoutpilot-review-toolbar',
         '.layoutpilot-review-confirm',
+        '.layoutpilot-review-popover',
+        '.layoutpilot-review-menu',
         '.layoutpilot-toast'
       ].join(',')))
+    }
+
+    function isPopoverTarget(target) {
+      return target instanceof Element && Boolean(target.closest?.('.layoutpilot-review-popover, .layoutpilot-review-menu'))
     }
 
     function handleScrollLockWheel(event) {
@@ -251,6 +307,14 @@
     function ensureConfirmDialog() {
       state.confirmDialog ||= createElement('layoutpilot-review-confirm')
       return state.confirmDialog
+    }
+
+    function ensurePopover(className = 'layoutpilot-review-popover') {
+      if (!state.popover) {
+        state.popover = createElement(className)
+      }
+      state.popover.className = className
+      return state.popover
     }
 
     function buildElementAnnotation(element) {
@@ -667,7 +731,7 @@
       } else {
         panelDrag.applyPosition()
       }
-      panel.querySelector('.layoutpilot-review-header')?.addEventListener('pointerdown', panelDrag.handleStart)
+      panel.querySelector('.layoutpilot-review-header')?.addEventListener('pointerdown', handlePanelDragStart)
     }
 
     function focusPanelNote() {
@@ -739,6 +803,7 @@
     function setToolbarAutoVisible(visible) {
       if (state.toolbarPinned !== false) return
       state.toolbarAutoVisible = visible
+      if (!visible) closePopover()
       state.toolbar?.classList.toggle('layoutpilot-review-toolbar--peek', visible)
     }
 
@@ -751,10 +816,21 @@
       if (state.toolbarPinned !== false) return
       clearToolbarAutoHideTimer()
       toolbarAutoHideTimer = setTimeout(() => {
-        state.toolbarAutoVisible = false
-        state.toolbar?.classList.remove('layoutpilot-review-toolbar--peek')
+        setToolbarAutoVisible(false)
         toolbarAutoHideTimer = null
       }, 1400)
+    }
+
+    function handlePanelDragStart(event) {
+      if (event.target?.closest?.('[data-layoutpilot-action], input, textarea, select, button')) return
+      closePopover()
+      panelDrag.handleStart(event)
+    }
+
+    function handleToolbarDragStart(event) {
+      if (!event.target?.closest?.('[data-layoutpilot-toolbar-drag-handle]')) return
+      closePopover()
+      toolbarDrag.handleStart(event)
     }
 
     function renderToolbar() {
@@ -764,9 +840,9 @@
       toolbar.innerHTML = renderReviewToolbar(state, { t })
       toolbar.style.display = 'block'
       applyToolbarPosition()
-      toolbar.removeEventListener('pointerdown', toolbarDrag.handleStart)
+      toolbar.removeEventListener('pointerdown', handleToolbarDragStart)
       if (state.toolbarPinned !== false) {
-        toolbar.addEventListener('pointerdown', toolbarDrag.handleStart)
+        toolbar.addEventListener('pointerdown', handleToolbarDragStart)
       } else {
         toolbarDrag.stop()
       }
@@ -776,15 +852,144 @@
       toolbar.onfocusout = scheduleToolbarAutoHide
     }
 
-    function showClearConfirmation() {
+    function getAnchorRect(target) {
+      const rect = target?.getBoundingClientRect?.()
+      if (!rect) return null
+      return {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height
+      }
+    }
+
+    function positionPopover(popover, anchorRect) {
+      if (!anchorRect) return
+      popover.style.display = 'block'
+      popover.style.visibility = 'hidden'
+      popover.style.left = '0px'
+      popover.style.top = '0px'
+
+      const rect = popover.getBoundingClientRect()
+      const gap = 8
+      const padding = 12
+      const viewportRight = window.innerWidth - padding
+      const viewportBottom = window.innerHeight - padding
+      const topBelow = anchorRect.bottom + gap
+      const topAbove = anchorRect.top - rect.height - gap
+      const hasBottomSpace = topBelow + rect.height <= viewportBottom
+      const top = hasBottomSpace ? topBelow : Math.max(padding, topAbove)
+      const left = clamp(anchorRect.right - rect.width, padding, Math.max(padding, viewportRight - rect.width))
+
+      popover.dataset.placement = hasBottomSpace ? 'bottom' : 'top'
+      popover.style.left = `${Math.round(left)}px`
+      popover.style.top = `${Math.round(top)}px`
+      popover.style.visibility = 'visible'
+    }
+
+    function closePopover(options = {}) {
+      const { updateToolbar = true } = options
+      const hadExportPopover = state.activePopover?.type === 'export'
+      const hadColorPopover = state.activePopover?.type === 'colors'
+      state.popover?.remove?.()
+      state.popover = null
+      state.activePopover = null
+      if (hadColorPopover) state.reviewColorDraft = null
+      if (updateToolbar && hadExportPopover && state.toolbar) renderToolbar()
+    }
+
+    function renderPopover() {
+      const active = state.activePopover
+      if (!active) {
+        closePopover()
+        return
+      }
+
+      const isMenu = active.type === 'annotation-color' || active.type === 'export'
+      const popover = ensurePopover(isMenu ? 'layoutpilot-review-menu' : 'layoutpilot-review-popover')
+      if (active.type === 'colors') {
+        popover.innerHTML = renderColorSettingsPopover(state, t)
+      } else if (active.type === 'annotation-color') {
+        popover.innerHTML = renderAnnotationColorMenu(state, t)
+      } else if (active.type === 'export') {
+        popover.innerHTML = renderExportMenu(t)
+      } else {
+        closePopover()
+        return
+      }
+      positionPopover(popover, active.anchorRect)
+    }
+
+    function openPopover(type, target, data = {}) {
+      if (
+        state.activePopover?.type === type &&
+        (data.annotationId == null || Number(state.activePopover.annotationId) === Number(data.annotationId))
+      ) {
+        closePopover()
+        return
+      }
+
+      const hadExportPopover = state.activePopover?.type === 'export'
+      const anchorRect = getAnchorRect(target)
+      state.activePopover = {
+        type,
+        anchorRect,
+        ...data
+      }
+      if (type === 'colors') {
+        state.reviewColorDraft = {
+          mode: normalizeColorMode(state.reviewColorMode),
+          color: normalizeColorReference(state.reviewDefaultColor)
+        }
+      }
+      if ((type === 'export' || hadExportPopover) && state.toolbar) renderToolbar()
+      renderPopover()
+    }
+
+    function showConfirmation(payload) {
+      closePopover()
       const dialog = ensureConfirmDialog()
-      dialog.innerHTML = renderClearReviewDialog(t)
+      state.confirmPayload = payload
+      dialog.innerHTML = renderConfirmDialog(t, payload)
       dialog.style.display = 'grid'
     }
 
-    function hideClearConfirmation() {
+    function hideConfirmation() {
       state.confirmDialog?.remove?.()
       state.confirmDialog = null
+      state.confirmPayload = null
+    }
+
+    function showClearConfirmation() {
+      showConfirmation({
+        confirmAction: 'review-confirm-clear',
+        cancelAction: 'review-cancel-clear'
+      })
+    }
+
+    function showColorSettingsConfirmation() {
+      const draft = state.reviewColorDraft || {
+        mode: normalizeColorMode(state.reviewColorMode),
+        color: normalizeColorReference(state.reviewDefaultColor)
+      }
+      const automatic = draft.mode === COLOR_MODE.AUTO
+      showConfirmation({
+        title: automatic ? t('review.colors.autoConfirmTitle') : t('review.colors.defaultConfirmTitle'),
+        description: automatic ? t('review.colors.autoConfirmDescription') : t('review.colors.defaultConfirmDescription'),
+        confirmLabel: t('review.colors.confirm'),
+        confirmAction: 'review-confirm-color-settings',
+        cancelAction: 'review-cancel-color-settings',
+        colorSettings: {
+          mode: draft.mode,
+          color: normalizeColorReference(draft.color)
+        }
+      })
+    }
+
+    function hideClearConfirmation() {
+      hideConfirmation()
     }
 
     function renderUi({ panel = false, focusNote = false } = {}) {
@@ -794,6 +999,7 @@
       renderAnnotations()
       if (panel || state.panel) renderPanel()
       if (focusNote) focusPanelNote()
+      if (state.activePopover) renderPopover()
     }
 
     function createDraftFromElement(element) {
@@ -1023,6 +1229,7 @@
 
     function setActiveTool(tool) {
       const nextTool = ['move', 'element', 'area', 'pen'].includes(tool) ? tool : 'element'
+      closePopover()
       if (state.draftAnnotation?.freeMarkSource) {
         cancelFreeMarkDraft({ render: false })
       }
@@ -1049,6 +1256,7 @@
     }
 
     function toggleToolbarPinned() {
+      closePopover()
       state.toolbarPinned = state.toolbarPinned === false
       state.toolbarAutoVisible = false
       clearToolbarAutoHideTimer()
@@ -1141,6 +1349,7 @@
     }
 
     function closePanel() {
+      closePopover()
       state.panel?.remove?.()
       state.panel = null
       panelDrag.stop()
@@ -1156,11 +1365,13 @@
     }
 
     function togglePanelCollapsed() {
+      closePopover()
       state.panelCollapsed = !state.panelCollapsed
       renderPanel()
     }
 
     function clearReviewAnnotations() {
+      closePopover()
       resetReviewState(state)
       clearSelectedFreeMark(state)
       clearAreaSelection()
@@ -1179,6 +1390,94 @@
       )
     }
 
+    function getColorReferenceFromTarget(target) {
+      const type = target?.dataset?.layoutpilotReviewColorType
+      if (type === 'custom') {
+        return normalizeColorReference({
+          type: 'custom',
+          value: target?.dataset?.layoutpilotReviewColorValue
+        })
+      }
+
+      return normalizeColorReference({
+        type: 'palette',
+        index: Number(target?.dataset?.layoutpilotReviewColorIndex)
+      })
+    }
+
+    function getColorSettingsDraft() {
+      state.reviewColorDraft ||= {
+        mode: normalizeColorMode(state.reviewColorMode),
+        color: normalizeColorReference(state.reviewDefaultColor)
+      }
+      return state.reviewColorDraft
+    }
+
+    function toggleAutomaticColorDraft() {
+      const draft = getColorSettingsDraft()
+      draft.mode = draft.mode === COLOR_MODE.AUTO ? COLOR_MODE.DEFAULT : COLOR_MODE.AUTO
+      renderPopover()
+      return true
+    }
+
+    function setReviewDefaultColor(colorReference) {
+      const draft = getColorSettingsDraft()
+      draft.mode = COLOR_MODE.DEFAULT
+      draft.color = normalizeColorReference(colorReference)
+      if (draft.color.type === 'custom') {
+        state.reviewRecentColors = addRecentCustomColor(state.reviewRecentColors, draft.color.value)
+        persistReviewColorPreferences()
+      }
+      renderPopover()
+      return true
+    }
+
+    function updateAnnotationColor(annotationId, colorReference) {
+      const annotation = state.annotations.find(item => item.id === Number(annotationId))
+      if (!annotation) return true
+      const color = setAnnotationColor(annotation, colorReference)
+      if (color?.type === 'custom') {
+        state.reviewRecentColors = addRecentCustomColor(state.reviewRecentColors, color.value)
+        persistReviewColorPreferences()
+      }
+      renderUi({ panel: !!state.panel })
+      renderPopover()
+      return true
+    }
+
+    function applyColorSettings(settings = {}) {
+      const mode = normalizeColorMode(settings.mode)
+      state.reviewColorMode = mode
+
+      if (mode === COLOR_MODE.AUTO) {
+        resetAnnotationsToAutomaticColors(state.annotations)
+      } else {
+        const color = normalizeColorReference(settings.color)
+        state.reviewDefaultColor = color
+        applyColorToAnnotations(state.annotations, color)
+      }
+
+      state.reviewColorDraft = null
+      persistReviewColorPreferences()
+      closePopover()
+      hideConfirmation()
+      renderUi({ panel: !!state.panel })
+    }
+
+    function openNativeColorPicker(target) {
+      const inputType = target?.dataset?.layoutpilotReviewColorInput
+      if (!inputType || !state.popover) return true
+
+      const annotationId = target?.dataset?.layoutpilotReviewId
+      const selector = annotationId
+        ? `[data-layoutpilot-review-color-input="${inputType}"][data-layoutpilot-review-id="${annotationId}"]`
+        : `[data-layoutpilot-review-color-input="${inputType}"]`
+      const input = state.popover.querySelector(selector)
+      input?.focus?.({ preventScroll: true })
+      input?.click?.()
+      return true
+    }
+
     function handleReviewAction(action, target) {
       if (action === 'review-request-clear') {
         if (!hasReviewContent()) {
@@ -1189,7 +1488,7 @@
       }
 
       if (action === 'review-cancel-clear') {
-        hideClearConfirmation()
+        hideConfirmation()
         return true
       }
 
@@ -1198,22 +1497,71 @@
         return true
       }
 
+      if (action === 'review-cancel-color-settings') {
+        hideConfirmation()
+        return true
+      }
+
+      if (action === 'review-confirm-color-settings') {
+        applyColorSettings(state.confirmPayload?.colorSettings)
+        return true
+      }
+
       if (action === 'review-toggle-collapse') {
         togglePanelCollapsed()
         return true
       }
 
+      if (action === 'review-toggle-colors-popover') {
+        openPopover('colors', target)
+        return true
+      }
+
+      if (action === 'review-toggle-automatic-colors') {
+        return toggleAutomaticColorDraft()
+      }
+
+      if (action === 'review-set-default-color') {
+        return setReviewDefaultColor(getColorReferenceFromTarget(target))
+      }
+
+      if (action === 'review-request-color-settings-confirm') {
+        showColorSettingsConfirmation()
+        return true
+      }
+
+      if (action === 'review-open-color-picker') {
+        return openNativeColorPicker(target)
+      }
+
+      if (action === 'review-toggle-annotation-color-menu') {
+        openPopover('annotation-color', target, { annotationId: Number(target?.dataset?.layoutpilotReviewId) })
+        return true
+      }
+
+      if (action === 'review-set-annotation-color') {
+        return updateAnnotationColor(target?.dataset?.layoutpilotReviewId, getColorReferenceFromTarget(target))
+      }
+
+      if (action === 'review-toggle-export-menu') {
+        openPopover('export', target)
+        return true
+      }
+
       if (action === 'review-download-snapshot') {
+        closePopover()
         downloadSnapshot()
         return true
       }
 
       if (action === 'review-copy-image') {
+        closePopover()
         copySnapshot()
         return true
       }
 
       if (action === 'review-generate-pdf') {
+        closePopover()
         generatePdfReport()
         return true
       }
@@ -1304,6 +1652,43 @@
       return false
     }
 
+    function handleColorChange(event) {
+      const field = event.target?.closest?.('[data-layoutpilot-review-color-input]')
+      if (!field) return false
+
+      const colorReference = normalizeColorReference({
+        type: 'custom',
+        value: field.value
+      })
+
+      if (field.dataset.layoutpilotReviewColorInput === 'default') {
+        const draft = getColorSettingsDraft()
+        draft.mode = COLOR_MODE.DEFAULT
+        draft.color = colorReference
+        state.reviewRecentColors = addRecentCustomColor(state.reviewRecentColors, colorReference.value)
+        persistReviewColorPreferences()
+        const hexButton = field.closest?.('.layoutpilot-review-color-custom')?.querySelector?.('.layoutpilot-review-color-hex')
+        if (hexButton) hexButton.textContent = colorReference.value
+        renderPopover()
+        return true
+      }
+
+      if (field.dataset.layoutpilotReviewColorInput === 'annotation') {
+        const annotation = state.annotations.find(item => item.id === Number(field.dataset.layoutpilotReviewId))
+        if (annotation) {
+          setAnnotationColor(annotation, colorReference)
+          state.reviewRecentColors = addRecentCustomColor(state.reviewRecentColors, colorReference.value)
+          persistReviewColorPreferences()
+          renderAnnotations()
+          if (state.panel) renderPanel()
+          renderPopover()
+        }
+        return true
+      }
+
+      return false
+    }
+
     function handleNoteInput(event) {
       const textarea = event.target?.closest?.('[data-layoutpilot-review-note]')
       if (!textarea) return
@@ -1368,6 +1753,13 @@
     function handleDocumentPointerDown(event) {
       if (!state.enabled) return
       if (event.button !== undefined && event.button !== 0) return
+      if (state.activePopover && !isOwnElement(event.target)) {
+        closePopover()
+        suppressNextPageClick = true
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
       if (state.draftAnnotation?.freeMarkSource &&
         !isReviewInteractiveUiTarget(event.target) &&
         !isEditableTypingTarget(event.target)
@@ -1502,6 +1894,13 @@
         return
       }
 
+      if (state.activePopover && !isPopoverTarget(event.target)) {
+        closePopover()
+        event.preventDefault()
+        event.stopPropagation()
+        return
+      }
+
       if (suppressNextPageClick) {
         suppressNextPageClick = false
         event.preventDefault()
@@ -1547,6 +1946,7 @@
       document.addEventListener('pointercancel', handleDocumentPointerCancel, true)
       document.addEventListener('click', handleDocumentClick, true)
       document.addEventListener('input', handleNoteInput, true)
+      document.addEventListener('change', handleColorChange, true)
       document.addEventListener('wheel', handleScrollLockWheel, { capture: true, passive: false })
       document.addEventListener('touchmove', handleScrollLockTouchMove, { capture: true, passive: false })
       document.addEventListener('contextmenu', handleContextMenu, true)
@@ -1562,6 +1962,7 @@
       document.removeEventListener('pointercancel', handleDocumentPointerCancel, true)
       document.removeEventListener('click', handleDocumentClick, true)
       document.removeEventListener('input', handleNoteInput, true)
+      document.removeEventListener('change', handleColorChange, true)
       document.removeEventListener('wheel', handleScrollLockWheel, true)
       document.removeEventListener('touchmove', handleScrollLockTouchMove, true)
       document.removeEventListener('contextmenu', handleContextMenu, true)
@@ -1570,11 +1971,13 @@
       window.removeEventListener('resize', handleViewportChange)
     }
 
-    function start() {
+    async function start() {
       if (state.enabled) return
       state.enabled = true
       lockPageScroll()
       bindListeners()
+      await colorPreferencesReady
+      if (!state.enabled) return
       renderUi()
       showToast?.(t('toast.reviewOn'))
     }
@@ -1604,7 +2007,12 @@
       if (!state.enabled) return false
 
       if (state.confirmDialog) {
-        if (normalizedKey === SHORTCUT.CANCEL) hideClearConfirmation()
+        if (normalizedKey === SHORTCUT.CANCEL) hideConfirmation()
+        return true
+      }
+
+      if (state.activePopover) {
+        if (normalizedKey === SHORTCUT.CANCEL) closePopover()
         return true
       }
 
@@ -1666,7 +2074,8 @@
     function refreshLanguage() {
       if (state.panel) renderPanel()
       if (state.toolbar) renderToolbar()
-      if (state.confirmDialog) showClearConfirmation()
+      if (state.confirmDialog && state.confirmPayload) showConfirmation(state.confirmPayload)
+      if (state.activePopover) renderPopover()
     }
 
     function getState() {
@@ -1674,7 +2083,7 @@
     }
 
     function blocksGlobalShortcuts() {
-      return Boolean(state.confirmDialog)
+      return Boolean(state.confirmDialog || state.activePopover)
     }
 
     return {

@@ -110,6 +110,30 @@
         downloadSnapshot: 'Descargar imagen',
         generatePdf: 'Generar PDF'
       },
+      colors: {
+        settings: 'Configurar colores',
+        title: 'Colores de las anotaciones',
+        modeAuto: 'Automático',
+        modeDefault: 'Color predeterminado',
+        automaticToggle: 'Colores automáticos',
+        confirm: 'Confirmar',
+        autoConfirmTitle: '¿Activar colores automáticos?',
+        autoConfirmDescription: 'Los colores individuales se eliminarán y las anotaciones actuales volverán a recibir colores automáticos.',
+        defaultConfirmTitle: '¿Aplicar color predeterminado?',
+        defaultConfirmDescription: 'El color elegido se aplicará a las anotaciones actuales y se usará en las próximas anotaciones.',
+        applyAll: 'Aplicar a todas',
+        applyAllConfirmTitle: '¿Aplicar color a todas las anotaciones?',
+        applyAllConfirmDescription: 'Esto sustituye los colores individuales y no se puede deshacer.',
+        applyAllConfirm: 'Aplicar color',
+        custom: 'Personalizado',
+        hex: 'HEX',
+        invalidColor: 'Color inválido',
+        swatch: 'Color de la anotación',
+        defaultColor: 'Color predeterminado',
+        palette: 'Paleta',
+        recent: 'Recientes',
+        recentColor: 'Color reciente'
+      },
       snapshot: {
         commentsTitle: 'Anotaciones'
       },
@@ -135,6 +159,7 @@
         element: 'Elemento',
         area: 'Área',
         pen: 'Lápiz',
+        export: 'Exportar',
         copyImage: 'Copiar imagen',
         downloadImage: 'Descargar imagen',
         generatePdf: 'Generar PDF'

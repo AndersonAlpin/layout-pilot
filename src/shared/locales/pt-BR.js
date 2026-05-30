@@ -110,6 +110,30 @@
         downloadSnapshot: 'Baixar imagem',
         generatePdf: 'Gerar PDF'
       },
+      colors: {
+        settings: 'Configurar cores',
+        title: 'Cores das marcações',
+        modeAuto: 'Automático',
+        modeDefault: 'Cor padrão',
+        automaticToggle: 'Cores automáticas',
+        confirm: 'Confirmar',
+        autoConfirmTitle: 'Ativar cores automáticas?',
+        autoConfirmDescription: 'As cores individuais serão removidas e as marcações atuais voltarão a receber cores automaticamente.',
+        defaultConfirmTitle: 'Aplicar cor padrão?',
+        defaultConfirmDescription: 'A cor escolhida será aplicada nas marcações atuais e usada nas próximas marcações.',
+        applyAll: 'Aplicar a todas',
+        applyAllConfirmTitle: 'Aplicar cor a todas as marcações?',
+        applyAllConfirmDescription: 'Isso substitui as cores individuais e não pode ser desfeito.',
+        applyAllConfirm: 'Aplicar cor',
+        custom: 'Personalizada',
+        hex: 'HEX',
+        invalidColor: 'Cor inválida',
+        swatch: 'Cor da marcação',
+        defaultColor: 'Cor padrão',
+        palette: 'Paleta',
+        recent: 'Recentes',
+        recentColor: 'Cor recente'
+      },
       snapshot: {
         commentsTitle: 'Anotações'
       },
@@ -135,6 +159,7 @@
         element: 'Elemento',
         area: 'Área',
         pen: 'Caneta',
+        export: 'Exportar',
         copyImage: 'Copiar imagem',
         downloadImage: 'Baixar imagem',
         generatePdf: 'Gerar PDF'

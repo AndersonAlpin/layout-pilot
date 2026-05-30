@@ -44,7 +44,7 @@
     const { t = key => key } = options
     const brandLogoUrl = chrome.runtime.getURL('src/assets/brand/logo-horizontal.png')
 
-    const isPinned = state.toolbarPinned !== false
+    const isPinned = state.toolbarPinned === false
     const pinLabel = isPinned ? t('review.toolbar.unpin') : t('review.toolbar.pin')
     const pinIcon = icon(isPinned ? 'pin-off' : 'pin')
     const dragTooltipAttr = renderAttrs(getTooltipAttrs(t('review.toolbar.drag'), { delayMs: 500 }))
@@ -60,9 +60,13 @@
         </div>
         <div class="layoutpilot-review-toolbar-separator" aria-hidden="true"></div>
         <div class="layoutpilot-review-toolbar-group" role="group" aria-label="${escapeHtml(t('review.toolbar.actions'))}">
-          ${renderToolbarButton({ label: t('review.toolbar.copyImage'), icon: icon('copy'), action: 'review-copy-image' })}
-          ${renderToolbarButton({ label: t('review.toolbar.downloadImage'), icon: icon('download'), action: 'review-download-snapshot' })}
-          ${renderToolbarButton({ label: t('review.toolbar.generatePdf'), icon: icon('pdf'), action: 'review-generate-pdf' })}
+          ${renderToolbarButton({
+            label: t('review.toolbar.export'),
+            icon: icon('download'),
+            action: 'review-toggle-export-menu',
+            active: state.activePopover?.type === 'export',
+            className: 'layoutpilot-review-toolbar-export'
+          }).replace('</button>', `<span class="layoutpilot-review-toolbar-chevron">${icon('chevron-down', 12)}</span></button>`)}
         </div>
         <button
           type="button"

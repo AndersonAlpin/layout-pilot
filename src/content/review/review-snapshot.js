@@ -7,6 +7,8 @@
     '.layoutpilot-review-panel',
     '.layoutpilot-review-toolbar',
     '.layoutpilot-review-confirm',
+    '.layoutpilot-review-popover',
+    '.layoutpilot-review-menu',
     '.layoutpilot-review-hover',
     '.layoutpilot-review-selection-box',
     '.layoutpilot-review-annotation-box-tools',

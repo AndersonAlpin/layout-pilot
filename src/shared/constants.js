@@ -76,7 +76,9 @@
     'src/content/inspect/detail-panel.js',
     'src/content/inspect/inspect-mode.js',
     'src/content/review/review-state.js',
+    'src/content/review/review-colors.js',
     'src/content/review/review-markers.js',
+    'src/content/review/review-color-controls.js',
     'src/content/review/review-panel.js',
     'src/content/review/review-toolbar.js',
     'src/content/review/review-snapshot.js',
@@ -103,6 +105,8 @@
     'layoutpilot-review-toolbar',
     'layoutpilot-review-workspace-frame',
     'layoutpilot-review-confirm',
+    'layoutpilot-review-popover',
+    'layoutpilot-review-menu',
     'layoutpilot-ui-tooltip',
     'layoutpilot-toast'
   ]
@@ -120,7 +124,10 @@
     STORAGE_KEYS: {
       INSTALLED_AT: 'layoutPilotInstalledAt',
       LANGUAGE: 'layoutPilotLanguage',
-      LAST_MODE: 'layoutPilotLastMode'
+      LAST_MODE: 'layoutPilotLastMode',
+      REVIEW_COLOR_MODE: 'layoutPilotReviewColorMode',
+      REVIEW_DEFAULT_COLOR: 'layoutPilotReviewDefaultColor',
+      REVIEW_RECENT_COLORS: 'layoutPilotReviewRecentColors'
     }
   }
 })()

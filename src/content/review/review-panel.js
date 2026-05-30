@@ -4,6 +4,7 @@
   const { icon } = root.icons
   const { renderAttrs, renderButton, renderIconButton } = root.ui
   const { ensureAnnotationColors, getAnnotationColorStyle } = root.reviewMarkers
+  const { renderAnnotationColorButton } = root.reviewColorControls
 
   function renderCardNumber(annotation, t) {
     return renderButton({
@@ -68,6 +69,7 @@
           ${renderCardNumber(annotation, t)}
           <span class="layoutpilot-review-card-note">${escapeHtml(annotation.note?.trim() || t('review.panel.noNote'))}</span>
           <div class="layoutpilot-review-card-tools">
+            ${renderAnnotationColorButton(annotation, t)}
             ${renderIconButton({
               iconHtml: icon('edit', 14),
               label: t('review.panel.edit'),
@@ -230,6 +232,12 @@
             className: 'layoutpilot-review-header-button'
           })}
           ${renderIconButton({
+            iconHtml: icon('palette', 14),
+            label: t('review.colors.settings'),
+            action: 'review-toggle-colors-popover',
+            className: 'layoutpilot-review-header-button'
+          })}
+          ${renderIconButton({
             iconHtml: icon('trash', 14),
             action: 'review-request-clear',
             label: clearReviewLabel,
@@ -249,25 +257,39 @@
     `
   }
 
-  function renderClearReviewDialog(t) {
+  function renderConfirmDialog(t, options = {}) {
+    const {
+      title = t('review.clearConfirm.title'),
+      description = t('review.clearConfirm.description'),
+      cancelLabel = t('review.clearConfirm.cancel'),
+      confirmLabel = t('review.clearConfirm.confirm'),
+      confirmAction = 'review-confirm-clear',
+      cancelAction = 'review-cancel-clear'
+    } = options
+
     return `
       <div class="layoutpilot-review-confirm-backdrop">
-        <div class="layoutpilot-review-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="layoutpilot-review-clear-title">
+        <div class="layoutpilot-review-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="layoutpilot-review-confirm-title">
           <div class="layoutpilot-review-confirm-body">
-            <h3 id="layoutpilot-review-clear-title">${escapeHtml(t('review.clearConfirm.title'))}</h3>
-            <p>${escapeHtml(t('review.clearConfirm.description'))}</p>
+            <h3 id="layoutpilot-review-confirm-title">${escapeHtml(title)}</h3>
+            <p>${escapeHtml(description)}</p>
           </div>
           <div class="layoutpilot-review-confirm-actions">
-            ${renderButton({ label: t('review.clearConfirm.cancel'), action: 'review-cancel-clear' })}
-            ${renderButton({ label: t('review.clearConfirm.confirm'), action: 'review-confirm-clear', className: 'layoutpilot-review-danger' })}
+            ${renderButton({ label: cancelLabel, action: cancelAction })}
+            ${renderButton({ label: confirmLabel, action: confirmAction, className: 'layoutpilot-review-danger' })}
           </div>
         </div>
       </div>
     `
   }
 
+  function renderClearReviewDialog(t) {
+    return renderConfirmDialog(t)
+  }
+
   root.reviewPanel = {
     renderReviewPanel,
-    renderClearReviewDialog
+    renderClearReviewDialog,
+    renderConfirmDialog
   }
 })()
