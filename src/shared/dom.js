@@ -164,6 +164,98 @@
     }
   }
 
+  function normalizeInlineAnchor(value) {
+    const normalized = String(value || '').trim().toLowerCase()
+    if (normalized === 'center') return 'center'
+    if (normalized === 'right' || normalized === 'end') return 'right'
+    if (normalized === 'left' || normalized === 'start') return 'left'
+    return null
+  }
+
+  function normalizeBlockAnchor(value) {
+    const normalized = String(value || '').trim().toLowerCase()
+    if (normalized === 'center') return 'middle'
+    if (normalized === 'flex-end' || normalized === 'end' || normalized === 'self-end') return 'bottom'
+    if (normalized === 'flex-start' || normalized === 'start' || normalized === 'self-start') return 'top'
+    return null
+  }
+
+  function getParentInlineAnchor(info, rect) {
+    const parent = info?.parent
+    if (!parent) return null
+
+    const display = String(parent.display || '').trim()
+    const flexDirection = String(parent.flexDirection || '').trim()
+
+    if (display === 'flex' || display === 'inline-flex') {
+      const alignment = flexDirection.startsWith('column')
+        ? normalizeInlineAnchor(parent.alignItems)
+        : normalizeInlineAnchor(parent.justifyContent)
+      if (alignment) return alignment
+    }
+
+    const parentRect = parent.rect
+    if (!parentRect || !rect) return null
+
+    const tolerance = Math.max(2, Math.min(12, parentRect.width * 0.03))
+    const leftInset = rect.left - parentRect.left
+    const rightInset = parentRect.right - rect.right
+    if (Math.abs(leftInset - rightInset) <= tolerance) return 'center'
+    if (leftInset >= -tolerance && leftInset <= tolerance && rightInset > tolerance) return 'left'
+    if (rightInset >= -tolerance && rightInset <= tolerance && leftInset > tolerance) return 'right'
+    return null
+  }
+
+  function getInlineAnchor(info, rect) {
+    const parentAnchor = getParentInlineAnchor(info, rect)
+    if (parentAnchor) return parentAnchor
+
+    const anchor = normalizeInlineAnchor(info?.textAlign)
+    const hasElementChildren = Number(info?.children?.count || 0) > 0
+    if (hasElementChildren && anchor === 'left') return null
+    return anchor
+  }
+
+  function getBlockAnchor(info) {
+    return normalizeBlockAnchor(info?.alignSelf) ||
+      normalizeBlockAnchor(info?.parent?.alignItems) ||
+      normalizeBlockAnchor(info?.alignItems)
+  }
+
+  function getHorizontalAnchorPosition(rect, anchor) {
+    if (anchor === 'left') return rect.left
+    if (anchor === 'right') return rect.right
+    return rect.left + rect.width / 2
+  }
+
+  function getVerticalAnchorPosition(rect, anchor) {
+    if (anchor === 'top') return rect.top
+    if (anchor === 'bottom') return rect.bottom
+    return rect.top + rect.height / 2
+  }
+
+  function createAlignmentResult(delta, tolerance, negativeDirection, positiveDirection, options = {}) {
+    const result = Math.abs(delta) < tolerance
+      ? {
+          aligned: true,
+          offset: 0,
+          direction: 'aligned'
+        }
+      : {
+          aligned: false,
+          offset: Math.round(Math.abs(delta)),
+          direction: delta > 0 ? positiveDirection : negativeDirection
+        }
+
+    if (options.includeReference) {
+      result.axis = options.axis
+      result.anchor = options.anchor
+      result.reference = Math.round(options.reference)
+    }
+
+    return result
+  }
+
   function getElementBandAlignment(baseRect, targetRect, options = {}) {
     const centerTolerance = options.centerTolerance ?? options.tolerance ?? 0.5
     const bandTolerance = options.bandTolerance ?? options.tolerance ?? 0.5
@@ -186,19 +278,36 @@
     const averageBandDelta = (startDelta + endDelta) / 2
 
     if (compareVerticalBand) {
-      if (Math.abs(centerDelta) < centerTolerance) {
-        return {
-          aligned: true,
-          offset: 0,
-          direction: 'aligned'
-        }
+      const baseAnchor = getInlineAnchor(options.baseInfo, baseRect)
+      const targetAnchor = getInlineAnchor(options.targetInfo, targetRect)
+      if (baseAnchor && targetAnchor && baseAnchor !== targetAnchor) {
+        return null
       }
 
-      return {
-        aligned: false,
-        offset: Math.round(Math.abs(centerDelta)),
-        direction: centerDelta > 0 ? 'right' : 'left'
-      }
+      const anchor = baseAnchor || targetAnchor || 'center'
+      const basePosition = getHorizontalAnchorPosition(baseRect, anchor)
+      const targetPosition = getHorizontalAnchorPosition(targetRect, anchor)
+      return createAlignmentResult(targetPosition - basePosition, centerTolerance, 'left', 'right', {
+        includeReference: options.includeReference,
+        axis: 'x',
+        anchor,
+        reference: basePosition
+      })
+    }
+
+    const baseAnchor = getBlockAnchor(options.baseInfo)
+    const targetAnchor = getBlockAnchor(options.targetInfo)
+    if (baseAnchor && targetAnchor) {
+      if (baseAnchor !== targetAnchor) return null
+
+      const basePosition = getVerticalAnchorPosition(baseRect, baseAnchor)
+      const targetPosition = getVerticalAnchorPosition(targetRect, baseAnchor)
+      return createAlignmentResult(targetPosition - basePosition, bandTolerance, 'above', 'below', {
+        includeReference: options.includeReference,
+        axis: 'y',
+        anchor: baseAnchor,
+        reference: basePosition
+      })
     }
 
     if (Math.abs(startDelta) < bandTolerance && Math.abs(endDelta) < bandTolerance) {

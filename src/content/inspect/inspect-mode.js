@@ -220,13 +220,15 @@
       state.tooltip.style.visibility = 'visible'
     }
 
-    function renderTooltip(event, element) {
-      const info = collectElementInfo(element)
-      const selectedRect = state.selectedElement?.isConnected ? state.selectedElement.getBoundingClientRect() : null
+    function renderTooltip(event, element, info = collectElementInfo(element)) {
+      const selectedInfo = state.selectedElement?.isConnected ? collectElementInfo(state.selectedElement) : null
+      const selectedRect = selectedInfo?.rect || null
       const containedPair = selectedRect && state.selectedElement !== element ? getContainedRectPair(selectedRect, info.rect) : null
       const containedSegments = containedPair ? getContainedDistanceSegments(selectedRect, info.rect) : null
       const spacing = selectedRect && state.selectedElement !== element && !containedSegments ? getSpacingBetween(selectedRect, info.rect) : null
-      const alignment = selectedRect && state.selectedElement !== element && !containedSegments ? getElementBandAlignment(selectedRect, info.rect) : null
+      const alignment = selectedRect && state.selectedElement !== element && !containedSegments
+        ? getElementBandAlignment(selectedRect, info.rect, { baseInfo: selectedInfo, targetInfo: info })
+        : null
       const isPinned = state.selectedElement === element
       const layoutExtra = info.gap !== '—' ? info.gap : `${info.display} / ${info.position}`
 
@@ -314,7 +316,7 @@
       labelElement.style.top = px(labelPosition.top)
     }
 
-    function renderDistances(element) {
+    function renderDistances(element, targetInfo = collectElementInfo(element)) {
       ensureUi()
       state.distanceLayer.innerHTML = ''
 
@@ -323,8 +325,9 @@
         return
       }
 
-      const a = state.selectedElement.getBoundingClientRect()
-      const b = element.getBoundingClientRect()
+      const selectedInfo = collectElementInfo(state.selectedElement)
+      const a = selectedInfo.rect
+      const b = targetInfo.rect
       const containedSegments = getContainedDistanceSegments(a, b)
       if (containedSegments) {
         for (const segment of containedSegments) {
@@ -335,22 +338,28 @@
       }
 
       const spacing = getSpacingBetween(a, b)
-      const alignment = getElementBandAlignment(a, b)
+      const alignment = getElementBandAlignment(a, b, {
+        baseInfo: selectedInfo,
+        targetInfo,
+        includeReference: true
+      })
       let hasDistance = false
 
       if (spacing.horizontal > 0) {
         const left = b.left > a.right ? a.right : b.right
         const right = b.left > a.right ? b.left : a.left
-        const y = Math.max(Math.min(a.top + a.height / 2, b.bottom), b.top)
-        addDistanceLine('horizontal', left, y, right - left, 2, `${spacing.horizontal}px`, { aligned: alignment.aligned })
+        const referenceY = alignment?.axis === 'y' ? alignment.reference : a.top + a.height / 2
+        const y = Math.max(Math.min(referenceY, b.bottom), b.top)
+        addDistanceLine('horizontal', left, y, right - left, 2, `${spacing.horizontal}px`, { aligned: alignment?.aligned })
         hasDistance = true
       }
 
       if (spacing.vertical > 0) {
         const top = b.top > a.bottom ? a.bottom : b.bottom
         const bottom = b.top > a.bottom ? b.top : a.top
-        const x = Math.max(Math.min(a.left + a.width / 2, b.right), b.left)
-        addDistanceLine('vertical', x, top, 2, bottom - top, `${spacing.vertical}px`, { aligned: alignment.aligned })
+        const referenceX = alignment?.axis === 'x' ? alignment.reference : a.left + a.width / 2
+        const x = Math.max(Math.min(referenceX, b.right), b.left)
+        addDistanceLine('vertical', x, top, 2, bottom - top, `${spacing.vertical}px`, { aligned: alignment?.aligned })
         hasDistance = true
       }
 
@@ -444,10 +453,11 @@
       state.hoveredElement = element
       state.lastPointerEvent = event
       ensureUi()
-      setBox(state.overlay, element.getBoundingClientRect())
+      const info = collectElementInfo(element)
+      setBox(state.overlay, info.rect)
       renderSelectedOverlay()
-      renderDistances(element)
-      renderTooltip(event, element)
+      renderDistances(element, info)
+      renderTooltip(event, element, info)
     }
 
     function togglePin(element = getActiveElement()) {

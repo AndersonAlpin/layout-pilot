@@ -100,3 +100,77 @@ assert.deepEqual(
   { aligned: false, offset: 6, direction: 'right' },
   'rounds positive half-pixel center offsets symmetrically'
 )
+
+assert.equal(
+  getElementBandAlignment(
+    rect(222, 126, 155, 22),
+    rect(166, 516, 267, 40),
+    {
+      baseInfo: { textAlign: 'center' },
+      targetInfo: { textAlign: 'left' }
+    }
+  ),
+  null,
+  'ignores stacked alignment when elements use different horizontal anchors'
+)
+
+assert.deepEqual(
+  getElementBandAlignment(
+    rect(166, 126, 155, 22),
+    rect(166, 516, 267, 40),
+    {
+      baseInfo: { textAlign: 'left' },
+      targetInfo: { textAlign: 'left' }
+    }
+  ),
+  { aligned: true, offset: 0, direction: 'aligned' },
+  'reports stacked elements with the same left anchor as aligned'
+)
+
+assert.deepEqual(
+  getElementBandAlignment(
+    rect(222, 126, 155, 22),
+    rect(166, 516, 267, 40),
+    {
+      baseInfo: { textAlign: 'start', children: { count: 2 } },
+      targetInfo: { textAlign: 'start', children: { count: 3 } }
+    }
+  ),
+  { aligned: true, offset: 0, direction: 'aligned' },
+  'keeps center alignment for container-like elements with default text alignment'
+)
+
+assert.deepEqual(
+  getElementBandAlignment(
+    rect(170, 126, 155, 22),
+    rect(114, 516, 267, 40),
+    {
+      baseInfo: {
+        textAlign: 'left',
+        parent: {
+          rect: rect(30, 60, 435, 480),
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start'
+        }
+      },
+      targetInfo: { textAlign: 'center' }
+    }
+  ),
+  { aligned: true, offset: 0, direction: 'aligned' },
+  'infers center alignment for a centered badge even when its own text-align is left'
+)
+
+assert.deepEqual(
+  getElementBandAlignment(
+    rect(610, 523, 127, 21),
+    rect(610, 548, 207, 21),
+    {
+      baseInfo: { textAlign: 'left' },
+      targetInfo: { textAlign: 'left' }
+    }
+  ),
+  { aligned: true, offset: 0, direction: 'aligned' },
+  'reports equal-height text rows with the same left edge as aligned even when widths differ'
+)
