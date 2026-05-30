@@ -9,11 +9,21 @@ O foco atual do produto esta em dois modos:
 - Inspect: inspecao rapida de layout, estilos, espacamentos e contexto tecnico.
 - Review: revisao visual com anotacoes, marcacoes livres, imagem, snapshot e relatorio PDF printavel.
 
+## Entregue recentemente
+
+- Modo Review reestruturado em modulos dedicados para estado, toolbar, painel, marcadores, snapshot, cores e PDF.
+- Cores de anotacoes estruturadas com paleta automatica, cor padrao, cor customizada, cores recentes e alteracao individual por card.
+- Exportacoes do Review consolidadas na toolbar: copiar imagem, baixar imagem e gerar PDF.
+- Relatorio PDF printavel restaurado em uma pagina propria da extensao, com imagens das anotacoes e secao final para marcacoes livres.
+- Dropdowns do popup e da toolbar receberam abertura/fechamento mais suave.
+- Site estatico de privacidade em EN, PT-BR e ES, alinhado ao fluxo local-first do LayoutPilot.
+- Script de empacotamento para gerar o zip de envio para a Chrome Web Store.
+
 ---
 
-## Prioridade 1 — Cores customizaveis para marcacoes e anotacoes
+## Prioridade 1 — Cores customizaveis para marcacoes livres
 
-Objetivo: permitir que o usuario controle melhor as cores usadas nas marcacoes visuais e nas anotacoes estruturadas.
+Objetivo: permitir que o usuario controle melhor as cores usadas em area e caneta. As anotacoes estruturadas ja possuem paleta, cor padrao, cor customizada, cores recentes e edicao individual.
 
 ### 1.1 Cor global para ferramentas livres
 
@@ -48,22 +58,19 @@ Cuidados:
 - botoes precisam ficar acima das marcacoes;
 - a UI precisa funcionar em marcacoes pequenas.
 
-### 1.3 Alterar cor de anotacoes estruturadas
+### 1.3 Ajustes futuros para cores de anotacoes estruturadas
 
-Ideia:
+Ja entregue:
 
-- adicionar uma acao de cor em cada card do painel de anotacoes;
-- alterar a cor da anotacao deve atualizar:
-  - marker;
-  - box;
-  - conector;
-  - numero no card;
-  - sidebar do snapshot;
-  - imagens/relatorio PDF.
+- acao de cor em cada card do painel de anotacoes;
+- alteracao individual refletida em marker, box, conector, card, snapshot e relatorio PDF;
+- modo automatico, cor padrao, custom color e cores recentes.
 
-Opcao complementar:
+Ideias futuras:
 
-- permitir alterar a cor pelo marker ou pela annotation box em um menu contextual futuro.
+- permitir alterar a cor pelo marker ou pela annotation box em um menu contextual;
+- permitir salvar presets de paleta por usuario;
+- avaliar contraste automatico em paginas muito claras/escuras.
 
 ### 1.4 Paleta inicial
 
@@ -78,11 +85,10 @@ Sugestao de paleta:
 - vermelho;
 - branco/neutro para casos especificos.
 
-Critérios de aceite:
+Critérios de aceite para a proxima etapa:
 
 - o usuario consegue escolher a cor global de novas marcacoes livres;
 - areas e riscos ja desenhados podem ter cor alterada;
-- anotacoes estruturadas podem ter cor alterada;
 - exportacoes refletem as cores atuais;
 - i18n cobre labels e tooltips;
 - `node --check` e `git diff --check` passam.
@@ -126,14 +132,44 @@ Ideia:
 - manter confirmacao se houver muitas marcacoes;
 - nao apagar anotacoes estruturadas.
 
-### 2.4 Area com resize/move
+### 2.4 Retangulos com resize/move
 
 Ideia:
 
 - permitir selecionar uma area livre existente;
+- permitir selecionar o retangulo de uma anotacao de elemento existente;
 - exibir handles de resize;
-- mover a area arrastando a borda ou interior;
-- manter botao de converter em anotacao.
+- mover o retangulo arrastando a borda ou interior;
+- para area livre, manter botao de converter em anotacao;
+- para elemento, preservar o vinculo com a anotacao estruturada e atualizar a area destacada.
+
+Cuidados:
+
+- diferenciar bem quando o usuario esta movendo a area e quando esta interagindo com a pagina;
+- manter handles e controles fora das capturas/exportacoes;
+- garantir que o PDF e snapshots usem a posicao final ajustada.
+
+### 2.5 Texto livre no Review
+
+Ideia:
+
+- adicionar um botao na toolbar para criar texto livre;
+- ao ativar a ferramenta, permitir clicar em qualquer area da tela;
+- exibir uma caixinha de texto no ponto clicado para o usuario escrever;
+- permitir mover a caixa de texto depois de criada;
+- tratar texto livre como marcacao visual, sem obrigar a aparecer no painel de anotacoes.
+
+Possiveis usos:
+
+- escrever observacoes curtas direto na imagem;
+- rotular uma area sem criar uma anotacao numerada;
+- complementar marcacoes de area/caneta em capturas rapidas.
+
+Cuidados:
+
+- definir se texto livre entra na secao final de marcacoes sem anotacao no PDF;
+- garantir contraste e legibilidade sobre paginas claras e escuras;
+- limitar tamanho minimo/maximo da caixa para nao quebrar exportacoes.
 
 Fora de escopo inicial:
 
@@ -320,14 +356,14 @@ Estas ideias ainda precisam de validacao antes de virar escopo.
 
 1. Cores customizaveis para area/caneta novas.
 2. Alterar cor de area/risco existente via hover.
-3. Alterar cor de anotacao estruturada pelo card.
+3. Espessura da caneta.
+4. Desfazer ultima marcacao livre.
 
 ### Depois
 
-4. Espessura da caneta.
-5. Desfazer ultima marcacao livre.
-6. Limpar apenas marcacoes livres.
-7. Melhorias no PDF para anotacoes fora da viewport.
+5. Limpar apenas marcacoes livres.
+6. Melhorias no PDF para anotacoes fora da viewport.
+7. Menu contextual para alterar cor pelo marker/box.
 
 ### Maiores
 

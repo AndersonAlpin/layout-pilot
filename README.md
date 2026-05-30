@@ -1,22 +1,24 @@
 # LayoutPilot
 
-LayoutPilot is a lightweight Chrome extension for inspecting layout details directly on live web pages. It helps designers and frontend developers understand spacing, sizing, colors, typography, and class names without opening DevTools panels or digging through the DOM manually.
+LayoutPilot is a lightweight Chrome and Edge extension for inspecting layout details and creating visual review notes directly on live web pages. It helps designers, frontend developers, and QA reviewers understand spacing, sizing, colors, typography, class names, annotations, screenshots, and printable review reports without opening DevTools panels or moving work into a separate design tool.
 
 ## What it does
 
-- Highlights the element under the cursor
-- Shows width, height, position, padding, margin, and border radius
-- Displays text color, background color, border colors, and font info
-- Lists the element classes
-- Lets you pin one element and compare spacing against another
-- Draws distance guides for horizontal and vertical gaps
-- Works on regular `http` and `https` pages
+- Inspect Mode highlights the element under the cursor.
+- Shows width, height, position, padding, margin, border radius, color, background, border, typography, and class information.
+- Lets you pin one element and compare spacing against another.
+- Draws distance guides for horizontal and vertical gaps.
+- Review Mode creates structured annotations, free area marks, and pen marks.
+- Copies or downloads annotated viewport images.
+- Generates printable review reports that can be saved as PDF from the browser print dialog.
+- Supports English, Portuguese, and Spanish UI text.
+- Works on regular `http` and `https` pages.
 
 ## How it works
 
-Once inspect mode is enabled, LayoutPilot injects a content script into the current tab and renders a visual overlay on top of the page. As you move the mouse, the extension reads computed styles from the hovered element and shows the most relevant layout information in a floating tooltip.
+Once LayoutPilot is enabled, it injects content scripts into the current tab and renders visual overlays on top of the page. Inspect Mode reads computed styles from hovered elements and shows relevant layout information in a floating tooltip.
 
-Clicking an element pins it in place so you can hover another one and measure the spacing between them. Press `H` to show shortcuts, `D` to open or close details, and `Q` to disable LayoutPilot.
+Review Mode keeps its own toolbar and annotation panel. It can mark elements, draw free rectangles, draw pen strokes, capture the visible tab, and open a printable report page inside the extension. Processing stays local in the browser.
 
 ## Installation
 
@@ -27,38 +29,78 @@ Because this project is currently set up as an unpacked Chrome extension, the ea
 3. Click **Load unpacked**
 4. Select this project folder: `layout-pilot`
 
-After loading the extension, click the LayoutPilot icon in Chrome and enable inspect mode on any `http` or `https` page.
+After loading the extension, click the LayoutPilot icon in Chrome and activate it on any `http` or `https` page.
 
 ## Usage
 
 1. Open a website you want to inspect
 2. Click the LayoutPilot extension icon
-3. Press **Enable inspect mode**
-4. Move the mouse over elements to inspect them
-5. Click an element to pin it
-6. Hover another element to compare spacing
-7. Press `Q` to disable LayoutPilot, or `Esc` to cancel the current panel/selection
+3. Choose **Inspect Mode** or **Review Mode**
+4. Press **Activate**
+5. Use the active mode tools on the page
+6. Press `Esc` to cancel the current panel/selection or deactivate when nothing else is active
 
 Shortcuts:
 
 - `H`: show/hide shortcuts
-- `Q`: disable LayoutPilot
 - `Esc`: cancel the current action, close panels, or clear selection
+- `I`: return to Inspect Mode
 - `C`: copy simple context
 - `P`: pin/unpin the current element
 - `D`: open/close element details
+- `S`: copy image in Review Mode
+- `Shift+S`: download image in Review Mode
+- `G`: generate a printable PDF report in Review Mode
+
+## Packaging
+
+Install dependencies once:
+
+```bash
+npm install
+```
+
+Run tests:
+
+```bash
+npm test
+```
+
+Create a Chrome Web Store zip:
+
+```bash
+npm run package
+```
+
+The package command writes `dist/layout-pilot.zip`. The generated `dist/` directory is ignored by git.
+
+## Privacy site
+
+The static privacy policy site lives in `site/dist` and includes:
+
+- English: `site/dist/index.html`
+- Portuguese: `site/dist/pt-br/index.html`
+- Spanish: `site/dist/es/index.html`
 
 ## Project structure
 
 ```text
 layout-pilot/
 ├── manifest.json
+├── package.json
+├── tools/
+│   └── package-extension.js
+├── site/
+│   └── dist/
 ├── icons/
 └── src/
     ├── background.js
     ├── content/
-    │   ├── inspector.css
-    │   └── inspector.js
+    │   ├── core/
+    │   ├── inspect/
+    │   └── review/
+    ├── report/
+    ├── shared/
     └── popup/
         ├── popup.html
         ├── popup.css

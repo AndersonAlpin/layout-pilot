@@ -59,6 +59,8 @@ Current repository path:
 - `shortcuts.js`: contextual shortcut handling.
 - `review-state.js`: Review Mode state.
 - `review-mode.js`: Review Mode orchestration.
+- `review-colors.js`: annotation palette, default/custom colors, and color references.
+- `review-color-controls.js`: color popovers and annotation color controls.
 - `review-toolbar.js`: floating Review toolbar.
 - `review-panel.js`: annotation panel.
 - `review-markers.js`: annotation boxes, markers, connectors, colors, and nesting behavior.
@@ -112,6 +114,7 @@ Structured annotations:
 - appear in the Review panel;
 - may contain a user note;
 - appear in snapshot sidebars and PDF sections.
+- support automatic palette colors, a default color, custom colors, recent colors, and individual card-level changes.
 
 Free visual marks:
 
@@ -119,6 +122,7 @@ Free visual marks:
 - do not require comments;
 - do not appear in the Review panel;
 - should appear in screenshots, copied images, snapshots, and the final free-marks section of the print report.
+- currently use the fixed free-mark color.
 
 Avoid mixing "comments" and "annotations" in new UI copy. Prefer annotations in UI surfaces that manage structured review items.
 
@@ -140,8 +144,16 @@ Avoid mixing "comments" and "annotations" in new UI copy. Prefer annotations in 
 
 - Generates printable HTML, not a binary PDF.
 - The browser print dialog is used to save as PDF.
+- The report opens in `src/report/review-report.html` after the background worker stores a temporary payload.
 - Each structured annotation gets its own section with comment and full-viewport image highlighting only that annotation.
 - Free area/pen marks are shown together in a final section when present.
+
+## Release and site artifacts
+
+- `npm run package` creates `dist/layout-pilot.zip` through `tools/package-extension.js`.
+- The package script validates manifest references and copies only production extension files into a temporary staging folder before zipping.
+- `site/dist` contains the static privacy policy site in EN, PT-BR, and ES.
+- Do not include `docs/plans` in release commits or extension packages unless the user explicitly asks.
 
 ## UI terminology
 
@@ -214,6 +226,7 @@ Rules:
 - Preserve `data-*` attributes used by action handlers.
 - Keep Review state in `review-state.js` when it is shared across render/actions.
 - Keep transient DOM rendering in content modules and CSS.
+- Keep release tooling local and explicit; avoid adding a bundler just to package the extension.
 
 ## Validation
 
@@ -221,6 +234,8 @@ Common validation:
 
 - `node --check` on changed JavaScript files.
 - `git diff --check`.
+- `npm test` when behavior or shared helpers change.
+- `npm run package` before release/package commits.
 - Manual UI validation for Review/Inspect changes.
 
 Review validation examples:

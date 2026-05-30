@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Política de Privacidade da LayoutPilot, uma extensão para Chrome e Edge voltada à inspeção local de layout, anotações visuais, screenshots e relatórios de revisão."
+    />
+    <title>LayoutPilot | Política de Privacidade</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b0f17'/%3E%3Cpath d='M18 18h28v28H18z' fill='none' stroke='%2338bdf8' stroke-width='6'/%3E%3Cpath d='M24 32h16M32 24v16' stroke='%2322c55e' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <img class="brand-logo" src="../assets/brand/logo-horizontal.png" alt="LayoutPilot" />
+          <h1>Política de Privacidade</h1>
+          <p class="lede">
+            A LayoutPilot foi criada para inspeção frontend e revisão visual em fluxo local. O processamento acontece
+            no navegador do usuário e só começa quando a extensão é ativada para a aba atual.
+          </p>
+        </div>
+
+        <nav class="language-switcher" aria-label="Seletor de idioma">
+          <details class="language-dropdown">
+            <summary class="language-trigger">
+              <img class="language-trigger-flag" src="../assets/flags/pt-BR.png" alt="" aria-hidden="true" />
+              <span class="language-trigger-name">Português</span>
+              <span class="language-chevron" aria-hidden="true"></span>
+            </summary>
+
+            <div class="language-menu">
+              <a class="language-menu-item" href="../">English</a>
+              <a class="language-menu-item is-active" href="./" aria-current="page">Português</a>
+              <a class="language-menu-item" href="../es/">Español</a>
+            </div>
+          </details>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero-card">
+          <div class="hero-copy">
+            <p class="hero-kicker">Ferramenta visual local</p>
+            <h2>Projetada para inspecionar layouts, marcar problemas e exportar revisões sem enviar seus dados para outro lugar.</h2>
+            <p>
+              A LayoutPilot é uma extensão Manifest V3 para Chrome e Edge voltada a desenvolvedores frontend,
+              designers e revisores de QA. Ela ajuda a inspecionar layout, comparar espaçamentos, criar anotações
+              visuais, copiar ou baixar screenshots anotados e gerar relatórios imprimíveis diretamente no navegador.
+            </p>
+
+            <div class="highlight-row" aria-label="Destaques de privacidade">
+              <span class="highlight-badge">Somente local</span>
+              <span class="highlight-badge">Sem backend</span>
+              <span class="highlight-badge">Sem rastreamento</span>
+              <span class="highlight-badge">Sem compartilhamento com terceiros</span>
+              <span class="highlight-badge">Ativação controlada pelo usuário</span>
+            </div>
+          </div>
+
+          <aside class="signal-panel" aria-label="Indicadores principais de privacidade">
+            <div class="signal-item">
+              <span class="signal-label">Fluxo de dados</span>
+              <strong>Somente no navegador</strong>
+            </div>
+            <div class="signal-item">
+              <span class="signal-label">Transporte externo</span>
+              <strong>Desativado</strong>
+            </div>
+            <div class="signal-item">
+              <span class="signal-label">Escopo de trabalho</span>
+              <strong>Aba atual</strong>
+            </div>
+            <div class="signal-item">
+              <span class="signal-label">Ativação</span>
+              <strong>Ação explícita do usuário</strong>
+            </div>
+          </aside>
+        </section>
+
+        <section class="cards-grid">
+          <article class="policy-card">
+            <h3>Visão geral</h3>
+            <p>
+              Esta política explica como a LayoutPilot trata dados técnicos da página ao oferecer inspeção local de
+              layout, anotação visual, screenshots e relatórios dentro do navegador.
+            </p>
+            <p>
+              A LayoutPilot não opera backend próprio, não envia dados inspecionados nem screenshots para servidores
+              externos e não compartilha nem vende dados do usuário.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Propósito único</h3>
+            <p>
+              A LayoutPilot tem um único propósito: ajudar desenvolvedores frontend, designers e revisores de QA a
+              inspecionar detalhes visuais de layout e criar artefatos locais de revisão para a página em que estão
+              trabalhando.
+            </p>
+            <p>
+              A extensão roda em uma página somente depois que o usuário a ativa pela interface da extensão para a aba
+              atual.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Dados tratados localmente</h3>
+            <p>Para oferecer seus recursos de inspeção e revisão, a LayoutPilot pode processar localmente dados técnicos como:</p>
+            <ul>
+              <li>estrutura da página e metadados de elementos da aba ativa</li>
+              <li>informações computadas de layout e estilo, incluindo tamanho, espaçamento, cores, tipografia, classes e seletores</li>
+              <li>screenshots da aba visível usados para copiar, baixar, compor snapshots e gerar relatórios imprimíveis</li>
+              <li>anotações de revisão, marcas de área, traços de caneta, notas, cores e estado temporário da revisão</li>
+              <li>preferência de idioma, último modo selecionado e configurações leves da extensão</li>
+            </ul>
+            <p>Esse processamento acontece dentro do navegador, no dispositivo do usuário.</p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Dados que não coletamos</h3>
+            <p>A LayoutPilot não coleta nem transmite dados para um backend da empresa porque não possui backend próprio.</p>
+            <ul>
+              <li>sem analytics ou telemetria</li>
+              <li>sem identificadores publicitários</li>
+              <li>sem rastreamento entre sites</li>
+              <li>sem perfilamento</li>
+              <li>sem venda de dados</li>
+            </ul>
+          </article>
+
+          <article class="policy-card">
+            <h3>Como os dados são usados</h3>
+            <p>Os dados técnicos são usados localmente e apenas para sustentar as funcionalidades visíveis da extensão, incluindo:</p>
+            <ul>
+              <li>destacar e inspecionar elementos na aba ativa</li>
+              <li>mostrar espaçamentos, dimensões, detalhes de estilo, seletores e contexto de layout copiado</li>
+              <li>criar anotações visuais, marcas de área e traços de caneta para fluxos de revisão</li>
+              <li>copiar ou baixar imagens anotadas e gerar relatórios imprimíveis de revisão</li>
+              <li>preservar preferências locais necessárias para a ferramenta entre sessões</li>
+            </ul>
+          </article>
+
+          <article class="policy-card">
+            <h3>Armazenamento local</h3>
+            <p>
+              A LayoutPilot usa o armazenamento da extensão no navegador para dados locais leves, como data de
+              instalação, idioma selecionado, último modo selecionado e preferências de cores da revisão.
+            </p>
+            <p>
+              Anotações e marcas visuais de revisão são mantidas na sessão ativa da página para que o usuário possa
+              inspecionar, exportar ou imprimir a revisão atual sem depender de infraestrutura remota.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Compartilhamento com terceiros</h3>
+            <p>
+              A LayoutPilot não compartilha detalhes de páginas inspecionadas, screenshots, anotações, preferências ou
+              artefatos de revisão com terceiros. Ela não vende dados nem disponibiliza dados locais de revisão para
+              anunciantes, data brokers ou provedores externos de analytics.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Código remoto</h3>
+            <p>
+              A LayoutPilot não executa código remoto. Seus arquivos JavaScript, HTML, CSS, imagens e recursos
+              relacionados são empacotados junto com a própria extensão.
+            </p>
+            <p>
+              Os scripts da extensão são carregados a partir dos recursos da própria extensão, não de servidores
+              remotos, e o produto não é baseado em código executável hospedado externamente.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Permissões</h3>
+            <p>
+              A LayoutPilot usa permissões do navegador apenas para oferecer seus recursos de inspeção e revisão. Essas
+              permissões permitem que a extensão rode na aba escolhida pelo usuário, injete a interface de
+              inspeção/revisão, capture a aba visível para exportações acionadas pelo usuário e salve preferências
+              locais leves.
+            </p>
+            <p>
+              Essas permissões são usadas somente para a finalidade declarada da extensão. Elas não são usadas para
+              rastreamento, publicidade, analytics ou coleta em segundo plano.
+            </p>
+            <div class="permission-badges" aria-label="Permissões do navegador usadas pela LayoutPilot">
+              <code>activeTab</code>
+              <code>scripting</code>
+              <code>storage</code>
+            </div>
+          </article>
+
+          <article class="policy-card">
+            <h3>Controle do usuário</h3>
+            <p>
+              O usuário escolhe quando a LayoutPilot é ativada, qual aba do navegador será envolvida, quais marcas de
+              revisão serão criadas e quando screenshots, downloads, cópias para clipboard ou relatórios imprimíveis
+              serão gerados.
+            </p>
+            <p>
+              A LayoutPilot não inspeciona silenciosamente abas não relacionadas e não faz upload dos artefatos de
+              revisão gerados.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Contato</h3>
+            <p>
+              Para dúvidas de privacidade sobre a LayoutPilot, entre em contato pelo e-mail
+              <a href="mailto:anderalpin@gmail.com">anderalpin@gmail.com</a>.
+            </p>
+          </article>
+
+          <article class="policy-card">
+            <h3>Última atualização</h3>
+            <p>30 de maio de 2026</p>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+[build]
+  publish = "."
+
+[build.processing.html]
+  pretty_urls = true
+
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/pt-br"
+  to = "/pt-br/"
+  status = 301
+
+[[redirects]]
+  from = "/es"
+  to = "/es/"
+  status = 301

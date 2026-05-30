@@ -14,6 +14,7 @@ Runtime modules are exposed through `window.LayoutPilotModules` and loaded in th
 
 - Owns background message handling.
 - Responds to capture requests with `chrome.tabs.captureVisibleTab`.
+- Stores temporary Review report payloads in memory and opens the extension report page for printing.
 - Should stay small and avoid UI-specific logic.
 
 `src/shared/`
@@ -77,6 +78,8 @@ Important files:
 
 - `src/content/review-state.js`
 - `src/content/review-mode.js`
+- `src/content/review-colors.js`
+- `src/content/review-color-controls.js`
 - `src/content/review-toolbar.js`
 - `src/content/review-panel.js`
 - `src/content/review-markers.js`
@@ -109,6 +112,7 @@ Free rectangle mark tool.
 - Releasing creates a free area mark.
 - Area marks do not appear in the panel.
 - Hover tools allow removing the mark or converting it into a structured annotation.
+- Area marks currently use the fixed free-mark color.
 
 ### Caneta
 
@@ -118,6 +122,22 @@ Freehand mark tool.
 - Pen strokes do not appear in the panel.
 - Hover tools allow removing an individual stroke.
 - Pen strokes are included in image/snapshot exports and in the final free-marks section of the print report.
+- Pen strokes currently use the fixed free-mark color.
+
+## Review colors
+
+Structured annotations support automatic palette assignment, a default color mode, custom colors, recent custom colors, and individual card-level color changes.
+
+Color behavior lives in:
+
+- `src/content/review-colors.js`
+- `src/content/review-color-controls.js`
+- `src/content/review-markers.js`
+- `src/content/review-panel.js`
+- `src/content/review-snapshot.js`
+- `src/content/review-print-report.js`
+
+Color preferences are persisted in Chrome storage. Free visual marks are still visual-first and keep the fixed free-mark color until a future color workflow is added for them.
 
 ## Review state
 
@@ -142,7 +162,7 @@ Free visual marks:
 
 UI/runtime state:
 
-- layers, panel, toolbar, confirm dialog, toast, drag state, scroll lock, selection state, active tool.
+- layers, panel, toolbar, confirm dialog, toast, drag state, scroll lock, selection state, active tool, color settings.
 
 Derived visual information should generally be calculated at render time instead of persisted.
 
@@ -192,7 +212,8 @@ Flow:
 3. Build one section per structured annotation.
 4. Draw only the target annotation highlight on each section image.
 5. If free visual marks exist, capture the viewport with those marks visible and append one final free-marks section.
-6. Open a Blob URL in a new tab and call `window.print()`.
+6. Send the report payload to the background service worker.
+7. Open `src/report/review-report.html` in a new tab and call `window.print()` from that extension page after images load.
 
 ## Popup flow
 
@@ -217,6 +238,9 @@ Known storage keys are in `src/shared/constants.js`:
 - `layoutPilotInstalledAt`
 - `layoutPilotLanguage`
 - `layoutPilotLastMode`
+- `layoutPilotReviewColorMode`
+- `layoutPilotReviewDefaultColor`
+- `layoutPilotReviewRecentColors`
 
 Avoid new persisted state unless the behavior truly needs to survive reloads.
 
@@ -244,3 +268,5 @@ After architecture-impacting changes, validate:
 - image copy/download;
 - composed snapshot;
 - print/PDF report.
+- release package with `npm run package`;
+- privacy site in `site/dist`.
