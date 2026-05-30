@@ -63,6 +63,7 @@
     'src/shared/ui/render.js',
     'src/shared/ui/tooltip.js',
     'src/shared/ui/button.js',
+    'src/shared/ui/toggle.js',
     'src/shared/ui/panel-section.js',
     'src/shared/ui/shortcut-key.js',
     'src/content/core/selector-utils.js',

@@ -2,7 +2,7 @@
   const root = window.LayoutPilotModules ||= {}
   const { escapeHtml } = root.dom
   const { icon } = root.icons
-  const { renderAttrs, renderButton, renderIconButton } = root.ui
+  const { renderAttrs, renderButton, renderIconButton, renderSwitch } = root.ui
   const {
     ANNOTATION_COLORS,
     COLOR_MODE,
@@ -216,15 +216,12 @@
     return `
       <div class="layoutpilot-review-popover-inner">
         <div class="layoutpilot-review-popover-title">${escapeHtml(t('review.colors.title'))}</div>
-        <button
-          type="button"
-          class="layoutpilot-review-color-switch${automaticActive ? ' layoutpilot-review-color-switch--active' : ''}"
-          data-layoutpilot-action="review-toggle-automatic-colors"
-          aria-pressed="${automaticActive ? 'true' : 'false'}"
-        >
-          <span>${escapeHtml(t('review.colors.automaticToggle'))}</span>
-          <span class="layoutpilot-review-color-switch-track" aria-hidden="true"><span></span></span>
-        </button>
+        ${renderSwitch({
+          label: t('review.colors.automaticToggle'),
+          checked: automaticActive,
+          action: 'review-toggle-automatic-colors',
+          className: 'layoutpilot-review-color-switch'
+        })}
         <fieldset class="layoutpilot-review-color-fields${automaticActive ? ' layoutpilot-review-color-fields--disabled' : ''}" ${automaticActive ? 'disabled' : ''}>
           ${renderColorSection(t('review.colors.palette'), renderSettingsSwatches({
             selectedReference: draft.color,
