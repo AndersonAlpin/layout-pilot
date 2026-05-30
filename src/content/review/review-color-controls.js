@@ -206,6 +206,7 @@
       label: t('review.colors.swatch'),
       action: 'review-toggle-annotation-color-menu',
       className: 'layoutpilot-review-card-icon layoutpilot-review-card-color',
+      title: null,
       data: { 'layoutpilot-review-id': annotation.id },
       attrs: {
         style: getAnnotationColorStyle(annotation)

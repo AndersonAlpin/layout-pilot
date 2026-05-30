@@ -15,7 +15,7 @@
         'layoutpilot-review-id': annotation.id,
         'layoutpilot-review-toggle-highlight': true
       },
-      title: t('review.panel.highlightAnnotation'),
+      title: null,
       ariaLabel: t('review.panel.focusAnnotation')
     })
   }
@@ -75,6 +75,7 @@
               label: t('review.panel.edit'),
               action: 'review-edit',
               className: 'layoutpilot-review-card-icon',
+              title: null,
               data: { 'layoutpilot-review-id': annotation.id }
             })}
             ${renderIconButton({
@@ -82,6 +83,7 @@
               label: t('review.panel.remove'),
               action: 'review-remove',
               className: 'layoutpilot-review-card-icon layoutpilot-review-card-icon--danger',
+              title: null,
               data: { 'layoutpilot-review-id': annotation.id }
             })}
           </div>
@@ -131,7 +133,6 @@
           class="layoutpilot-review-free-mark-main"
           data-layoutpilot-action="${focusAction}"
           data-${idName}="${escapeHtml(mark.id)}"
-          ${renderAttrs({ 'data-layoutpilot-tooltip': focusLabel })}
           aria-label="${escapeHtml(focusLabel)}"
         >
           <span class="layoutpilot-review-free-mark-type">${typeIcon}${escapeHtml(typeLabel)}</span>
@@ -143,6 +144,7 @@
             label: t('review.panel.addAnnotation'),
             action: 'review-comment-area-mark',
             className: 'layoutpilot-review-card-icon',
+            title: null,
             data: { 'layoutpilot-review-area-mark-id': mark.id }
           }) : ''}
           ${renderIconButton({
@@ -150,6 +152,7 @@
             label: t('review.panel.removeFreeMark'),
             action: removeAction,
             className: 'layoutpilot-review-card-icon layoutpilot-review-card-icon--danger',
+            title: null,
             data: { [idName]: mark.id }
           })}
         </div>
