@@ -60,6 +60,47 @@
     }
   }
 
+  function getContainedTooltipPosition(pointer, innerRect, tooltipRect, viewport, options = {}) {
+    const offset = options.offset ?? 16
+    const margin = options.margin ?? 12
+    const width = tooltipRect.width || 0
+    const height = tooltipRect.height || 0
+    const maxLeft = Math.max(margin, viewport.width - width - margin)
+    const maxTop = Math.max(margin, viewport.height - height - margin)
+    const centerX = innerRect.left + innerRect.width / 2
+    const centerY = innerRect.top + innerRect.height / 2
+
+    const candidates = [
+      { left: innerRect.right + offset, top: innerRect.bottom + offset },
+      { left: innerRect.left - width - offset, top: innerRect.bottom + offset },
+      { left: innerRect.right + offset, top: innerRect.top - height - offset },
+      { left: innerRect.left - width - offset, top: innerRect.top - height - offset }
+    ]
+
+    const bestCandidate = candidates
+      .map(candidate => {
+        const left = clamp(candidate.left, margin, maxLeft)
+        const top = clamp(candidate.top, margin, maxTop)
+        const crossesVerticalGuide = centerX >= left && centerX <= left + width
+        const crossesHorizontalGuide = centerY >= top && centerY <= top + height
+        const guidePenalty = (crossesVerticalGuide ? 100000 : 0) + (crossesHorizontalGuide ? 100000 : 0)
+        const clampPenalty = Math.abs(left - candidate.left) + Math.abs(top - candidate.top)
+        const pointerDistance = Math.hypot(left - pointer.x, top - pointer.y)
+
+        return {
+          left: Math.round(left),
+          top: Math.round(top),
+          score: guidePenalty + clampPenalty + pointerDistance / 10
+        }
+      })
+      .sort((a, b) => a.score - b.score)[0]
+
+    return {
+      left: bestCandidate.left,
+      top: bestCandidate.top
+    }
+  }
+
   function getDistanceLabelPosition(orientation, lineRect, labelRect, viewport, options = {}) {
     const offset = options.offset ?? 8
     const margin = options.margin ?? 8
@@ -169,6 +210,102 @@
     }
   }
 
+  function rectContainsRect(outerRect, innerRect, options = {}) {
+    const tolerance = options.tolerance ?? 0.5
+    return innerRect.left >= outerRect.left - tolerance &&
+      innerRect.top >= outerRect.top - tolerance &&
+      innerRect.right <= outerRect.right + tolerance &&
+      innerRect.bottom <= outerRect.bottom + tolerance &&
+      (
+        innerRect.left > outerRect.left + tolerance ||
+        innerRect.top > outerRect.top + tolerance ||
+        innerRect.right < outerRect.right - tolerance ||
+        innerRect.bottom < outerRect.bottom - tolerance
+      )
+  }
+
+  function getContainedRectPair(rectA, rectB, options = {}) {
+    if (rectContainsRect(rectA, rectB, options)) {
+      return {
+        outerRect: rectA,
+        innerRect: rectB
+      }
+    }
+
+    if (rectContainsRect(rectB, rectA, options)) {
+      return {
+        outerRect: rectB,
+        innerRect: rectA
+      }
+    }
+
+    return null
+  }
+
+  function addContainedDistanceSegment(segments, orientation, left, top, width, height, distance) {
+    const roundedDistance = Math.round(distance)
+    if (roundedDistance <= 0) return
+
+    segments.push({
+      orientation,
+      left: Math.round(left),
+      top: Math.round(top),
+      width: Math.round(width),
+      height: Math.round(height),
+      distance: roundedDistance
+    })
+  }
+
+  function getContainedDistanceSegments(rectA, rectB, options = {}) {
+    const containedPair = getContainedRectPair(rectA, rectB, options)
+    if (!containedPair) return null
+
+    const { outerRect, innerRect } = containedPair
+    const segments = []
+    const lineSize = options.lineSize ?? 2
+    const innerCenterX = innerRect.left + innerRect.width / 2
+    const innerCenterY = innerRect.top + innerRect.height / 2
+
+    addContainedDistanceSegment(
+      segments,
+      'vertical',
+      innerCenterX,
+      outerRect.top,
+      lineSize,
+      innerRect.top - outerRect.top,
+      innerRect.top - outerRect.top
+    )
+    addContainedDistanceSegment(
+      segments,
+      'vertical',
+      innerCenterX,
+      innerRect.bottom,
+      lineSize,
+      outerRect.bottom - innerRect.bottom,
+      outerRect.bottom - innerRect.bottom
+    )
+    addContainedDistanceSegment(
+      segments,
+      'horizontal',
+      outerRect.left,
+      innerCenterY,
+      innerRect.left - outerRect.left,
+      lineSize,
+      innerRect.left - outerRect.left
+    )
+    addContainedDistanceSegment(
+      segments,
+      'horizontal',
+      innerRect.right,
+      innerCenterY,
+      outerRect.right - innerRect.right,
+      lineSize,
+      outerRect.right - innerRect.right
+    )
+
+    return segments
+  }
+
   function setBox(element, rect) {
     element.style.display = 'block'
     element.style.left = px(rect.left)
@@ -262,8 +399,11 @@
     isTypingTarget,
     px,
     getAnchoredTooltipPosition,
+    getContainedTooltipPosition,
     getDistanceLabelPosition,
     getElementBandAlignment,
+    getContainedRectPair,
+    getContainedDistanceSegments,
     setBox,
     escapeHtml,
     formatBoxValues,

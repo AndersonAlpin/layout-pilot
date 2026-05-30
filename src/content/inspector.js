@@ -18,8 +18,11 @@
     createElement,
     px,
     getAnchoredTooltipPosition,
+    getContainedTooltipPosition,
     getDistanceLabelPosition,
     getElementBandAlignment,
+    getContainedRectPair,
+    getContainedDistanceSegments,
     setBox,
     escapeHtml,
     formatColor
@@ -267,19 +270,18 @@
     }
   }
 
-  function positionTooltip(event, elementRect) {
+  function positionTooltip(event, elementRect, options = {}) {
     state.tooltip.style.display = 'block'
     state.tooltip.style.visibility = 'hidden'
     state.tooltip.style.left = '0px'
     state.tooltip.style.top = '0px'
 
     const tooltipRect = state.tooltip.getBoundingClientRect()
-    const position = getAnchoredTooltipPosition(
-      { x: event.clientX, y: event.clientY },
-      elementRect,
-      tooltipRect,
-      { width: window.innerWidth, height: window.innerHeight }
-    )
+    const pointer = { x: event.clientX, y: event.clientY }
+    const viewport = { width: window.innerWidth, height: window.innerHeight }
+    const position = options.containedInnerRect
+      ? getContainedTooltipPosition(pointer, options.containedInnerRect, tooltipRect, viewport)
+      : getAnchoredTooltipPosition(pointer, elementRect, tooltipRect, viewport)
 
     state.tooltip.style.left = px(position.left)
     state.tooltip.style.top = px(position.top)
@@ -289,8 +291,10 @@
   function renderTooltip(event, element) {
     const info = collectElementInfo(element)
     const selectedRect = state.selectedElement?.isConnected ? state.selectedElement.getBoundingClientRect() : null
-    const spacing = selectedRect && state.selectedElement !== element ? getSpacingBetween(selectedRect, info.rect) : null
-    const alignment = selectedRect && state.selectedElement !== element ? getElementBandAlignment(selectedRect, info.rect) : null
+    const containedPair = selectedRect && state.selectedElement !== element ? getContainedRectPair(selectedRect, info.rect) : null
+    const containedSegments = containedPair ? getContainedDistanceSegments(selectedRect, info.rect) : null
+    const spacing = selectedRect && state.selectedElement !== element && !containedSegments ? getSpacingBetween(selectedRect, info.rect) : null
+    const alignment = selectedRect && state.selectedElement !== element && !containedSegments ? getElementBandAlignment(selectedRect, info.rect) : null
     const isPinned = state.selectedElement === element
     const layoutExtra = info.gap !== '—' ? info.gap : `${info.display} / ${info.position}`
 
@@ -336,7 +340,7 @@
       <div class="layoutpilot-help">${escapeHtml(isPinned ? t('tooltip.clickToUnpin') : t('tooltip.clickToPin'))} ${escapeHtml(t('tooltip.help'))}</div>
     `
 
-    positionTooltip(event, info.rect)
+    positionTooltip(event, info.rect, { containedInnerRect: containedPair?.innerRect })
   }
 
   function renderSelectedOverlay() {
@@ -389,6 +393,15 @@
 
     const a = state.selectedElement.getBoundingClientRect()
     const b = element.getBoundingClientRect()
+    const containedSegments = getContainedDistanceSegments(a, b)
+    if (containedSegments) {
+      for (const segment of containedSegments) {
+        addDistanceLine(segment.orientation, segment.left, segment.top, segment.width, segment.height, `${segment.distance}px`)
+      }
+      state.distanceLayer.style.display = containedSegments.length ? 'block' : 'none'
+      return
+    }
+
     const spacing = getSpacingBetween(a, b)
     const alignment = getElementBandAlignment(a, b)
     let hasDistance = false
