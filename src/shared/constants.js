@@ -3,7 +3,8 @@
 
   const MODE = {
     INSPECT: 'inspect',
-    REVIEW: 'review'
+    REVIEW: 'review',
+    COMPARE: 'compare'
   }
 
   const MESSAGE_TYPE = {
@@ -26,7 +27,9 @@
     PIN: 'p',
     DETAILS: 'd',
     SNAPSHOT_IMAGE: 's',
-    PDF_REPORT: 'g'
+    PDF_REPORT: 'g',
+    TOGGLE_OVERLAY: 'o',
+    TOGGLE_SKELETON: 'k'
   }
 
   const SHORTCUTS_BY_MODE = {
@@ -46,13 +49,21 @@
       { key: 'S', labelKey: 'shortcuts.copyImage' },
       { key: 'Shift+S', labelKey: 'shortcuts.downloadImage' },
       { key: 'G', labelKey: 'shortcuts.generatePdf' }
+    ],
+    [MODE.COMPARE]: [
+      { key: 'Ctrl+V', labelKey: 'shortcuts.pasteFigma' },
+      { key: 'O', labelKey: 'shortcuts.toggleOverlay' },
+      { key: 'K', labelKey: 'shortcuts.toggleSkeleton' },
+      { key: 'H', labelKey: 'shortcuts.help' },
+      { key: 'Esc', labelKey: 'shortcuts.cancel' }
     ]
   }
 
   const CONTENT_CSS_FILES = [
     'src/content/base.css',
     'src/content/inspect/inspect.css',
-    'src/content/review/review.css'
+    'src/content/review/review.css',
+    'src/content/figma/figma.css'
   ]
 
   const CONTENT_SCRIPT_FILES = [
@@ -88,6 +99,15 @@
     'src/content/review/review-snapshot.js',
     'src/content/review/review-print-report.js',
     'src/content/review/review-mode.js',
+    'src/content/figma/figma-clipboard.js',
+    'src/content/figma/figma-svg-parser.js',
+    'src/content/figma/figma-align.js',
+    'src/content/figma/figma-match.js',
+    'src/content/figma/figma-diff.js',
+    'src/content/figma/pixelmatch.js',
+    'src/content/figma/figma-pixel.js',
+    'src/content/figma/figma-overlay.js',
+    'src/content/figma/figma-diff-mode.js',
     'src/content/core/orchestrator.js'
   ]
 
@@ -112,6 +132,10 @@
     'layoutpilot-review-confirm',
     'layoutpilot-review-popover',
     'layoutpilot-review-menu',
+    'layoutpilot-figma-overlay',
+    'layoutpilot-figma-marker-layer',
+    'layoutpilot-figma-pixel-layer',
+    'layoutpilot-figma-panel',
     'layoutpilot-ui-tooltip',
     'layoutpilot-toast'
   ]

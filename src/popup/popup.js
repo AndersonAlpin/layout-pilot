@@ -3,6 +3,7 @@ const statusText = document.getElementById('status-text')
 const statusDot = document.getElementById('status-dot')
 const modeInspect = document.getElementById('mode-inspect')
 const modeReview = document.getElementById('mode-review')
+const modeCompare = document.getElementById('mode-compare')
 const languagePicker = document.getElementById('language-picker')
 const languageToggle = document.getElementById('language-toggle')
 const languageMenu = document.getElementById('language-menu')
@@ -32,6 +33,8 @@ const textBindings = {
   'mode-inspect-description': 'popup.mode.inspect.description',
   'mode-review-name': 'popup.mode.review.name',
   'mode-review-description': 'popup.mode.review.description',
+  'mode-compare-name': 'popup.mode.compare.name',
+  'mode-compare-description': 'popup.mode.compare.description',
   'shortcuts-title': 'popup.shortcuts.title',
   'shortcut-note': 'popup.shortcuts.note'
 }
@@ -52,11 +55,14 @@ for (const language of Object.values(languageOptions)) {
 }
 
 function normalizeMode(mode) {
-  return mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+  return Object.values(MODE).includes(mode) ? mode : MODE.INSPECT
 }
 
 function getActiveStatusKey(mode) {
-  return normalizeMode(mode) === MODE.REVIEW ? 'popup.status.reviewActive' : 'popup.status.inspectActive'
+  const normalizedMode = normalizeMode(mode)
+  if (normalizedMode === MODE.REVIEW) return 'popup.status.reviewActive'
+  if (normalizedMode === MODE.COMPARE) return 'popup.status.compareActive'
+  return 'popup.status.inspectActive'
 }
 
 async function loadModePreference() {
@@ -237,6 +243,7 @@ function renderPopupTexts() {
 function renderModeSelection() {
   modeInspect.checked = state.mode === MODE.INSPECT
   modeReview.checked = state.mode === MODE.REVIEW
+  modeCompare.checked = state.mode === MODE.COMPARE
   renderShortcuts()
 }
 
@@ -349,6 +356,10 @@ modeInspect.addEventListener('change', () => {
 
 modeReview.addEventListener('change', () => {
   if (modeReview.checked) handleModeChange(MODE.REVIEW)
+})
+
+modeCompare.addEventListener('change', () => {
+  if (modeCompare.checked) handleModeChange(MODE.COMPARE)
 })
 
 languageToggle.addEventListener('click', event => {

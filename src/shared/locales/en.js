@@ -33,6 +33,7 @@
         active: 'Inspect Mode active.',
         inspectActive: 'Inspect Mode active.',
         reviewActive: 'Review Mode active.',
+        compareActive: 'Figma Compare active.',
         inactive: 'LayoutPilot disabled.'
       },
       mode: {
@@ -44,6 +45,10 @@
         review: {
           name: 'Review Mode',
           description: 'Create visual annotations, mark areas and export the review.'
+        },
+        compare: {
+          name: 'Figma Compare',
+          description: 'Paste a Figma frame and compare it with the rendered screen.'
         }
       },
       shortcuts: {
@@ -63,7 +68,10 @@
       downloadImage: 'Download image',
       copyImage: 'Copy image',
       generatePdf: 'Generate PDF',
-      removeAnnotation: 'Remove annotation'
+      removeAnnotation: 'Remove annotation',
+      pasteFigma: 'Paste Figma frame',
+      toggleOverlay: 'Show/hide overlay',
+      toggleSkeleton: 'Toggle skeleton'
     },
     detail: {
       kicker: 'Inspect Mode',
@@ -185,7 +193,8 @@
       },
       note: {
         inspect: 'I works after activating this tab from the popup.',
-        review: 'Review Mode: click an element to create an annotation.'
+        review: 'Review Mode: click an element to create an annotation.',
+        compare: 'Figma Compare: copy a frame as SVG in Figma and paste it here with Ctrl+V.'
       }
     },
     tooltip: {
@@ -243,6 +252,78 @@
         fullContext: 'Full context copied',
         selector: 'Selector copied',
         cssLayout: 'CSS/layout summary copied'
+      }
+    },
+    figma: {
+      panel: {
+        title: 'Figma Compare',
+        clear: 'Clear comparison'
+      },
+      summary: {
+        hint: 'Paste a Figma frame (Ctrl+V) or import/drop an exported SVG.',
+        counts: '{total} elements, {divergent} divergent',
+        png: 'PNG pasted. Use pixel diff to compare.'
+      },
+      warning: {
+        capped: 'DOM scan stopped at {limit} elements; results may be partial.'
+      },
+      controls: {
+        opacity: 'Opacity',
+        scale: 'Scale',
+        overlay: 'Overlay',
+        overlayHint: 'Show/hide the design overlay',
+        moveOn: 'Move: on',
+        moveOff: 'Move: off',
+        moveHint: 'Drag the overlay to reposition it',
+        blendOn: 'Blend: diff',
+        blendOff: 'Blend: normal',
+        blendHint: 'Toggle difference blend mode',
+        skeletonOn: 'Skeleton: on',
+        skeletonOff: 'Skeleton: off',
+        skeletonHint: 'Show only design outlines',
+        nudge: 'Nudge alignment',
+        recompute: 'Recompute',
+        recomputeHint: 'Re-run matching and diff',
+        pixel: 'Pixel diff',
+        pixelClear: 'Clear pixel diff',
+        pixelHint: 'Compare pixels against the captured screen',
+        importSvg: 'Import SVG/PNG'
+      },
+      checks: {
+        position: 'Position',
+        size: 'Size',
+        color: 'Color',
+        fontSize: 'Font size'
+      },
+      list: {
+        empty: 'No divergences found.',
+        waiting: 'Waiting for a Figma frame.'
+      },
+      issue: {
+        position: 'position off by {dx}px / {dy}px',
+        size: 'size off by {dw}px / {dh}px',
+        color: 'color {design} vs {actual}',
+        fontSize: 'font-size {design} vs {actual}',
+        missing: 'missing on the page',
+        extra: 'extra on the page'
+      },
+      type: {
+        rect: 'Rectangle',
+        image: 'Image',
+        icon: 'Icon',
+        extra: 'Extra element'
+      },
+      pixel: {
+        result: 'Pixel diff: {percent}% different'
+      },
+      toast: {
+        ready: 'Figma Compare ready. Paste a frame (Ctrl+V).',
+        noContent: 'No Figma SVG or image found in the clipboard.',
+        parseFailed: 'Could not read the Figma frame.',
+        diffReady: 'Comparison ready: {count} divergent.',
+        pngReady: 'PNG overlay ready. Use pixel diff.',
+        pixelRunning: 'Running pixel diff...',
+        pixelFailed: 'Could not run pixel diff.'
       }
     }
   }

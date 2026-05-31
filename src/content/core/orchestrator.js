@@ -5,6 +5,7 @@
     inspectMode,
     modalShield,
     reviewMode,
+    figmaDiffMode,
     shortcuts,
     ui,
     i18n
@@ -14,6 +15,7 @@
   const { createInspectMode } = inspectMode
   const { createModalShield } = modalShield
   const { createReviewMode } = reviewMode
+  const { createFigmaDiffMode } = figmaDiffMode
   const { normalizeKey, shouldIgnoreShortcut, consumeShortcut } = shortcuts
   const { initTooltips, teardownTooltips, renderCloseButton, renderShortcutList } = ui
   const {
@@ -50,6 +52,10 @@
       t
     }),
     [MODE.REVIEW]: createReviewMode({
+      showToast,
+      t
+    }),
+    [MODE.COMPARE]: createFigmaDiffMode({
       showToast,
       t
     })
@@ -97,7 +103,12 @@
   }
 
   function getHelpNote() {
-    return state.mode === MODE.REVIEW ? t('help.note.review') : t('help.note.inspect')
+    const noteKeyByMode = {
+      [MODE.INSPECT]: 'help.note.inspect',
+      [MODE.REVIEW]: 'help.note.review',
+      [MODE.COMPARE]: 'help.note.compare'
+    }
+    return t(noteKeyByMode[state.mode] || 'help.note.inspect')
   }
 
   function renderHelpPanel() {
@@ -153,10 +164,10 @@
 
   function handleKeyDown(event) {
     const normalized = normalizeKey(event)
-    const isReviewMode = state.enabled && state.mode === MODE.REVIEW
-    const allowReviewCancel = isReviewMode && normalized === SHORTCUT.CANCEL
+    const isNonInspectMode = state.enabled && state.mode !== MODE.INSPECT
+    const allowModeCancel = isNonInspectMode && normalized === SHORTCUT.CANCEL
 
-    if (shouldIgnoreShortcut(event) && !allowReviewCancel) return
+    if (shouldIgnoreShortcut(event) && !allowModeCancel) return
 
     const activeController = getController()
     if (state.enabled && activeController.blocksGlobalShortcuts?.()) {
@@ -173,7 +184,7 @@
 
     if (normalized === SHORTCUT.INSPECT) {
       consumeShortcut(event)
-      if (isReviewMode) return
+      if (isNonInspectMode) return
 
       if (state.enabled) {
         setEnabled(false)
@@ -230,7 +241,7 @@
   }
 
   function setMode(mode) {
-    const nextMode = mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+    const nextMode = controllers[mode] ? mode : MODE.INSPECT
     if (state.mode === nextMode) return
 
     const previousMode = state.mode

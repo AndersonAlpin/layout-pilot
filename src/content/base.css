@@ -18,6 +18,10 @@
 .layoutpilot-review-confirm,
 .layoutpilot-review-popover,
 .layoutpilot-review-menu,
+.layoutpilot-figma-overlay,
+.layoutpilot-figma-marker-layer,
+.layoutpilot-figma-pixel-layer,
+.layoutpilot-figma-panel,
 .layoutpilot-toast {
   all: initial;
   box-sizing: border-box;
@@ -47,6 +51,10 @@
 .layoutpilot-review-confirm *,
 .layoutpilot-review-popover *,
 .layoutpilot-review-menu *,
+.layoutpilot-figma-overlay *,
+.layoutpilot-figma-marker-layer *,
+.layoutpilot-figma-pixel-layer *,
+.layoutpilot-figma-panel *,
 .layoutpilot-toast * {
   box-sizing: border-box;
 }

@@ -33,6 +33,7 @@
         active: 'Modo Inspeção ativo.',
         inspectActive: 'Modo Inspeção ativo.',
         reviewActive: 'Modo Revisão ativo.',
+        compareActive: 'Comparação Figma ativa.',
         inactive: 'LayoutPilot desativado.'
       },
       mode: {
@@ -44,6 +45,10 @@
         review: {
           name: 'Modo Revisão',
           description: 'Crie anotações visuais, marque áreas e exporte a revisão.'
+        },
+        compare: {
+          name: 'Comparar Figma',
+          description: 'Cole um frame do Figma e compare com a tela renderizada.'
         }
       },
       shortcuts: {
@@ -63,7 +68,10 @@
       downloadImage: 'Baixar imagem',
       copyImage: 'Copiar imagem',
       generatePdf: 'Gerar PDF',
-      removeAnnotation: 'Remover anotação'
+      removeAnnotation: 'Remover anotação',
+      pasteFigma: 'Colar frame do Figma',
+      toggleOverlay: 'Mostrar/ocultar overlay',
+      toggleSkeleton: 'Alternar esqueleto'
     },
     detail: {
       kicker: 'Modo Inspeção',
@@ -185,7 +193,8 @@
       },
       note: {
         inspect: 'I funciona depois de ativar a extensão nesta aba pelo popup.',
-        review: 'Modo Revisão: clique em um elemento para criar uma anotação.'
+        review: 'Modo Revisão: clique em um elemento para criar uma anotação.',
+        compare: 'Comparar Figma: copie um frame como SVG no Figma e cole aqui com Ctrl+V.'
       }
     },
     tooltip: {
@@ -243,6 +252,78 @@
         fullContext: 'Contexto completo copiado',
         selector: 'Selector copiado',
         cssLayout: 'Resumo CSS/layout copiado'
+      }
+    },
+    figma: {
+      panel: {
+        title: 'Comparar Figma',
+        clear: 'Limpar comparação'
+      },
+      summary: {
+        hint: 'Cole um frame do Figma (Ctrl+V) ou importe/arraste um SVG exportado.',
+        counts: '{total} elementos, {divergent} divergentes',
+        png: 'PNG colado. Use o diff de pixel para comparar.'
+      },
+      warning: {
+        capped: 'A varredura do DOM parou em {limit} elementos; resultado pode ser parcial.'
+      },
+      controls: {
+        opacity: 'Opacidade',
+        scale: 'Escala',
+        overlay: 'Overlay',
+        overlayHint: 'Mostrar/ocultar o overlay do design',
+        moveOn: 'Mover: on',
+        moveOff: 'Mover: off',
+        moveHint: 'Arraste o overlay para reposicionar',
+        blendOn: 'Mistura: diff',
+        blendOff: 'Mistura: normal',
+        blendHint: 'Alternar modo de mistura difference',
+        skeletonOn: 'Esqueleto: on',
+        skeletonOff: 'Esqueleto: off',
+        skeletonHint: 'Mostrar apenas contornos do design',
+        nudge: 'Ajustar alinhamento',
+        recompute: 'Recalcular',
+        recomputeHint: 'Refazer correspondência e diff',
+        pixel: 'Diff de pixel',
+        pixelClear: 'Limpar diff de pixel',
+        pixelHint: 'Comparar pixels com a tela capturada',
+        importSvg: 'Importar SVG/PNG'
+      },
+      checks: {
+        position: 'Posição',
+        size: 'Tamanho',
+        color: 'Cor',
+        fontSize: 'Tam. fonte'
+      },
+      list: {
+        empty: 'Nenhuma divergência encontrada.',
+        waiting: 'Aguardando um frame do Figma.'
+      },
+      issue: {
+        position: 'posição difere em {dx}px / {dy}px',
+        size: 'tamanho difere em {dw}px / {dh}px',
+        color: 'cor {design} vs {actual}',
+        fontSize: 'tamanho de fonte {design} vs {actual}',
+        missing: 'ausente na página',
+        extra: 'sobrando na página'
+      },
+      type: {
+        rect: 'Retângulo',
+        image: 'Imagem',
+        icon: 'Ícone',
+        extra: 'Elemento extra'
+      },
+      pixel: {
+        result: 'Diff de pixel: {percent}% diferente'
+      },
+      toast: {
+        ready: 'Comparar Figma pronto. Cole um frame (Ctrl+V).',
+        noContent: 'Nenhum SVG ou imagem do Figma na área de transferência.',
+        parseFailed: 'Não foi possível ler o frame do Figma.',
+        diffReady: 'Comparação pronta: {count} divergentes.',
+        pngReady: 'Overlay PNG pronto. Use o diff de pixel.',
+        pixelRunning: 'Executando diff de pixel...',
+        pixelFailed: 'Não foi possível executar o diff de pixel.'
       }
     }
   }
