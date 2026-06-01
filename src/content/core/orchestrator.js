@@ -32,7 +32,8 @@
     mode: MODE.INSPECT,
     helpPanel: null,
     toast: null,
-    healthCheckTimer: null
+    healthCheckTimer: null,
+    breakpointStandalone: false
   }
 
   function cleanupOrphanUi() {
@@ -53,7 +54,8 @@
     t,
     onEnabledChange: () => applyActiveState(),
     onInteractionChange: () => applyActiveState(),
-    onViewportChange: () => controllers[MODE.INSPECT].resetVisualState?.()
+    onViewportChange: () => controllers[MODE.INSPECT].resetVisualState?.(),
+    onClose: () => setBreakpointEnabled(false)
   })
   const controllers = {
     [MODE.INSPECT]: createInspectMode({
@@ -308,24 +310,43 @@
   }
 
   function setEnabled(enabled) {
-    if (state.enabled === enabled) return
-    state.enabled = enabled
-
-    if (!enabled) {
+    const nextEnabled = !!enabled
+    if (!nextEnabled) {
+      state.enabled = false
+      state.breakpointStandalone = false
       breakpointController.setEnabled(false)
       removeElement('helpPanel')
       removeElement('toast')
+      applyActiveState()
+      cleanupOrphanUi()
+      return
     }
 
-    applyActiveState()
+    if (state.enabled === nextEnabled) return
+    state.enabled = nextEnabled
 
-    if (!enabled) cleanupOrphanUi()
+    applyActiveState()
   }
 
   function setBreakpointEnabled(enabled) {
-    if (enabled && !state.enabled) state.enabled = true
+    const nextEnabled = !!enabled
+    if (nextEnabled) {
+      state.breakpointStandalone = !state.enabled
+      if (!state.enabled) state.enabled = true
+      // breakpointController.setEnabled triggers onEnabledChange -> applyActiveState.
+      breakpointController.setEnabled(true)
+      return
+    }
+
+    const shouldDisableAll = state.breakpointStandalone
+    state.breakpointStandalone = false
+    if (shouldDisableAll) {
+      setEnabled(false)
+      return
+    }
+
     // breakpointController.setEnabled triggers onEnabledChange -> applyActiveState.
-    breakpointController.setEnabled(enabled)
+    breakpointController.setEnabled(false)
   }
 
   function destroy() {

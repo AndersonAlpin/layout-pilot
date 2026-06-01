@@ -30,7 +30,8 @@
       t = key => key,
       onInteractionChange,
       onEnabledChange,
-      onViewportChange
+      onViewportChange,
+      onClose
     } = options
     const defaultPreset = getBreakpointPreset(DEFAULT_PRESET_ID)
     const state = {
@@ -659,7 +660,10 @@
       const action = trigger?.dataset?.layoutpilotAction
       if (!action?.startsWith('breakpoint-')) return false
 
-      if (action === 'breakpoint-close') setEnabled(false)
+      if (action === 'breakpoint-close') {
+        if (onClose) onClose()
+        else setEnabled(false)
+      }
       if (action === 'breakpoint-collapse') setPanelCollapsed(true)
       if (action === 'breakpoint-expand') setPanelCollapsed(false)
       if (action === 'breakpoint-rotate') rotate()
