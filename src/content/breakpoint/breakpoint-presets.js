@@ -120,6 +120,33 @@
     }
   }
 
+  function frameToInternalPoint(clientX, clientY, geometry) {
+    const geo = geometry || {}
+    const scaleX = Number.isFinite(geo.scaleX) && geo.scaleX > 0 ? geo.scaleX : 1
+    const scaleY = Number.isFinite(geo.scaleY) && geo.scaleY > 0 ? geo.scaleY : 1
+    return {
+      x: (clientX - (geo.originX || 0)) / scaleX,
+      y: (clientY - (geo.originY || 0)) / scaleY
+    }
+  }
+
+  function internalRectToViewport(rect, geometry) {
+    const source = rect || {}
+    const geo = geometry || {}
+    const scaleX = Number.isFinite(geo.scaleX) && geo.scaleX > 0 ? geo.scaleX : 1
+    const scaleY = Number.isFinite(geo.scaleY) && geo.scaleY > 0 ? geo.scaleY : 1
+    const originX = geo.originX || 0
+    const originY = geo.originY || 0
+    return {
+      left: originX + source.left * scaleX,
+      top: originY + source.top * scaleY,
+      right: originX + source.right * scaleX,
+      bottom: originY + source.bottom * scaleY,
+      width: source.width * scaleX,
+      height: source.height * scaleY
+    }
+  }
+
   // The breakpoint frame always loads the current (same-origin) URL, so we can
   // tell whether it rendered by probing its location:
   // - reachable === false  -> the browser swapped in a cross-origin error page
@@ -157,6 +184,8 @@
     getBreakpointPreset,
     normalizeBreakpointDimension,
     rotateBreakpointViewport,
+    frameToInternalPoint,
+    internalRectToViewport,
     classifyFrameProbe,
     normalizeBreakpointInteraction,
     resolveActiveControllers

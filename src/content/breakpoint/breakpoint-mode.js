@@ -12,7 +12,9 @@
     normalizeBreakpointDimension,
     rotateBreakpointViewport,
     classifyFrameProbe,
-    normalizeBreakpointInteraction
+    normalizeBreakpointInteraction,
+    frameToInternalPoint,
+    internalRectToViewport
   } = root.breakpointPresets
 
   const FRAME_LOAD_TIMEOUT_MS = 12000
@@ -682,33 +684,42 @@
       return true
     }
 
-    function getFrameRect() {
+    function readFrameGeometry() {
       if (!state.enabled || !state.iframe) return null
-      return state.iframe.getBoundingClientRect()
-    }
 
-    function getFrameScale() {
-      const rect = getFrameRect()
-      if (!rect?.width || !rect?.height) return 1
-      return rect.width / state.width
+      try {
+        const rect = state.iframe.getBoundingClientRect()
+        const frameWindow = state.iframe.contentWindow
+        const innerWidth = frameWindow?.innerWidth
+        const innerHeight = frameWindow?.innerHeight
+        if (!rect?.width || !rect?.height || !innerWidth || !innerHeight) return null
+        return {
+          originX: rect.left,
+          originY: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          scaleX: rect.width / innerWidth,
+          scaleY: rect.height / innerHeight
+        }
+      } catch {
+        return null
+      }
     }
 
     function getElementAtPoint(event) {
       if (!state.enabled) return undefined
       if (state.interaction !== 'inspect') return null
 
-      const rect = getFrameRect()
-      if (!rect) return null
-      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+      const geometry = readFrameGeometry()
+      if (!geometry) return null
+      if (event.clientX < geometry.originX || event.clientX > geometry.right || event.clientY < geometry.originY || event.clientY > geometry.bottom) {
         return null
       }
 
       try {
-        const scale = getFrameScale()
-        const frameX = (event.clientX - rect.left) / scale
-        const frameY = (event.clientY - rect.top) / scale
+        const point = frameToInternalPoint(event.clientX, event.clientY, geometry)
         const frameDocument = state.iframe.contentDocument
-        return frameDocument?.elementFromPoint(frameX, frameY) || null
+        return frameDocument?.elementFromPoint(point.x, point.y) || null
       } catch {
         return null
       }
@@ -717,19 +728,9 @@
     function mapElementInfo(info, element) {
       if (!state.enabled || !state.iframe || element?.ownerDocument !== state.iframe.contentDocument) return info
 
-      const frameRect = getFrameRect()
-      const scale = getFrameScale()
-      if (!frameRect || !info?.rect) return info
-
-      const rect = info.rect
-      const mappedRect = {
-        left: frameRect.left + rect.left * scale,
-        top: frameRect.top + rect.top * scale,
-        right: frameRect.left + rect.right * scale,
-        bottom: frameRect.top + rect.bottom * scale,
-        width: rect.width * scale,
-        height: rect.height * scale
-      }
+      const geometry = readFrameGeometry()
+      if (!geometry || !info?.rect) return info
+      const mappedRect = internalRectToViewport(info.rect, geometry)
 
       return {
         ...info,

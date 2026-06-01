@@ -11,7 +11,9 @@ const {
   getBreakpointPreset,
   normalizeBreakpointDimension,
   rotateBreakpointViewport,
-  classifyFrameProbe
+  classifyFrameProbe,
+  frameToInternalPoint,
+  internalRectToViewport
 } = window.LayoutPilotModules.breakpointPresets
 
 assert.ok(
@@ -124,6 +126,37 @@ assert.deepEqual(
   { width: 852, height: 393 },
   'swaps width and height when rotating viewport'
 )
+
+assert.deepEqual(
+  frameToInternalPoint(300, 220, { originX: 100, originY: 20, scaleX: 0.5, scaleY: 0.25 }),
+  { x: 400, y: 800 },
+  'maps outer viewport points into internal iframe coordinates with per-axis scale'
+)
+
+assert.deepEqual(
+  internalRectToViewport(
+    { left: 10, top: 20, right: 50, bottom: 70, width: 40, height: 50 },
+    { originX: 100, originY: 200, scaleX: 0.5, scaleY: 0.25 }
+  ),
+  { left: 105, top: 205, right: 125, bottom: 217.5, width: 20, height: 12.5 },
+  'maps internal iframe rects into outer viewport coordinates with per-axis scale'
+)
+
+{
+  const geometry = { originX: 32, originY: 48, scaleX: 0.75, scaleY: 0.5 }
+  const internalRect = { left: 16, top: 24, right: 80, bottom: 72, width: 64, height: 48 }
+  const outerRect = internalRectToViewport(internalRect, geometry)
+  assert.deepEqual(
+    frameToInternalPoint(outerRect.left, outerRect.top, geometry),
+    { x: internalRect.left, y: internalRect.top },
+    'round-trips top-left corner through viewport mapping'
+  )
+  assert.deepEqual(
+    frameToInternalPoint(outerRect.right, outerRect.bottom, geometry),
+    { x: internalRect.right, y: internalRect.bottom },
+    'round-trips bottom-right corner through viewport mapping'
+  )
+}
 
 assert.equal(
   classifyFrameProbe({ reachable: true, href: 'https://example.com/#/security/domains' }),
