@@ -49,6 +49,12 @@
       shortcuts: {
         title: 'Atajos',
         note: 'I funciona después de activar esta pestaña desde el popup.'
+      },
+      breakpoint: {
+        description: 'Visualiza la página en tamaños de dispositivos sin reducir la ventana.',
+        current: 'Actual',
+        activate: 'Activar vista',
+        deactivate: 'Desactivar vista'
       }
     },
     shortcuts: {
@@ -63,7 +69,56 @@
       downloadImage: 'Descargar imagen',
       copyImage: 'Copiar imagen',
       generatePdf: 'Generar PDF',
-      removeAnnotation: 'Eliminar anotación'
+      removeAnnotation: 'Eliminar anotación',
+      breakpointPanel: 'Panel responsivo',
+      breakpointToggle: 'Vista responsiva'
+    },
+    breakpoint: {
+      title: 'Vista responsiva',
+      frameTitle: 'Vista responsiva',
+      statusActive: 'Vista responsiva activa.',
+      statusInspectActive: 'Vista responsiva + Inspección activas.',
+      interaction: {
+        label: 'Modo',
+        navigate: 'Navegar',
+        inspect: 'Inspección'
+      },
+      reviewUnavailable: 'La revisión aún no está disponible en Vista responsiva.',
+      fields: {
+        preset: 'Dispositivo',
+        width: 'Ancho',
+        height: 'Alto',
+        zoom: 'Zoom'
+      },
+      presetGroups: {
+        essential: 'Esenciales',
+        applePhones: 'Teléfonos Apple',
+        androidPhones: 'Teléfonos Android',
+        tablets: 'Tablets',
+        computers: 'Computadoras',
+        custom: 'Personalizado'
+      },
+      presets: {
+        custom: 'Personalizado'
+      },
+      zoom: {
+        fit: 'Fit'
+      },
+      actions: {
+        close: 'Salir',
+        center: 'Centrar vista',
+        collapse: 'Contraer panel',
+        expand: 'Expandir panel',
+        rotate: 'Alternar orientación'
+      },
+      blocked: {
+        title: 'Preview bloqueado',
+        description: 'Esta página bloquea la carga en iframe (X-Frame-Options o CSP). Ábrela en una pestaña y usa el modo responsivo de DevTools para probar este viewport.'
+      },
+      toast: {
+        enabled: 'Vista responsiva activa',
+        disabled: 'Vista responsiva desactivada'
+      }
     },
     detail: {
       kicker: 'Modo Inspección',

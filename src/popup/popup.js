@@ -8,8 +8,16 @@ const languageToggle = document.getElementById('language-toggle')
 const languageMenu = document.getElementById('language-menu')
 const languageCurrentFlag = document.getElementById('language-current-flag')
 const shortcutGrid = document.getElementById('shortcut-grid')
+const breakpointToggle = document.getElementById('breakpoint-toggle')
+const breakpointSummaryValue = document.getElementById('breakpoint-summary-value')
+const breakpointSwitchLabel = document.getElementById('breakpoint-switch-label')
 const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES, SHORTCUTS_BY_MODE, STORAGE_KEYS } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
+const {
+  DEFAULT_PRESET_ID,
+  getBreakpointPreset,
+  normalizeBreakpointDimension
+} = window.LayoutPilotModules.breakpointPresets
 const {
   AUTO_LANGUAGE,
   loadLanguagePreference,
@@ -19,9 +27,21 @@ const {
   t
 } = window.LayoutPilotModules.i18n
 
+function getDefaultBreakpointState() {
+  const preset = getBreakpointPreset(DEFAULT_PRESET_ID)
+  return {
+    enabled: false,
+    interaction: 'navigate',
+    presetId: preset?.id || 'custom',
+    width: preset?.width || 402,
+    height: preset?.height || 874
+  }
+}
+
 const state = {
   enabled: false,
   mode: MODE.INSPECT,
+  breakpoint: getDefaultBreakpointState(),
   statusKey: 'popup.status.checking'
 }
 let languageCloseTimer = null
@@ -32,6 +52,9 @@ const textBindings = {
   'mode-inspect-description': 'popup.mode.inspect.description',
   'mode-review-name': 'popup.mode.review.name',
   'mode-review-description': 'popup.mode.review.description',
+  'breakpoint-title': 'breakpoint.title',
+  'breakpoint-description': 'popup.breakpoint.description',
+  'breakpoint-summary-label': 'popup.breakpoint.current',
   'shortcuts-title': 'popup.shortcuts.title',
   'shortcut-note': 'popup.shortcuts.note'
 }
@@ -79,6 +102,42 @@ async function setModePreference(mode) {
   }
 
   return normalizedMode
+}
+
+function normalizeBreakpointPreference(value) {
+  const fallback = getDefaultBreakpointState()
+  const saved = value || {}
+  if (saved.presetId === 'custom') {
+    return {
+      ...fallback,
+      presetId: 'custom',
+      width: normalizeBreakpointDimension(saved.width, fallback.width),
+      height: normalizeBreakpointDimension(saved.height, fallback.height),
+      zoom: saved.zoom || 'fit'
+    }
+  }
+
+  const preset = getBreakpointPreset(saved.presetId) || getBreakpointPreset(DEFAULT_PRESET_ID)
+  if (!preset) return fallback
+  return {
+    ...fallback,
+    presetId: preset.id,
+    width: preset.width,
+    height: preset.height,
+    zoom: saved.zoom || 'fit'
+  }
+}
+
+async function loadBreakpointPreference() {
+  try {
+    const result = await chrome.storage.local.get(STORAGE_KEYS.RESPONSIVE_PREVIEW_STATE)
+    state.breakpoint = {
+      ...state.breakpoint,
+      ...normalizeBreakpointPreference(result?.[STORAGE_KEYS.RESPONSIVE_PREVIEW_STATE])
+    }
+  } catch {
+    state.breakpoint = getDefaultBreakpointState()
+  }
 }
 
 async function getActiveTab() {
@@ -230,8 +289,35 @@ function renderPopupTexts() {
 
   renderShortcuts()
   renderLanguageOptions()
+  renderBreakpointState()
   statusText.textContent = t(state.statusKey)
   toggleButton.textContent = state.enabled ? t('common.deactivate') : t('common.activate')
+}
+
+function renderBreakpointState() {
+  const breakpoint = state.breakpoint || {}
+  const on = !!breakpoint.enabled
+  breakpointToggle.setAttribute('aria-checked', on ? 'true' : 'false')
+  breakpointSwitchLabel.textContent = on ? t('popup.breakpoint.deactivate') : t('popup.breakpoint.activate')
+  const fallback = getDefaultBreakpointState()
+  const presetLabel = breakpoint.presetId === 'custom'
+    ? t('breakpoint.presets.custom')
+    : breakpoint.presetLabel || getBreakpointPreset(breakpoint.presetId)?.label || getBreakpointPreset(DEFAULT_PRESET_ID)?.label || t('breakpoint.presets.custom')
+  breakpointSummaryValue.textContent = `${presetLabel} · ${breakpoint.width || fallback.width} x ${breakpoint.height || fallback.height}`
+
+  // While the responsive preview is on, the status line reflects the preview
+  // instead of the classic mode.
+  if (on) {
+    statusDot.classList.add('active')
+    statusText.textContent = breakpoint.interaction === 'inspect'
+      ? t('breakpoint.statusInspectActive')
+      : t('breakpoint.statusActive')
+  }
+
+  // Review is unavailable while the preview is on (MVP).
+  const reviewLabel = modeReview.closest('.mode-option')
+  modeReview.disabled = on
+  reviewLabel?.classList.toggle('is-disabled', on)
 }
 
 function renderModeSelection() {
@@ -249,6 +335,7 @@ function setStatus(enabled, statusKey, mode = MODE.INSPECT) {
   statusText.textContent = t(statusKey)
   toggleButton.textContent = enabled ? t('common.deactivate') : t('common.activate')
   renderModeSelection()
+  renderBreakpointState()
 }
 
 async function ensureContentScript(tabId) {
@@ -273,14 +360,17 @@ async function refreshStatus() {
 
   if (!isInspectableTab(tab)) {
     toggleButton.disabled = true
+    breakpointToggle.disabled = true
     setStatus(false, 'popup.status.unsupported', state.mode)
     return
   }
 
   toggleButton.disabled = false
+  breakpointToggle.disabled = false
   const response = await sendToTab(tab.id, { type: MESSAGE_TYPE.GET_STATE })
   const enabled = !!response?.enabled
   const mode = enabled ? response?.mode || state.mode : state.mode
+  state.breakpoint = response?.breakpoint || state.breakpoint
   setStatus(enabled, enabled ? getActiveStatusKey(mode) : 'popup.status.inactive', mode)
 }
 
@@ -340,6 +430,7 @@ async function handleModeChange(mode) {
   }
 
   const responseMode = response?.mode || state.mode
+  state.breakpoint = response?.breakpoint || state.breakpoint
   setStatus(!!response?.enabled, response?.enabled ? getActiveStatusKey(responseMode) : 'popup.status.inactive', responseMode)
 }
 
@@ -348,7 +439,35 @@ modeInspect.addEventListener('change', () => {
 })
 
 modeReview.addEventListener('change', () => {
+  if (state.breakpoint?.enabled) {
+    modeReview.checked = false
+    modeInspect.checked = state.mode === MODE.INSPECT
+    renderBreakpointState()
+    return
+  }
   if (modeReview.checked) handleModeChange(MODE.REVIEW)
+})
+
+breakpointToggle.addEventListener('click', async () => {
+  const tab = await getActiveTab()
+  if (!isInspectableTab(tab)) return
+
+  breakpointToggle.disabled = true
+  try {
+    await ensureContentScript(tab.id)
+    const response = await sendToTab(tab.id, {
+      type: MESSAGE_TYPE.SET_BREAKPOINT,
+      enabled: !state.breakpoint?.enabled
+    })
+    state.breakpoint = response?.breakpoint || state.breakpoint
+    const mode = response?.mode || state.mode
+    if (response?.enabled) await setModePreference(mode)
+    setStatus(!!response?.enabled, response?.enabled ? getActiveStatusKey(mode) : 'popup.status.inactive', mode)
+  } catch {
+    setStatus(false, 'popup.status.injectionFailed', state.mode)
+  } finally {
+    breakpointToggle.disabled = false
+  }
 })
 
 languageToggle.addEventListener('click', event => {
@@ -374,6 +493,7 @@ document.addEventListener('keydown', event => {
 async function initializePopup() {
   await loadLanguagePreference()
   await loadModePreference()
+  await loadBreakpointPreference()
   renderPopupTexts()
   await refreshStatus()
 }

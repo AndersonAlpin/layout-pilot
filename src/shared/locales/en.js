@@ -49,6 +49,12 @@
       shortcuts: {
         title: 'Shortcuts',
         note: 'I works after activating this tab from the popup.'
+      },
+      breakpoint: {
+        description: 'View the page at device sizes without shrinking the browser window.',
+        current: 'Current',
+        activate: 'Enable preview',
+        deactivate: 'Disable preview'
       }
     },
     shortcuts: {
@@ -63,7 +69,56 @@
       downloadImage: 'Download image',
       copyImage: 'Copy image',
       generatePdf: 'Generate PDF',
-      removeAnnotation: 'Remove annotation'
+      removeAnnotation: 'Remove annotation',
+      breakpointPanel: 'Responsive panel',
+      breakpointToggle: 'Responsive view'
+    },
+    breakpoint: {
+      title: 'Responsive view',
+      frameTitle: 'Responsive view',
+      statusActive: 'Responsive view active.',
+      statusInspectActive: 'Responsive view + Inspect active.',
+      interaction: {
+        label: 'Mode',
+        navigate: 'Browse',
+        inspect: 'Inspect'
+      },
+      reviewUnavailable: 'Review is not available in Responsive view yet.',
+      fields: {
+        preset: 'Device',
+        width: 'Width',
+        height: 'Height',
+        zoom: 'Zoom'
+      },
+      presetGroups: {
+        essential: 'Essentials',
+        applePhones: 'Apple phones',
+        androidPhones: 'Android phones',
+        tablets: 'Tablets',
+        computers: 'Computers',
+        custom: 'Custom'
+      },
+      presets: {
+        custom: 'Custom'
+      },
+      zoom: {
+        fit: 'Fit'
+      },
+      actions: {
+        close: 'Exit',
+        center: 'Center preview',
+        collapse: 'Collapse panel',
+        expand: 'Expand panel',
+        rotate: 'Toggle orientation'
+      },
+      blocked: {
+        title: 'Preview blocked',
+        description: 'This page blocks iframe loading (X-Frame-Options or CSP). Open it in a tab and use the DevTools responsive mode to test this viewport.'
+      },
+      toast: {
+        enabled: 'Responsive view on',
+        disabled: 'Responsive view off'
+      }
     },
     detail: {
       kicker: 'Inspect Mode',

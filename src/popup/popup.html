@@ -49,6 +49,23 @@
           </label>
         </section>
 
+        <section class="breakpoint-card" aria-labelledby="breakpoint-title">
+          <div class="breakpoint-card-header">
+            <strong id="breakpoint-title">Visualização responsiva</strong>
+          </div>
+          <p id="breakpoint-description" class="breakpoint-description">
+            Visualize a página em tamanhos de dispositivos sem reduzir a janela.
+          </p>
+          <button id="breakpoint-toggle" class="breakpoint-switch" type="button" role="switch" aria-checked="false">
+            <span class="breakpoint-switch-track" aria-hidden="true"><span class="breakpoint-switch-thumb"></span></span>
+            <span id="breakpoint-switch-label" class="breakpoint-switch-label">Ativar visualização</span>
+          </button>
+          <div class="breakpoint-summary">
+            <span id="breakpoint-summary-label">Atual</span>
+            <b id="breakpoint-summary-value">iPhone 16/17 Pro · 402 x 874</b>
+          </div>
+        </section>
+
         <section class="shortcuts" aria-labelledby="shortcuts-title">
           <strong id="shortcuts-title">Atalhos</strong>
           <div id="shortcut-grid" class="shortcut-grid">
@@ -69,6 +86,7 @@
     <script src="../shared/locales/es.js"></script>
     <script src="../shared/i18n.js"></script>
     <script src="../shared/messaging.js"></script>
+    <script src="../content/breakpoint/breakpoint-presets.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

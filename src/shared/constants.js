@@ -11,6 +11,7 @@
     GET_STATE: 'layoutpilot:get-state',
     TOGGLE: 'layoutpilot:toggle',
     SET_ENABLED: 'layoutpilot:set-enabled',
+    SET_BREAKPOINT: 'layoutpilot:set-breakpoint',
     SET_LANGUAGE: 'layoutpilot:set-language',
     CAPTURE_VISIBLE_TAB: 'layoutpilot:capture-visible-tab',
     STORE_REVIEW_REPORT: 'layoutpilot:store-review-report',
@@ -25,6 +26,7 @@
     COPY_CONTEXT: 'c',
     PIN: 'p',
     DETAILS: 'd',
+    BREAKPOINT_PANEL: 'b',
     SNAPSHOT_IMAGE: 's',
     PDF_REPORT: 'g'
   }
@@ -36,7 +38,9 @@
       { key: 'D', labelKey: 'shortcuts.details' },
       { key: 'I', labelKey: 'shortcuts.inspect' },
       { key: 'C', labelKey: 'shortcuts.context' },
-      { key: 'P', labelKey: 'shortcuts.pin' }
+      { key: 'P', labelKey: 'shortcuts.pin' },
+      { key: 'B', labelKey: 'shortcuts.breakpointPanel' },
+      { key: 'Shift+B', labelKey: 'shortcuts.breakpointToggle' }
     ],
     [MODE.REVIEW]: [
       { key: 'H', labelKey: 'shortcuts.help' },
@@ -45,12 +49,15 @@
       { key: 'Delete', labelKey: 'shortcuts.removeAnnotation' },
       { key: 'S', labelKey: 'shortcuts.copyImage' },
       { key: 'Shift+S', labelKey: 'shortcuts.downloadImage' },
-      { key: 'G', labelKey: 'shortcuts.generatePdf' }
+      { key: 'G', labelKey: 'shortcuts.generatePdf' },
+      { key: 'B', labelKey: 'shortcuts.breakpointPanel' },
+      { key: 'Shift+B', labelKey: 'shortcuts.breakpointToggle' }
     ]
   }
 
   const CONTENT_CSS_FILES = [
     'src/content/base.css',
+    'src/content/breakpoint/breakpoint.css',
     'src/content/inspect/inspect.css',
     'src/content/review/review.css'
   ]
@@ -69,12 +76,15 @@
     'src/shared/ui/toggle.js',
     'src/shared/ui/panel-section.js',
     'src/shared/ui/shortcut-key.js',
+    'src/shared/ui/popover-menu.js',
     'src/content/core/selector-utils.js',
     'src/content/core/element-inspector.js',
     'src/content/core/draggable-panel.js',
     'src/content/core/clipboard.js',
     'src/content/core/shortcuts.js',
     'src/content/core/modal-shield.js',
+    'src/content/breakpoint/breakpoint-presets.js',
+    'src/content/breakpoint/breakpoint-mode.js',
     'src/content/inspect/context-export.js',
     'src/content/inspect/css-export.js',
     'src/content/inspect/detail-panel.js',
@@ -113,7 +123,12 @@
     'layoutpilot-review-popover',
     'layoutpilot-review-menu',
     'layoutpilot-ui-tooltip',
-    'layoutpilot-toast'
+    'layoutpilot-toast',
+    'layoutpilot-breakpoint-workspace',
+    'layoutpilot-breakpoint-stage',
+    'layoutpilot-breakpoint-frame',
+    'layoutpilot-breakpoint-panel',
+    'layoutpilot-menu'
   ]
 
   root.constants = {
@@ -130,6 +145,7 @@
       INSTALLED_AT: 'layoutPilotInstalledAt',
       LANGUAGE: 'layoutPilotLanguage',
       LAST_MODE: 'layoutPilotLastMode',
+      RESPONSIVE_PREVIEW_STATE: 'layoutPilotResponsivePreviewState',
       REVIEW_COLOR_MODE: 'layoutPilotReviewColorMode',
       REVIEW_DEFAULT_COLOR: 'layoutPilotReviewDefaultColor',
       REVIEW_RECENT_COLORS: 'layoutPilotReviewRecentColors'

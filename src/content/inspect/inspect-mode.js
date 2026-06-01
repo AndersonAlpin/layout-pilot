@@ -56,7 +56,12 @@
   }
 
   function createInspectMode(options = {}) {
-    const { showToast, t } = options
+    const {
+      showToast,
+      t,
+      getElementAtPoint: getCustomElementAtPoint,
+      mapElementInfo
+    } = options
     const state = {
       enabled: false,
       hoveredElement: null,
@@ -132,8 +137,16 @@
     }
 
     function getElementAtPoint(event) {
+      const customElement = getCustomElementAtPoint?.(event)
+      if (customElement !== undefined) return customElement
+
       const elements = document.elementsFromPoint(event.clientX, event.clientY)
       return elements.find(element => element instanceof Element && !isOwnElement(element) && element !== document.documentElement && element !== document.body) || null
+    }
+
+    function getElementInfo(element) {
+      const info = collectElementInfo(element)
+      return mapElementInfo?.(info, element) || info
     }
 
     function getActiveElement() {
@@ -220,8 +233,8 @@
       state.tooltip.style.visibility = 'visible'
     }
 
-    function renderTooltip(event, element, info = collectElementInfo(element)) {
-      const selectedInfo = state.selectedElement?.isConnected ? collectElementInfo(state.selectedElement) : null
+    function renderTooltip(event, element, info = getElementInfo(element)) {
+      const selectedInfo = state.selectedElement?.isConnected ? getElementInfo(state.selectedElement) : null
       const selectedRect = selectedInfo?.rect || null
       const containedPair = selectedRect && state.selectedElement !== element ? getContainedRectPair(selectedRect, info.rect) : null
       const containedSegments = containedPair ? getContainedDistanceSegments(selectedRect, info.rect) : null
@@ -285,7 +298,7 @@
       }
 
       ensureUi()
-      setBox(state.selectedOverlay, state.selectedElement.getBoundingClientRect())
+      setBox(state.selectedOverlay, getElementInfo(state.selectedElement).rect)
     }
 
     function addDistanceLine(className, left, top, width, height, label, options = {}) {
@@ -316,7 +329,7 @@
       labelElement.style.top = px(labelPosition.top)
     }
 
-    function renderDistances(element, targetInfo = collectElementInfo(element)) {
+    function renderDistances(element, targetInfo = getElementInfo(element)) {
       ensureUi()
       state.distanceLayer.innerHTML = ''
 
@@ -325,7 +338,7 @@
         return
       }
 
-      const selectedInfo = collectElementInfo(state.selectedElement)
+      const selectedInfo = getElementInfo(state.selectedElement)
       const a = selectedInfo.rect
       const b = targetInfo.rect
       const containedSegments = getContainedDistanceSegments(a, b)
@@ -375,7 +388,7 @@
       state.selectedElement = element
       renderSelectedOverlay()
 
-      const info = collectElementInfo(element)
+      const info = getElementInfo(element)
       const panel = ensureDetailPanel()
       panel.innerHTML = renderDetailPanelContent(info, {
         createCompactContext: createTranslatedCompactContext,
@@ -405,7 +418,7 @@
         showToast?.(t('toast.noElement'))
         return
       }
-      copyText(createTranslatedCompactContext(collectElementInfo(element)), 'Simple context', showToast, {
+      copyText(createTranslatedCompactContext(getElementInfo(element)), 'Simple context', showToast, {
         success: t('toast.copied.simpleContext'),
         failure: t('toast.copyFailed')
       })
@@ -416,7 +429,7 @@
         showToast?.(t('toast.noElement'))
         return
       }
-      copyText(createTranslatedFullContext(collectElementInfo(element)), 'Full context', showToast, {
+      copyText(createTranslatedFullContext(getElementInfo(element)), 'Full context', showToast, {
         success: t('toast.copied.fullContext'),
         failure: t('toast.copyFailed')
       })
@@ -427,7 +440,7 @@
         showToast?.(t('toast.noElement'))
         return
       }
-      copyText(collectElementInfo(element).selector, 'Selector', showToast, {
+      copyText(getElementInfo(element).selector, 'Selector', showToast, {
         success: t('toast.copied.selector'),
         failure: t('toast.copyFailed')
       })
@@ -438,7 +451,7 @@
         showToast?.(t('toast.noElement'))
         return
       }
-      copyText(createCssSummary(collectElementInfo(element)), 'CSS/layout summary', showToast, {
+      copyText(createCssSummary(getElementInfo(element)), 'CSS/layout summary', showToast, {
         success: t('toast.copied.cssLayout'),
         failure: t('toast.copyFailed')
       })
@@ -453,7 +466,7 @@
       state.hoveredElement = element
       state.lastPointerEvent = event
       ensureUi()
-      const info = collectElementInfo(element)
+      const info = getElementInfo(element)
       setBox(state.overlay, info.rect)
       renderSelectedOverlay()
       renderDistances(element, info)

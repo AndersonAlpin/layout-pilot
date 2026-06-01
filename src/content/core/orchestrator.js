@@ -3,6 +3,8 @@
     constants,
     dom,
     inspectMode,
+    breakpointMode,
+    breakpointPresets,
     modalShield,
     reviewMode,
     shortcuts,
@@ -12,6 +14,8 @@
   const { INSTANCE_KEY, MODE, MESSAGE_TYPE, SHORTCUT, SHORTCUTS_BY_MODE, UI_SELECTOR } = constants
   const { createElement, isLayoutPilotElement, escapeHtml } = dom
   const { createInspectMode } = inspectMode
+  const { createBreakpointMode } = breakpointMode
+  const { resolveActiveControllers } = breakpointPresets
   const { createModalShield } = modalShield
   const { createReviewMode } = reviewMode
   const { normalizeKey, shouldIgnoreShortcut, consumeShortcut } = shortcuts
@@ -44,10 +48,18 @@
     cleanupOrphanUi()
   }
 
+  const breakpointController = createBreakpointMode({
+    showToast,
+    t,
+    onEnabledChange: () => applyActiveState(),
+    onInteractionChange: () => applyActiveState()
+  })
   const controllers = {
     [MODE.INSPECT]: createInspectMode({
       showToast,
-      t
+      t,
+      getElementAtPoint: breakpointController.getElementAtPoint,
+      mapElementInfo: breakpointController.mapElementInfo
     }),
     [MODE.REVIEW]: createReviewMode({
       showToast,
@@ -62,6 +74,21 @@
 
   function getController(mode = state.mode) {
     return controllers[mode] || controllers[MODE.INSPECT]
+  }
+
+  // The controller that is actually intercepting input right now. With
+  // Breakpoint on, that is Inspect (when interaction = inspect) regardless of
+  // the classic `mode`, so its shortcuts/detail clicks route correctly.
+  function getActiveController() {
+    const bp = breakpointController.getState()
+    const desired = resolveActiveControllers({
+      enabled: state.enabled,
+      mode: state.mode,
+      breakpointEnabled: bp.enabled,
+      interaction: bp.interaction
+    })
+    if (desired.review) return controllers[MODE.REVIEW]
+    return controllers[MODE.INSPECT]
   }
 
   function ensureHelpPanel() {
@@ -133,6 +160,7 @@
   }
 
   function refreshTranslatedUi() {
+    breakpointController.refreshLanguage?.()
     for (const controller of Object.values(controllers)) {
       controller.refreshLanguage?.()
     }
@@ -148,17 +176,28 @@
       return
     }
 
-    getController().handleUiClick?.(event)
+    if (breakpointController.handleUiClick?.(event)) return
+
+    getActiveController().handleUiClick?.(event)
+  }
+
+  function handleUiChange(event) {
+    if (!isLayoutPilotElement(event.target)) return
+    breakpointController.handleFieldChange?.(event)
   }
 
   function handleKeyDown(event) {
+    if (isLayoutPilotElement(event.target) && breakpointController.handleFieldKeyDown?.(event)) return
+
     const normalized = normalizeKey(event)
-    const isReviewMode = state.enabled && state.mode === MODE.REVIEW
+    // Review is only the active interceptor in classic mode; with Breakpoint on
+    // the interceptor is Inspect (or none), never Review.
+    const isReviewMode = state.enabled && !breakpointController.getState().enabled && state.mode === MODE.REVIEW
     const allowReviewCancel = isReviewMode && normalized === SHORTCUT.CANCEL
 
     if (shouldIgnoreShortcut(event) && !allowReviewCancel) return
 
-    const activeController = getController()
+    const activeController = getActiveController()
     if (state.enabled && activeController.blocksGlobalShortcuts?.()) {
       consumeShortcut(event)
       activeController.handleKeyDown(event, normalized)
@@ -171,9 +210,24 @@
       return
     }
 
+    if (state.enabled && normalized === SHORTCUT.BREAKPOINT_PANEL) {
+      consumeShortcut(event)
+      if (event.shiftKey) {
+        setBreakpointEnabled(!breakpointController.getState().enabled)
+      } else {
+        breakpointController.togglePanel()
+      }
+      return
+    }
+
     if (normalized === SHORTCUT.INSPECT) {
       consumeShortcut(event)
       if (isReviewMode) return
+
+      if (breakpointController.getState().enabled) {
+        breakpointController.toggleInteraction()
+        return
+      }
 
       if (state.enabled) {
         setEnabled(false)
@@ -221,24 +275,34 @@
     state.healthCheckTimer = null
   }
 
-  function startMode(mode) {
-    getController(mode).start()
-  }
+  function applyActiveState() {
+    const bp = breakpointController.getState()
+    const desired = resolveActiveControllers({
+      enabled: state.enabled,
+      mode: state.mode,
+      breakpointEnabled: bp.enabled,
+      interaction: bp.interaction
+    })
 
-  function stopMode(mode) {
-    getController(mode).stop()
+    if (desired.inspect) controllers[MODE.INSPECT].start()
+    else controllers[MODE.INSPECT].stop()
+
+    if (desired.review) controllers[MODE.REVIEW].start()
+    else controllers[MODE.REVIEW].stop()
+
+    // Keep the breakpoint panel above the freshly-mounted inspect hit-shield.
+    if (bp.enabled) breakpointController.raisePanel()
   }
 
   function setMode(mode) {
     const nextMode = mode === MODE.REVIEW ? MODE.REVIEW : MODE.INSPECT
+    if (nextMode === MODE.REVIEW && breakpointController.getState().enabled) {
+      showToast(t('breakpoint.reviewUnavailable'))
+      return
+    }
     if (state.mode === nextMode) return
-
-    const previousMode = state.mode
-    if (state.enabled) stopMode(previousMode)
-
     state.mode = nextMode
-
-    if (state.enabled) startMode(state.mode)
+    applyActiveState()
     if (state.helpPanel) renderHelpPanel()
   }
 
@@ -246,15 +310,21 @@
     if (state.enabled === enabled) return
     state.enabled = enabled
 
-    if (enabled) {
-      startMode(state.mode)
-      return
+    if (!enabled) {
+      breakpointController.setEnabled(false)
+      removeElement('helpPanel')
+      removeElement('toast')
     }
 
-    stopMode(state.mode)
-    removeElement('helpPanel')
-    removeElement('toast')
-    cleanupOrphanUi()
+    applyActiveState()
+
+    if (!enabled) cleanupOrphanUi()
+  }
+
+  function setBreakpointEnabled(enabled) {
+    if (enabled && !state.enabled) state.enabled = true
+    // breakpointController.setEnabled triggers onEnabledChange -> applyActiveState.
+    breakpointController.setEnabled(enabled)
   }
 
   function destroy() {
@@ -262,8 +332,10 @@
     for (const controller of Object.values(controllers)) {
       controller.destroy?.()
     }
+    breakpointController.destroy?.()
     document.removeEventListener('keydown', handleKeyDown, true)
     document.removeEventListener('click', handleUiClick, true)
+    document.removeEventListener('change', handleUiChange, true)
     rekaModalShield.stop()
     teardownTooltips()
     window.removeEventListener('pagehide', handleLifecycleCleanup)
@@ -287,6 +359,7 @@
 
   document.addEventListener('keydown', handleKeyDown, true)
   document.addEventListener('click', handleUiClick, true)
+  document.addEventListener('change', handleUiChange, true)
   rekaModalShield.start()
   window.addEventListener('pagehide', handleLifecycleCleanup)
   window.addEventListener('beforeunload', handleLifecycleCleanup)
@@ -300,21 +373,31 @@
     }
 
     if (message?.type === MESSAGE_TYPE.GET_STATE) {
-      sendResponse({ enabled: state.enabled, mode: state.mode })
+      sendResponse({ enabled: state.enabled, mode: state.mode, breakpoint: breakpointController.getState() })
       return true
     }
 
     if (message?.type === MESSAGE_TYPE.TOGGLE) {
       setMode(message.mode || MODE.INSPECT)
       setEnabled(!state.enabled)
-      sendResponse({ enabled: state.enabled, mode: state.mode })
+      sendResponse({ enabled: state.enabled, mode: state.mode, breakpoint: breakpointController.getState() })
       return true
     }
 
     if (message?.type === MESSAGE_TYPE.SET_ENABLED) {
       setMode(message.mode || MODE.INSPECT)
       setEnabled(!!message.enabled)
-      sendResponse({ enabled: state.enabled, mode: state.mode })
+      sendResponse({ enabled: state.enabled, mode: state.mode, breakpoint: breakpointController.getState() })
+      return true
+    }
+
+    if (message?.type === MESSAGE_TYPE.SET_BREAKPOINT) {
+      if (message.toggle) {
+        setBreakpointEnabled(!breakpointController.getState().enabled)
+      } else {
+        setBreakpointEnabled(!!message.enabled)
+      }
+      sendResponse({ enabled: state.enabled, mode: state.mode, breakpoint: breakpointController.getState() })
       return true
     }
 

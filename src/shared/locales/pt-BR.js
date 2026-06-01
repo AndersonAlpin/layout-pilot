@@ -49,6 +49,12 @@
       shortcuts: {
         title: 'Atalhos',
         note: 'I funciona depois de ativar nesta aba pelo popup.'
+      },
+      breakpoint: {
+        description: 'Visualize a página em tamanhos de dispositivos sem reduzir a janela.',
+        current: 'Atual',
+        activate: 'Ativar visualização',
+        deactivate: 'Desativar visualização'
       }
     },
     shortcuts: {
@@ -63,7 +69,56 @@
       downloadImage: 'Baixar imagem',
       copyImage: 'Copiar imagem',
       generatePdf: 'Gerar PDF',
-      removeAnnotation: 'Remover anotação'
+      removeAnnotation: 'Remover anotação',
+      breakpointPanel: 'Painel responsivo',
+      breakpointToggle: 'Visualização responsiva'
+    },
+    breakpoint: {
+      title: 'Visualização responsiva',
+      frameTitle: 'Visualização responsiva',
+      statusActive: 'Visualização responsiva ativa.',
+      statusInspectActive: 'Visualização responsiva + Inspeção ativos.',
+      interaction: {
+        label: 'Modo',
+        navigate: 'Navegar',
+        inspect: 'Inspeção'
+      },
+      reviewUnavailable: 'Revisão ainda não está disponível na Visualização responsiva.',
+      fields: {
+        preset: 'Dispositivo',
+        width: 'Largura',
+        height: 'Altura',
+        zoom: 'Zoom'
+      },
+      presetGroups: {
+        essential: 'Essenciais',
+        applePhones: 'Telefones Apple',
+        androidPhones: 'Telefones Android',
+        tablets: 'Tablets',
+        computers: 'Computadores',
+        custom: 'Personalizado'
+      },
+      presets: {
+        custom: 'Personalizado'
+      },
+      zoom: {
+        fit: 'Fit'
+      },
+      actions: {
+        close: 'Sair',
+        center: 'Centralizar preview',
+        collapse: 'Recolher painel',
+        expand: 'Expandir painel',
+        rotate: 'Alternar orientação'
+      },
+      blocked: {
+        title: 'Preview bloqueado',
+        description: 'Esta página impede o carregamento em iframe (X-Frame-Options ou CSP). Abra-a em uma aba e use o modo responsivo do DevTools para testar este viewport.'
+      },
+      toast: {
+        enabled: 'Visualização responsiva ativa',
+        disabled: 'Visualização responsiva desativada'
+      }
     },
     detail: {
       kicker: 'Modo Inspeção',
