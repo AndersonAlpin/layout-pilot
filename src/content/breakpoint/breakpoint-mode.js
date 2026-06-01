@@ -29,7 +29,8 @@
       showToast,
       t = key => key,
       onInteractionChange,
-      onEnabledChange
+      onEnabledChange,
+      onViewportChange
     } = options
     const defaultPreset = getBreakpointPreset(DEFAULT_PRESET_ID)
     const state = {
@@ -77,6 +78,10 @@
         panelCollapsed: state.panelCollapsed,
         frameBlocked: state.frameBlocked
       }
+    }
+
+    function notifyViewportChange() {
+      onViewportChange?.(getState())
     }
 
     function getCurrentUrl() {
@@ -449,6 +454,7 @@
     function handleResize() {
       if (!state.enabled || state.zoom !== 'fit') return
       renderFrame()
+      notifyViewportChange()
     }
 
     function isPanStartTarget(target) {
@@ -575,6 +581,7 @@
       updateWorkspaceLayout()
       renderPanel()
       scheduleCenter()
+      notifyViewportChange()
       return getState()
     }
 
@@ -591,13 +598,16 @@
         return
       }
 
-      const changed = state.width !== preset.width || state.height !== preset.height
+      const changed = state.presetId !== preset.id || state.width !== preset.width || state.height !== preset.height
       state.presetId = preset.id
       state.width = preset.width
       state.height = preset.height
       persistViewportPreference()
       render()
-      if (changed) centerFrame()
+      if (changed) {
+        centerFrame()
+        notifyViewportChange()
+      }
     }
 
     function applyDimensions(width, height, sourceTarget = null) {
@@ -609,7 +619,10 @@
       state.height = nextHeight
       persistViewportPreference()
       renderViewportOnly(sourceTarget)
-      if (changed) scheduleCenter()
+      if (changed) {
+        scheduleCenter()
+        notifyViewportChange()
+      }
     }
 
     function rotate() {
@@ -620,13 +633,17 @@
       persistViewportPreference()
       render()
       centerFrame()
+      notifyViewportChange()
     }
 
     function setZoom(value) {
-      state.zoom = ['fit', '1', '0.75', '0.5'].includes(String(value)) ? String(value) : 'fit'
+      const nextZoom = ['fit', '1', '0.75', '0.5'].includes(String(value)) ? String(value) : 'fit'
+      const changed = state.zoom !== nextZoom
+      state.zoom = nextZoom
       persistViewportPreference()
       render()
       centerFrame()
+      if (changed) notifyViewportChange()
     }
 
     function openFieldMenu(name, trigger) {

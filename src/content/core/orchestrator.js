@@ -52,7 +52,8 @@
     showToast,
     t,
     onEnabledChange: () => applyActiveState(),
-    onInteractionChange: () => applyActiveState()
+    onInteractionChange: () => applyActiveState(),
+    onViewportChange: () => controllers[MODE.INSPECT].resetVisualState?.()
   })
   const controllers = {
     [MODE.INSPECT]: createInspectMode({

@@ -124,6 +124,16 @@
       state.lastPointerEvent = null
     }
 
+    function resetVisualState() {
+      state.hoveredElement = null
+      state.selectedElement = null
+      state.lastPointerEvent = null
+      detailPanelDrag.stop()
+      hideTransientUi()
+      if (state.distanceLayer) state.distanceLayer.innerHTML = ''
+      closeDetailPanel()
+    }
+
     function isOwnElement(element) {
       return isLayoutPilotElement(element)
     }
@@ -661,6 +671,7 @@
       start,
       stop,
       destroy,
+      resetVisualState,
       handleKeyDown,
       handleUiClick,
       refreshLanguage,
