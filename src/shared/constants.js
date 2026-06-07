@@ -145,6 +145,8 @@
       INSTALLED_AT: 'layoutPilotInstalledAt',
       LANGUAGE: 'layoutPilotLanguage',
       LAST_MODE: 'layoutPilotLastMode',
+      LAST_SEEN_RELEASE_NOTES_VERSION: 'layoutpilot_last_seen_release_notes_version',
+      LAST_SEEN_RELEASE_NOTES_AT: 'layoutpilot_last_seen_release_notes_at',
       RESPONSIVE_PREVIEW_STATE: 'layoutPilotResponsivePreviewState',
       RESPONSIVE_CUSTOM_PRESETS: 'layoutPilotResponsiveCustomPresets',
       REVIEW_COLOR_MODE: 'layoutPilotReviewColorMode',

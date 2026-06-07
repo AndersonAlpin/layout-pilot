@@ -7,6 +7,14 @@ const languagePicker = document.getElementById('language-picker')
 const languageToggle = document.getElementById('language-toggle')
 const languageMenu = document.getElementById('language-menu')
 const languageCurrentFlag = document.getElementById('language-current-flag')
+const releaseNotesButton = document.getElementById('release-notes-button')
+const releaseNotesBadge = document.getElementById('release-notes-badge')
+const releaseNotesModal = document.getElementById('release-notes-modal')
+const releaseNotesTitle = document.getElementById('release-notes-title')
+const releaseNotesSubtitle = document.getElementById('release-notes-subtitle')
+const releaseNotesContent = document.getElementById('release-notes-content')
+const releaseNotesClose = document.getElementById('release-notes-close')
+const releaseNotesConfirm = document.getElementById('release-notes-confirm')
 const shortcutGrid = document.getElementById('shortcut-grid')
 const shortcutNote = document.getElementById('shortcut-note')
 const shortcutsToggle = document.getElementById('shortcuts-toggle')
@@ -16,6 +24,7 @@ const breakpointDescription = document.getElementById('breakpoint-description')
 const breakpointSwitchLabel = document.getElementById('breakpoint-switch-label')
 const { MODE, MESSAGE_TYPE, CONTENT_CSS_FILES, CONTENT_SCRIPT_FILES, SHORTCUTS_BY_MODE, STORAGE_KEYS } = window.LayoutPilotModules.constants
 const { sendToTab } = window.LayoutPilotModules.messaging
+const { getReleaseNote } = window.LayoutPilotModules.releaseNotes
 const {
   DEFAULT_PRESET_ID,
   getBreakpointPreset,
@@ -45,11 +54,17 @@ const state = {
   enabled: false,
   mode: MODE.INSPECT,
   breakpoint: getDefaultBreakpointState(),
+  releaseNote: null,
+  releaseNotesOpen: false,
+  releaseNotesSeen: true,
+  releaseNotesSeenAt: 0,
   statusKey: 'popup.status.checking',
   shortcutsExpanded: false
 }
 let languageCloseTimer = null
 let scrollStateFrame = null
+
+const RELEASE_NOTES_VISIBLE_AFTER_SEEN_MS = 3 * 24 * 60 * 60 * 1000
 
 const textBindings = {
   'mode-title': 'popup.mode.title',
@@ -139,6 +154,34 @@ async function loadBreakpointPreference() {
     }
   } catch {
     state.breakpoint = getDefaultBreakpointState()
+  }
+}
+
+async function loadReleaseNotesState() {
+  const currentVersion = chrome.runtime.getManifest().version
+  state.releaseNote = getReleaseNote(currentVersion)
+  if (!state.releaseNote) {
+    state.releaseNotesSeen = true
+    state.releaseNotesSeenAt = 0
+    return
+  }
+
+  try {
+    const result = await chrome.storage.local.get([
+      STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_VERSION,
+      STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_AT
+    ])
+    state.releaseNotesSeen = result?.[STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_VERSION] === state.releaseNote.version
+    state.releaseNotesSeenAt = Number(result?.[STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_AT]) || 0
+    if (state.releaseNotesSeen && !state.releaseNotesSeenAt) {
+      state.releaseNotesSeenAt = Date.now()
+      await chrome.storage.local.set({
+        [STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_AT]: state.releaseNotesSeenAt
+      })
+    }
+  } catch {
+    state.releaseNotesSeen = true
+    state.releaseNotesSeenAt = 0
   }
 }
 
@@ -266,6 +309,91 @@ function renderLanguageOptions() {
   document.documentElement.lang = getCurrentLanguage()
 }
 
+function appendReleaseNotesContent(notes) {
+  if (!notes) return
+
+  const feature = document.createElement('section')
+  const highlight = document.createElement('strong')
+  const description = document.createElement('p')
+  const list = document.createElement('ul')
+  const extra = document.createElement('p')
+  feature.className = 'release-notes-feature'
+  highlight.className = 'release-notes-highlight'
+  description.className = 'release-notes-description'
+  extra.className = 'release-notes-extra'
+  highlight.textContent = notes.highlight || ''
+  description.textContent = notes.description || ''
+
+  for (const item of notes.bullets || []) {
+    const entry = document.createElement('li')
+    entry.textContent = item
+    list.append(entry)
+  }
+
+  extra.textContent = notes.extra || ''
+  feature.append(highlight, description, list, extra)
+  releaseNotesContent.append(feature)
+}
+
+function getLocalizedReleaseNotes(note) {
+  const notesByLanguage = note?.chromeWebStoreShortNotes || {}
+  return notesByLanguage[getCurrentLanguage()] || notesByLanguage.en || null
+}
+
+function shouldShowReleaseNotesButton() {
+  if (!state.releaseNote) return false
+  if (!state.releaseNotesSeen) return true
+  if (!state.releaseNotesSeenAt) return false
+
+  return Date.now() - state.releaseNotesSeenAt < RELEASE_NOTES_VISIBLE_AFTER_SEEN_MS
+}
+
+function renderReleaseNotes() {
+  const note = state.releaseNote
+  const localizedNotes = getLocalizedReleaseNotes(note)
+  releaseNotesButton.hidden = !shouldShowReleaseNotesButton()
+  releaseNotesButton.setAttribute('aria-label', t('popup.releaseNotes.tooltip'))
+  releaseNotesButton.title = t('popup.releaseNotes.tooltip')
+  releaseNotesBadge.hidden = !note || state.releaseNotesSeen
+  releaseNotesModal.hidden = !state.releaseNotesOpen
+  releaseNotesTitle.textContent = t('popup.releaseNotes.title')
+  releaseNotesSubtitle.textContent = note ? `LayoutPilot ${note.version}` : ''
+  releaseNotesClose.setAttribute('aria-label', t('common.close'))
+  releaseNotesConfirm.textContent = t('popup.releaseNotes.gotIt')
+  releaseNotesContent.replaceChildren()
+
+  if (!localizedNotes) return
+  appendReleaseNotesContent(localizedNotes)
+}
+
+async function markReleaseNotesSeen() {
+  if (!state.releaseNote || state.releaseNotesSeen) return
+
+  state.releaseNotesSeen = true
+  state.releaseNotesSeenAt = Date.now()
+  try {
+    await chrome.storage.local.set({
+      [STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_VERSION]: state.releaseNote.version,
+      [STORAGE_KEYS.LAST_SEEN_RELEASE_NOTES_AT]: state.releaseNotesSeenAt
+    })
+  } catch {
+    // Badge state is non-critical; keep the popup usable if storage fails.
+  }
+}
+
+function openReleaseNotes() {
+  if (!state.releaseNote) return
+  state.releaseNotesOpen = true
+  renderReleaseNotes()
+  window.requestAnimationFrame(() => releaseNotesConfirm.focus())
+}
+
+async function closeReleaseNotes() {
+  state.releaseNotesOpen = false
+  await markReleaseNotesSeen()
+  renderReleaseNotes()
+}
+
 function renderShortcuts() {
   const shortcuts = SHORTCUTS_BY_MODE[normalizeMode(state.mode)] || SHORTCUTS_BY_MODE[MODE.INSPECT]
   const fragment = document.createDocumentFragment()
@@ -314,6 +442,7 @@ function renderPopupTexts() {
   renderLanguageOptions()
   renderBreakpointState()
   renderModeSelection()
+  renderReleaseNotes()
   toggleButton.textContent = state.enabled ? t('common.deactivate') : t('common.activate')
 }
 
@@ -492,6 +621,22 @@ shortcutsToggle.addEventListener('click', () => {
   renderShortcutsState()
 })
 
+releaseNotesButton.addEventListener('click', () => {
+  openReleaseNotes()
+})
+
+releaseNotesClose.addEventListener('click', () => {
+  closeReleaseNotes()
+})
+
+releaseNotesConfirm.addEventListener('click', () => {
+  closeReleaseNotes()
+})
+
+releaseNotesModal.addEventListener('click', event => {
+  if (event.target === releaseNotesModal) closeReleaseNotes()
+})
+
 languageToggle.addEventListener('click', event => {
   event.preventDefault()
   toggleLanguageMenu()
@@ -509,6 +654,10 @@ document.addEventListener('click', event => {
 })
 
 document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && state.releaseNotesOpen) {
+    closeReleaseNotes()
+    return
+  }
   if (event.key === 'Escape') closeLanguageMenu()
 })
 
@@ -516,6 +665,7 @@ async function initializePopup() {
   await loadLanguagePreference()
   await loadModePreference()
   await loadBreakpointPreference()
+  await loadReleaseNotesState()
   renderPopupTexts()
   await refreshStatus()
 }
