@@ -59,6 +59,16 @@
         current: 'Current',
         activate: 'Enable preview',
         deactivate: 'Disable preview'
+      },
+      releaseNotes: {
+        tooltip: 'What\'s new',
+        title: 'What\'s new',
+        gotIt: 'Got it',
+        sections: {
+          new: 'New:',
+          improved: 'Improved:',
+          fixed: 'Fixed:'
+        }
       }
     },
     shortcuts: {

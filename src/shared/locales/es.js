@@ -59,6 +59,16 @@
         current: 'Actual',
         activate: 'Activar vista',
         deactivate: 'Desactivar vista'
+      },
+      releaseNotes: {
+        tooltip: 'Novedades de la versión',
+        title: 'Novedades',
+        gotIt: 'Entendido',
+        sections: {
+          new: 'Nuevo:',
+          improved: 'Mejoras:',
+          fixed: 'Correcciones:'
+        }
       }
     },
     shortcuts: {

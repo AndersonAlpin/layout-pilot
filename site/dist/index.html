@@ -182,18 +182,30 @@
           <article class="policy-card">
             <h3>Permissions</h3>
             <p>
-              LayoutPilot uses browser permissions only to provide its inspection and review features. These permissions
-              allow the extension to run on the user-selected tab, inject the inspection/review UI, capture the visible
-              tab for user-triggered exports, and save lightweight local preferences.
+              LayoutPilot uses browser permissions only to provide its inspection, review, and responsive preview
+              features. These permissions allow the extension to run on the user-selected tab, inject the
+              inspection/review UI, capture the visible tab for user-triggered exports, and save lightweight local
+              preferences.
             </p>
             <p>
               These permissions are used only for the extension's stated purpose. They are not used for tracking,
-              advertising, analytics, or background collection.
+              advertising, analytics, or background data collection.
+            </p>
+            <p>
+              When the user enables Responsive Preview, LayoutPilot may create a temporary rule for the current tab so
+              the selected page can load inside the preview iframe when frame-related headers would otherwise block it.
+              This rule is limited to the active tab, applies only while Responsive Preview is active, and is removed
+              when the preview or tab is closed.
+            </p>
+            <p>
+              LayoutPilot does not read, collect, store, or transmit request/response bodies, credentials, browsing
+              history, personal data, or page content through this permission.
             </p>
             <div class="permission-badges" aria-label="Browser permissions used by LayoutPilot">
               <code>activeTab</code>
               <code>scripting</code>
               <code>storage</code>
+              <code>declarativeNetRequestWithHostAccess</code>
             </div>
           </article>
 
@@ -223,5 +235,19 @@
         </section>
       </main>
     </div>
+    <script>
+      const languageDropdown = document.querySelector('.language-dropdown')
+
+      document.addEventListener('click', event => {
+        if (!languageDropdown?.open || languageDropdown.contains(event.target)) return
+        languageDropdown.open = false
+      })
+
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !languageDropdown?.open) return
+        languageDropdown.open = false
+        languageDropdown.querySelector('summary')?.focus()
+      })
+    </script>
   </body>
 </html>
