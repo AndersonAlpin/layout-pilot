@@ -452,6 +452,7 @@ breakpointToggle.addEventListener('click', async () => {
   const tab = await getActiveTab()
   if (!isInspectableTab(tab)) return
 
+  const wasBreakpointEnabled = !!state.breakpoint?.enabled
   breakpointToggle.disabled = true
   try {
     await ensureContentScript(tab.id)
@@ -463,6 +464,9 @@ breakpointToggle.addEventListener('click', async () => {
     const mode = response?.mode || state.mode
     if (response?.enabled) await setModePreference(mode)
     setStatus(!!response?.enabled, response?.enabled ? getActiveStatusKey(mode) : 'popup.status.inactive', mode)
+    if (!wasBreakpointEnabled && response?.breakpoint?.enabled) {
+      window.close()
+    }
   } catch {
     setStatus(false, 'popup.status.injectionFailed', state.mode)
   } finally {
