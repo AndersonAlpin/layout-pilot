@@ -39,16 +39,26 @@
         title: 'Modo',
         inspect: {
           name: 'Modo Inspección',
-          description: 'Hover, pin, detalles y contexto simple.'
+          shortName: 'Inspección',
+          description: 'Inspecciona elementos, fija detalles y ve el contexto.'
         },
         review: {
           name: 'Modo Revisión',
-          description: 'Crea anotaciones visuales, marca áreas y exporta la revisión.'
+          shortName: 'Revisión',
+          description: 'Crea notas visuales, marca áreas y exporta la revisión.'
         }
       },
       shortcuts: {
         title: 'Atajos',
+        show: 'Ver atajos',
+        hide: 'Ocultar atajos',
         note: 'I funciona después de activar esta pestaña desde el popup.'
+      },
+      breakpoint: {
+        description: 'Prueba la página en diferentes tamaños de pantalla sin redimensionar la ventana.',
+        current: 'Actual',
+        activate: 'Activar vista',
+        deactivate: 'Desactivar vista'
       }
     },
     shortcuts: {
@@ -63,7 +73,83 @@
       downloadImage: 'Descargar imagen',
       copyImage: 'Copiar imagen',
       generatePdf: 'Generar PDF',
-      removeAnnotation: 'Eliminar anotación'
+      removeAnnotation: 'Eliminar anotación',
+      breakpointPanel: 'Panel responsivo',
+      breakpointToggle: 'Vista responsiva'
+    },
+    breakpoint: {
+      title: 'Vista responsiva',
+      frameTitle: 'Vista responsiva',
+      statusActive: 'Vista responsiva activa.',
+      statusInspectActive: 'Vista responsiva + Inspección activas.',
+      interaction: {
+        label: 'Modo',
+        navigate: 'Navegar',
+        inspect: 'Inspección'
+      },
+      reviewUnavailable: 'La revisión aún no está disponible en Vista responsiva.',
+      fields: {
+        preset: 'Preset',
+        size: 'Tamaño',
+        width: 'Ancho',
+        height: 'Alto',
+        zoom: 'Zoom',
+        preview: 'Preview'
+      },
+      presetGroups: {
+        essential: 'Esenciales',
+        applePhones: 'Teléfonos Apple',
+        androidPhones: 'Teléfonos Android',
+        tablets: 'Tablets',
+        computers: 'Computadoras',
+        custom: 'Personalizado',
+        customSaved: 'Personalizados'
+      },
+      presets: {
+        custom: 'Personalizado'
+      },
+      zoom: {
+        fit: 'Ajustar a la pantalla'
+      },
+      actions: {
+        close: 'Salir',
+        center: 'Centrar preview',
+        move: 'Mover preview',
+        capture: 'Capturar preview',
+        saveCurrentSize: 'Guardar tamaño actual',
+        savePreset: 'Guardar preset',
+        renamePreset: 'Renombrar',
+        removePreset: 'Eliminar',
+        collapse: 'Contraer panel',
+        expand: 'Expandir panel',
+        rotate: 'Cambiar orientación'
+      },
+      customPreset: {
+        title: 'Guardar tamaño actual',
+        description: 'Crea un preset personalizado con el tamaño actual del preview.',
+        renameTitle: 'Renombrar preset',
+        renameDescription: 'Actualiza el nombre de este preset personalizado.',
+        nameLabel: 'Nombre del preset',
+        cancel: 'Cancelar',
+        save: 'Guardar',
+        renameSave: 'Renombrar',
+        emptyName: 'Ingresa un nombre para el preset.',
+        duplicateName: 'Ya existe un preset con ese nombre.'
+      },
+      blocked: {
+        title: 'Preview bloqueado',
+        description: 'Esta página bloquea la carga en iframe (X-Frame-Options o CSP). Ábrela en una pestaña y usa el modo responsivo de DevTools para probar este viewport.'
+      },
+      toast: {
+        enabled: 'Vista responsiva activa',
+        disabled: 'Vista responsiva desactivada',
+        presetSaved: 'Preset personalizado guardado',
+        presetRenamed: 'Preset personalizado renombrado',
+        presetRemoved: 'Preset personalizado eliminado',
+        presetSaveFailed: 'No se pudo guardar el preset',
+        previewCaptured: 'Preview capturado',
+        previewCaptureFailed: 'No se pudo capturar el preview'
+      }
     },
     detail: {
       kicker: 'Modo Inspección',

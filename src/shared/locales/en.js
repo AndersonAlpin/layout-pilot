@@ -39,16 +39,26 @@
         title: 'Mode',
         inspect: {
           name: 'Inspect Mode',
-          description: 'Hover, pin, details and simple context.'
+          shortName: 'Inspect',
+          description: 'Inspect elements, pin details, and view context.'
         },
         review: {
           name: 'Review Mode',
-          description: 'Create visual annotations, mark areas and export the review.'
+          shortName: 'Review',
+          description: 'Create visual notes, mark areas, and export the review.'
         }
       },
       shortcuts: {
         title: 'Shortcuts',
+        show: 'View shortcuts',
+        hide: 'Hide shortcuts',
         note: 'I works after activating this tab from the popup.'
+      },
+      breakpoint: {
+        description: 'Test the page at different screen sizes without resizing the window.',
+        current: 'Current',
+        activate: 'Enable preview',
+        deactivate: 'Disable preview'
       }
     },
     shortcuts: {
@@ -63,7 +73,83 @@
       downloadImage: 'Download image',
       copyImage: 'Copy image',
       generatePdf: 'Generate PDF',
-      removeAnnotation: 'Remove annotation'
+      removeAnnotation: 'Remove annotation',
+      breakpointPanel: 'Responsive panel',
+      breakpointToggle: 'Responsive view'
+    },
+    breakpoint: {
+      title: 'Responsive view',
+      frameTitle: 'Responsive view',
+      statusActive: 'Responsive view active.',
+      statusInspectActive: 'Responsive view + Inspect active.',
+      interaction: {
+        label: 'Mode',
+        navigate: 'Browse',
+        inspect: 'Inspect'
+      },
+      reviewUnavailable: 'Review is not available in Responsive view yet.',
+      fields: {
+        preset: 'Preset',
+        size: 'Size',
+        width: 'Width',
+        height: 'Height',
+        zoom: 'Zoom',
+        preview: 'Preview'
+      },
+      presetGroups: {
+        essential: 'Essentials',
+        applePhones: 'Apple phones',
+        androidPhones: 'Android phones',
+        tablets: 'Tablets',
+        computers: 'Computers',
+        custom: 'Custom',
+        customSaved: 'Custom'
+      },
+      presets: {
+        custom: 'Custom'
+      },
+      zoom: {
+        fit: 'Fit to screen'
+      },
+      actions: {
+        close: 'Exit',
+        center: 'Center preview',
+        move: 'Move preview',
+        capture: 'Capture preview',
+        saveCurrentSize: 'Save current size',
+        savePreset: 'Save preset',
+        renamePreset: 'Rename',
+        removePreset: 'Remove',
+        collapse: 'Collapse panel',
+        expand: 'Expand panel',
+        rotate: 'Switch orientation'
+      },
+      customPreset: {
+        title: 'Save current size',
+        description: 'Create a custom preset from the current preview size.',
+        renameTitle: 'Rename preset',
+        renameDescription: 'Update this custom preset name.',
+        nameLabel: 'Preset name',
+        cancel: 'Cancel',
+        save: 'Save',
+        renameSave: 'Rename',
+        emptyName: 'Enter a preset name.',
+        duplicateName: 'A preset with this name already exists.'
+      },
+      blocked: {
+        title: 'Preview blocked',
+        description: 'This page blocks iframe loading (X-Frame-Options or CSP). Open it in a tab and use the DevTools responsive mode to test this viewport.'
+      },
+      toast: {
+        enabled: 'Responsive view on',
+        disabled: 'Responsive view off',
+        presetSaved: 'Custom preset saved',
+        presetRenamed: 'Custom preset renamed',
+        presetRemoved: 'Custom preset removed',
+        presetSaveFailed: 'Could not save preset',
+        previewCaptured: 'Preview captured',
+        previewCaptureFailed: 'Could not capture preview'
+      }
     },
     detail: {
       kicker: 'Inspect Mode',

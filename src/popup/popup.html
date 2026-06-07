@@ -21,11 +21,6 @@
         </div>
       </header>
 
-      <section class="status-card">
-        <span id="status-dot" class="status-dot"></span>
-        <span id="status-text">Verificando aba atual...</span>
-      </section>
-
       <button id="toggle-button" class="primary-button" type="button">
         Ativar
       </button>
@@ -33,25 +28,39 @@
       <div class="popup-scroll">
         <section class="mode-card" aria-labelledby="mode-title">
           <strong id="mode-title">Modo</strong>
-          <label class="mode-option">
-            <input id="mode-inspect" type="radio" name="mode" value="inspect" checked />
-            <span>
-              <b id="mode-inspect-name">Modo Inspeção</b>
-              <small id="mode-inspect-description">Hover, pin, detalhes e contexto simples.</small>
-            </span>
-          </label>
-          <label class="mode-option">
-            <input id="mode-review" type="radio" name="mode" value="review" />
-            <span>
-              <b id="mode-review-name">Modo Revisão</b>
-              <small id="mode-review-description">Crie anotações visuais, marque áreas e exporte a revisão.</small>
-            </span>
-          </label>
+          <div class="mode-segmented" role="radiogroup" aria-labelledby="mode-title">
+            <label class="mode-option">
+              <input id="mode-inspect" type="radio" name="mode" value="inspect" checked />
+              <span id="mode-inspect-name">Inspeção</span>
+            </label>
+            <label class="mode-option">
+              <input id="mode-review" type="radio" name="mode" value="review" />
+              <span id="mode-review-name">Revisão</span>
+            </label>
+          </div>
+          <p id="mode-description" class="mode-description">Hover, pin, detalhes e contexto simples.</p>
+        </section>
+
+        <section class="breakpoint-card" aria-labelledby="breakpoint-title">
+          <div class="breakpoint-card-header">
+            <strong id="breakpoint-title">Visualização responsiva</strong>
+          </div>
+          <p id="breakpoint-description" class="breakpoint-description">
+            Visualize a página em tamanhos de dispositivos sem reduzir a janela.
+          </p>
+          <button id="breakpoint-toggle" class="breakpoint-switch" type="button" role="switch" aria-checked="false">
+            <span class="breakpoint-switch-track" aria-hidden="true"><span class="breakpoint-switch-thumb"></span></span>
+            <span id="breakpoint-switch-label" class="breakpoint-switch-label">Ativar visualização</span>
+          </button>
         </section>
 
         <section class="shortcuts" aria-labelledby="shortcuts-title">
           <strong id="shortcuts-title">Atalhos</strong>
-          <div id="shortcut-grid" class="shortcut-grid">
+          <button id="shortcuts-toggle" class="shortcuts-toggle" type="button" aria-expanded="false" aria-controls="shortcut-grid">
+            <span id="shortcuts-toggle-label">Ver atalhos</span>
+            <span class="shortcuts-toggle-chevron" aria-hidden="true"></span>
+          </button>
+          <div id="shortcut-grid" class="shortcut-grid" hidden>
             <div class="shortcut-item"><kbd>I</kbd><span id="shortcut-inspect">Inspeção</span></div>
             <div class="shortcut-item"><kbd>H</kbd><span id="shortcut-help">Atalhos</span></div>
             <div class="shortcut-item"><kbd>Esc</kbd><span id="shortcut-cancel">Cancelar</span></div>
@@ -59,7 +68,7 @@
             <div class="shortcut-item"><kbd>P</kbd><span id="shortcut-pin">Fixar</span></div>
             <div class="shortcut-item"><kbd>D</kbd><span id="shortcut-details">Detalhes</span></div>
           </div>
-          <p id="shortcut-note" class="shortcut-note">I funciona depois de ativar nesta aba pelo popup.</p>
+          <p id="shortcut-note" class="shortcut-note" hidden>I funciona depois de ativar nesta aba pelo popup.</p>
         </section>
       </div>
     </main>
@@ -69,6 +78,7 @@
     <script src="../shared/locales/es.js"></script>
     <script src="../shared/i18n.js"></script>
     <script src="../shared/messaging.js"></script>
+    <script src="../content/breakpoint/breakpoint-presets.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

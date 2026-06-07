@@ -1,0 +1,592 @@
+.layoutpilot-breakpoint-workspace,
+.layoutpilot-breakpoint-panel,
+.layoutpilot-breakpoint-stage,
+.layoutpilot-breakpoint-frame {
+  all: initial;
+  box-sizing: border-box;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.layoutpilot-breakpoint-workspace *,
+.layoutpilot-breakpoint-panel *,
+.layoutpilot-breakpoint-stage *,
+.layoutpilot-breakpoint-frame * {
+  box-sizing: border-box;
+}
+
+.layoutpilot-breakpoint-workspace {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 312px 28px 24px; /* right space for the expanded panel (280) + gap */
+  overflow: hidden;
+  color: #e5edf7;
+  background:
+    radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.14), transparent 32%),
+    #20242b;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.layoutpilot-breakpoint-workspace--panel-collapsed {
+  padding-right: 72px; /* collapsed rail width + gap */
+}
+
+.layoutpilot-breakpoint-stage {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: auto;
+  scrollbar-color: rgba(125, 211, 252, 0.52) rgba(15, 23, 42, 0.62);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  cursor: default;
+}
+
+.layoutpilot-breakpoint-stage::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.layoutpilot-breakpoint-stage::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.layoutpilot-breakpoint-stage::-webkit-scrollbar-thumb {
+  min-height: 42px;
+  border: 2px solid rgba(15, 23, 42, 0.62);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(125, 211, 252, 0.72), rgba(56, 189, 248, 0.36));
+}
+
+.layoutpilot-breakpoint-stage::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(186, 230, 253, 0.9), rgba(56, 189, 248, 0.56));
+}
+
+.layoutpilot-breakpoint-stage::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.layoutpilot-breakpoint-workspace--fit,
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-stage {
+  cursor: default;
+}
+
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-stage {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+}
+
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.layoutpilot-breakpoint-workspace--can-pan,
+.layoutpilot-breakpoint-workspace--can-pan .layoutpilot-breakpoint-stage,
+.layoutpilot-breakpoint-workspace--pan-tool,
+.layoutpilot-breakpoint-workspace--pan-tool .layoutpilot-breakpoint-stage {
+  cursor: grab;
+}
+
+.layoutpilot-breakpoint-workspace--can-pan .layoutpilot-breakpoint-frame {
+  margin: 24px;
+}
+
+.layoutpilot-breakpoint-workspace--panning,
+.layoutpilot-breakpoint-workspace--panning .layoutpilot-breakpoint-stage,
+.layoutpilot-breakpoint-workspace--panning .layoutpilot-hit-shield,
+.layoutpilot-breakpoint-workspace--panning .layoutpilot-breakpoint-pan-overlay {
+  cursor: grabbing;
+}
+
+.layoutpilot-breakpoint-frame {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 28px;
+  background: #0b1020;
+  box-shadow:
+    0 0 0 10px rgba(15, 23, 42, 0.78),
+    0 30px 90px rgba(0, 0, 0, 0.46);
+  transform-origin: 50% 50%;
+  cursor: auto;
+}
+
+/* Inspect interaction is signalled only on the extension chrome, never by
+   altering the iframe content (color/brightness/opacity stay original). */
+.layoutpilot-breakpoint-workspace--inspect {
+  background:
+    radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.14), transparent 32%),
+    #20242b;
+}
+
+.layoutpilot-breakpoint-workspace--inspect .layoutpilot-breakpoint-frame {
+  border-color: rgba(148, 163, 184, 0.42);
+  box-shadow:
+    0 0 0 10px rgba(15, 23, 42, 0.78),
+    0 30px 90px rgba(0, 0, 0, 0.46);
+}
+
+.layoutpilot-breakpoint-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.layoutpilot-breakpoint-pan-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: grab;
+  background: transparent;
+}
+
+.layoutpilot-breakpoint-frame--blocked {
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.layoutpilot-breakpoint-blocked-title {
+  display: block;
+  margin-bottom: 8px;
+  font: 800 15px/1.3 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-blocked-copy {
+  max-width: 320px;
+  margin: 0;
+  color: #a8b3c7;
+  font: 500 12px/1.45 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #38bdf8;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+}
+
+.layoutpilot-breakpoint-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483647;
+  display: flex;
+  width: 280px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  color: #f8fafc;
+  background: rgba(10, 15, 28, 0.97);
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.42);
+  pointer-events: auto;
+  overflow: visible;
+}
+
+.layoutpilot-breakpoint-panel--collapsed {
+  width: 48px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.layoutpilot-breakpoint-rail {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 4px;
+  border: 0;
+  color: #dbeafe;
+  background: transparent;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-rail-size {
+  color: #cbd5e1;
+  font: 800 11px/1.2 ui-sans-serif, system-ui, sans-serif;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 0.05em;
+}
+
+.layoutpilot-breakpoint-rail-chevron {
+  display: inline-grid;
+  place-items: center;
+  color: #bae6fd;
+}
+
+.layoutpilot-breakpoint-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.layoutpilot-breakpoint-logo {
+  display: block;
+  height: 32px;
+  width: auto;
+  min-width: 0;
+  max-width: 126px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.layoutpilot-breakpoint-panel-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.layoutpilot-breakpoint-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.layoutpilot-breakpoint-segmented--vertical {
+  grid-template-columns: 1fr;
+}
+
+.layoutpilot-breakpoint-tab {
+  display: flex;
+  width: 100%;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  color: #cbd5e1;
+  background: transparent;
+  font: 800 12px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-segmented--vertical .layoutpilot-breakpoint-tab {
+  justify-content: center;
+  padding: 0 10px;
+  text-align: center;
+}
+
+.layoutpilot-breakpoint-tab--active {
+  color: #031525;
+  background: #38bdf8;
+}
+
+.layoutpilot-breakpoint-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.layoutpilot-breakpoint-field-label {
+  color: #94a3b8;
+  font: 700 11px/1.2 ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.layoutpilot-breakpoint-size-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layoutpilot-breakpoint-input {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 7px;
+  color: #e5edf7;
+  background: rgba(15, 23, 42, 0.92);
+  font: 700 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  text-align: center;
+}
+
+.layoutpilot-breakpoint-dropdown-trigger {
+  display: flex;
+  width: 100%;
+  height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 9px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 7px;
+  color: #e5edf7;
+  background: rgba(15, 23, 42, 0.92);
+  font: 700 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layoutpilot-breakpoint-dropdown-chevron {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.layoutpilot-breakpoint-dropdown-trigger[data-layoutpilot-menu-open] .layoutpilot-breakpoint-dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.layoutpilot-breakpoint-size-separator {
+  color: #64748b;
+  font: 800 12px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-icon-button {
+  display: inline-grid;
+  height: 30px;
+  min-width: 30px;
+  place-items: center;
+  padding: 0 9px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 7px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.9);
+  font: 800 12px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-icon-button--primary {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #031525;
+  background: #38bdf8;
+}
+
+.layoutpilot-breakpoint-icon-button--active {
+  border-color: rgba(56, 189, 248, 0.68);
+  color: #031525;
+  background: #7dd3fc;
+}
+
+.layoutpilot-breakpoint-icon-button:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.layoutpilot-breakpoint-preset-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.layoutpilot-breakpoint-mini-button {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 7px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.72);
+  font: 800 11px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-mini-button--danger {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+.layoutpilot-breakpoint-secondary-button {
+  display: inline-flex;
+  width: 100%;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 7px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.72);
+  font: 800 12px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-viewport-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.layoutpilot-breakpoint-icon-button:hover,
+.layoutpilot-breakpoint-icon-button:focus-visible,
+.layoutpilot-breakpoint-mini-button:hover,
+.layoutpilot-breakpoint-mini-button:focus-visible,
+.layoutpilot-breakpoint-secondary-button:hover,
+.layoutpilot-breakpoint-secondary-button:focus-visible,
+.layoutpilot-breakpoint-tab:hover,
+.layoutpilot-breakpoint-dropdown-trigger:hover,
+.layoutpilot-breakpoint-dropdown-trigger:focus-visible,
+.layoutpilot-breakpoint-input:hover,
+.layoutpilot-breakpoint-input:focus-visible {
+  border-color: rgba(56, 189, 248, 0.58);
+  outline: none;
+}
+
+.layoutpilot-breakpoint-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 6, 23, 0.48);
+}
+
+.layoutpilot-breakpoint-dialog {
+  display: flex;
+  width: min(340px, calc(100vw - 36px));
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  color: #f8fafc;
+  background: #0b1222;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+}
+
+.layoutpilot-breakpoint-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.layoutpilot-breakpoint-dialog-body h3,
+.layoutpilot-breakpoint-dialog-body p {
+  margin: 0;
+}
+
+.layoutpilot-breakpoint-dialog-body h3 {
+  font: 800 15px/1.25 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-dialog-body p {
+  color: #a8b3c7;
+  font: 600 12px/1.45 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #cbd5e1;
+  font: 800 11px/1.2 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-dialog-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 7px;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.96);
+  font: 700 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+}
+
+.layoutpilot-breakpoint-dialog-input:focus {
+  border-color: rgba(56, 189, 248, 0.64);
+  outline: none;
+}
+
+.layoutpilot-breakpoint-dialog-error {
+  color: #fca5a5 !important;
+}
+
+.layoutpilot-breakpoint-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.layoutpilot-breakpoint-dialog-button {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 7px;
+  color: #dbeafe;
+  background: rgba(15, 23, 42, 0.9);
+  font: 800 12px/1 ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.layoutpilot-breakpoint-dialog-button--primary {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #031525;
+  background: #38bdf8;
+}
+
+.layoutpilot-breakpoint-dialog-button:hover,
+.layoutpilot-breakpoint-dialog-button:focus-visible {
+  border-color: rgba(56, 189, 248, 0.58);
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .layoutpilot-breakpoint-workspace {
+    padding: 16px 16px 96px;
+  }
+
+  .layoutpilot-breakpoint-workspace--panel-collapsed {
+    padding-bottom: 64px;
+  }
+
+  .layoutpilot-breakpoint-panel {
+    top: auto;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 45vh;
+  }
+}

@@ -326,6 +326,19 @@
       }
     }
 
+    // Different-height elements whose centers coincide are visually centered
+    // (e.g. an icon next to a taller text label via align-items: center). Their
+    // edge deltas are symmetric (startDelta ≈ -endDelta), so the checks above
+    // miss them; treat a near-zero center offset as aligned instead of flagging
+    // a false "misaligned".
+    if (Math.abs(averageBandDelta) <= bandTolerance) {
+      return {
+        aligned: true,
+        offset: 0,
+        direction: 'aligned'
+      }
+    }
+
     return {
       aligned: false,
       offset: 0,
