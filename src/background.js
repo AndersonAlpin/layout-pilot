@@ -6,8 +6,67 @@ const MESSAGE_TYPE = {
   CAPTURE_VISIBLE_TAB: 'layoutpilot:capture-visible-tab',
   STORE_REVIEW_REPORT: 'layoutpilot:store-review-report',
   GET_REVIEW_REPORT: 'layoutpilot:get-review-report',
-  CLEAR_REVIEW_REPORT: 'layoutpilot:clear-review-report'
+  CLEAR_REVIEW_REPORT: 'layoutpilot:clear-review-report',
+  SET_FRAME_UNBLOCK: 'layoutpilot:set-frame-unblock'
 }
+
+// Pages that send X-Frame-Options / CSP frame-ancestors refuse to load in the
+// preview iframe. While breakpoint mode is active we strip those response
+// headers for sub-frame requests in the previewed tab only, using a session
+// declarativeNetRequest rule scoped by tabId (auto-removed when the rule is
+// cleared, the tab closes, or the browser session ends).
+const FRAME_UNBLOCK_RULE_OFFSET = 1_000_000
+
+function frameUnblockRuleId(tabId) {
+  return FRAME_UNBLOCK_RULE_OFFSET + tabId
+}
+
+function setFrameUnblock(tabId, enabled, sendResponse) {
+  if (!Number.isInteger(tabId)) {
+    sendResponse({ ok: false, error: serializeCaptureError('No tab id for frame unblock.') })
+    return
+  }
+
+  const ruleId = frameUnblockRuleId(tabId)
+  const addRules = enabled
+    ? [
+        {
+          id: ruleId,
+          priority: 1,
+          action: {
+            type: 'modifyHeaders',
+            responseHeaders: [
+              { header: 'x-frame-options', operation: 'remove' },
+              { header: 'content-security-policy', operation: 'remove' },
+              { header: 'content-security-policy-report-only', operation: 'remove' }
+            ]
+          },
+          condition: {
+            tabIds: [tabId],
+            resourceTypes: ['sub_frame']
+          }
+        }
+      ]
+    : []
+
+  chrome.declarativeNetRequest.updateSessionRules({ addRules, removeRuleIds: [ruleId] }, () => {
+    const runtimeError = chrome.runtime.lastError
+    if (runtimeError) {
+      sendResponse({ ok: false, error: serializeCaptureError(runtimeError.message) })
+      return
+    }
+    sendResponse({ ok: true })
+  })
+}
+
+// Drop the per-tab rule if the previewed tab is closed without disabling first.
+chrome.tabs.onRemoved.addListener(tabId => {
+  if (!Number.isInteger(tabId)) return
+  chrome.declarativeNetRequest.updateSessionRules(
+    { removeRuleIds: [frameUnblockRuleId(tabId)] },
+    () => void chrome.runtime.lastError
+  )
+})
 
 const reviewReports = new Map()
 const REVIEW_REPORT_TTL_MS = 10 * 60 * 1000
@@ -119,6 +178,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message?.type === MESSAGE_TYPE.CLEAR_REVIEW_REPORT) {
     clearReviewReport(message, sendResponse)
+    return true
+  }
+
+  if (message?.type === MESSAGE_TYPE.SET_FRAME_UNBLOCK) {
+    setFrameUnblock(sender?.tab?.id, !!message.enabled, sendResponse)
     return true
   }
 

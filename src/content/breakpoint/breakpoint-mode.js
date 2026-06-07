@@ -49,6 +49,10 @@
       panelCollapsed: false,
       frameBlocked: false,
       frameReady: false,
+      // Gates iframe creation until the background confirms the X-Frame-Options /
+      // CSP strip rule is active for this tab (the iframe request must be made
+      // after the rule exists, since DNR only applies to subsequent requests).
+      frameUnblockReady: false,
       frameLoadTimer: null,
       frameLoadNonce: 0,
       resizeObserver: null,
@@ -355,6 +359,9 @@
 
       state.frame.classList.remove('layoutpilot-breakpoint-frame--blocked')
       if (!state.iframe) {
+        // Wait until the header-strip rule is confirmed active before issuing
+        // the iframe request (renderFrame is re-run from the unblock ack).
+        if (!state.frameUnblockReady) return
         const nonce = ++state.frameLoadNonce
         state.frameReady = false
         const iframe = document.createElement('iframe')
@@ -530,12 +537,40 @@
       state.resizeObserver = null
     }
 
+    // Ask the background to strip X-Frame-Options / CSP for this tab's preview
+    // iframe while the mode is active (pages with those headers refuse to frame).
+    // onApplied runs once the rule add/remove resolves (or immediately if the
+    // extension messaging is unavailable, so the frame still loads best-effort).
+    function requestFrameUnblock(enabled, onApplied) {
+      const send = typeof chrome !== 'undefined' ? chrome?.runtime?.sendMessage : undefined
+      if (typeof send !== 'function') {
+        onApplied?.()
+        return
+      }
+      try {
+        send({ type: 'layoutpilot:set-frame-unblock', enabled }, () => {
+          void chrome.runtime?.lastError
+          onApplied?.()
+        })
+      } catch {
+        onApplied?.()
+      }
+    }
+
     function setEnabled(enabled) {
       const nextEnabled = !!enabled
       if (state.enabled === nextEnabled) return getState()
 
       state.enabled = nextEnabled
       if (state.enabled) {
+        state.frameUnblockReady = false
+        state.frameBlocked = false
+        requestFrameUnblock(true, () => {
+          // Rule is active now — let renderFrame build the iframe so its request
+          // is made after the header strip is in place.
+          state.frameUnblockReady = true
+          if (state.enabled) renderFrame()
+        })
         state.interaction = 'navigate'
         render()
         bindResize()
@@ -545,6 +580,8 @@
         return getState()
       }
 
+      state.frameUnblockReady = false
+      requestFrameUnblock(false)
       unbindResize()
       removeUi()
       showToast?.(t('breakpoint.toast.disabled'))
