@@ -73,6 +73,27 @@
   background: transparent;
 }
 
+.layoutpilot-breakpoint-workspace--fit,
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-stage {
+  cursor: default;
+}
+
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-stage {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+}
+
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.layoutpilot-breakpoint-workspace--fit .layoutpilot-breakpoint-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
 .layoutpilot-breakpoint-workspace--panning,
 .layoutpilot-breakpoint-workspace--panning .layoutpilot-breakpoint-stage,
 .layoutpilot-breakpoint-workspace--panning .layoutpilot-hit-shield {

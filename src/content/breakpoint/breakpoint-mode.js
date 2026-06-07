@@ -392,7 +392,9 @@
       const scale = getResolvedScale()
       state.frame.style.width = `${state.width}px`
       state.frame.style.height = `${state.height}px`
-      state.frame.style.transform = `scale(${scale})`
+      state.frame.style.transform = state.zoom === 'fit'
+        ? `translate(-50%, -50%) scale(${scale})`
+        : `scale(${scale})`
 
       if (state.frameBlocked) {
         state.frame.classList.add('layoutpilot-breakpoint-frame--blocked')
@@ -458,6 +460,7 @@
       if (!state.workspace) return
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--panel-collapsed', state.panelCollapsed)
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--inspect', state.interaction === 'inspect')
+      state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--fit', state.zoom === 'fit')
     }
 
     function render() {
@@ -470,6 +473,11 @@
 
     function centerFrameNow() {
       if (!state.stage) return
+      if (state.zoom === 'fit') {
+        state.stage.scrollLeft = 0
+        state.stage.scrollTop = 0
+        return
+      }
       state.stage.scrollLeft = Math.max(0, (state.stage.scrollWidth - state.stage.clientWidth) / 2)
       state.stage.scrollTop = Math.max(0, (state.stage.scrollHeight - state.stage.clientHeight) / 2)
     }
@@ -516,6 +524,7 @@
     function handleResize() {
       if (!state.enabled || state.zoom !== 'fit') return
       renderFrame()
+      scheduleCenter()
       notifyViewportChange()
     }
 
@@ -529,6 +538,7 @@
 
     function handlePanPointerDown(event) {
       if (!state.enabled || event.button !== 0) return
+      if (state.zoom === 'fit') return
       if (!state.stage || !isPanStartTarget(event.target)) return
 
       state.pan = {
