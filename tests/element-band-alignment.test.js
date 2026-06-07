@@ -54,6 +54,12 @@ assert.deepEqual(
 )
 
 assert.deepEqual(
+  getElementBandAlignment(rect(160, 430, 100, 40), rect(300, 442, 40, 16)),
+  { aligned: true, offset: 0, direction: 'aligned' },
+  'reports vertically centered side-by-side elements of different heights as aligned (icon next to taller text)'
+)
+
+assert.deepEqual(
   getElementBandAlignment(rect(222, 126, 267, 40), rect(222, 516, 267, 40)),
   { aligned: true, offset: 0, direction: 'aligned' },
   'reports stacked elements with the same center x as aligned'
