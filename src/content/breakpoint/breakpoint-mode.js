@@ -177,6 +177,7 @@
       resizeObserver: null,
       pan: null,
       centerTimer: null,
+      canPan: false,
       preferenceDirty: false
     }
 
@@ -505,8 +506,33 @@
       `
     }
 
+    function getPreviewPanMetrics() {
+      if (!state.stage) {
+        return {
+          canPan: false,
+          renderedWidth: 0,
+          renderedHeight: 0,
+          stageWidth: 0,
+          stageHeight: 0
+        }
+      }
+
+      const scale = getResolvedScale()
+      const renderedWidth = state.width * scale
+      const renderedHeight = state.height * scale
+      const rect = state.stage.getBoundingClientRect()
+      const stageWidth = Math.max(0, rect.width)
+      const stageHeight = Math.max(0, rect.height)
+      const canPan = state.zoom !== 'fit' && (
+        renderedWidth > stageWidth + 1 ||
+        renderedHeight > stageHeight + 1
+      )
+
+      return { canPan, renderedWidth, renderedHeight, stageWidth, stageHeight }
+    }
+
     function isPanToolAvailable() {
-      return state.zoom !== 'fit'
+      return state.canPan
     }
 
     function isPanToolActive() {
@@ -610,6 +636,9 @@
       const presetActionsSlot = state.panel.querySelector('.layoutpilot-breakpoint-preset-actions-slot')
       if (presetActionsSlot) presetActionsSlot.innerHTML = renderSelectedPresetActions()
 
+      const viewportActions = state.panel.querySelector('.layoutpilot-breakpoint-viewport-actions')?.closest('.layoutpilot-breakpoint-field')
+      if (viewportActions) viewportActions.outerHTML = renderViewportActions()
+
       const widthInput = state.panel.querySelector('[data-layoutpilot-breakpoint-field="width"]')
       const heightInput = state.panel.querySelector('[data-layoutpilot-breakpoint-field="height"]')
       if (widthInput && widthInput !== sourceTarget) widthInput.value = String(state.width)
@@ -635,11 +664,14 @@
       if (!state.frame) return
 
       const scale = getResolvedScale()
-      state.frame.style.width = `${state.width}px`
-      state.frame.style.height = `${state.height}px`
+      const manualZoom = state.zoom !== 'fit'
+      const renderedWidth = manualZoom ? state.width * scale : state.width
+      const renderedHeight = manualZoom ? state.height * scale : state.height
+      state.frame.style.width = `${renderedWidth}px`
+      state.frame.style.height = `${renderedHeight}px`
       state.frame.style.transform = state.zoom === 'fit'
         ? `translate(-50%, -50%) scale(${scale})`
-        : `scale(${scale})`
+        : ''
 
       if (state.frameBlocked) {
         state.frame.classList.add('layoutpilot-breakpoint-frame--blocked')
@@ -678,7 +710,31 @@
           markFrameBlocked(nonce)
         }, FRAME_LOAD_TIMEOUT_MS)
       }
+      if (state.iframe) {
+        state.iframe.style.width = manualZoom ? `${state.width}px` : ''
+        state.iframe.style.height = manualZoom ? `${state.height}px` : ''
+        state.iframe.style.transform = manualZoom ? `scale(${scale})` : ''
+        state.iframe.style.transformOrigin = manualZoom ? '0 0' : ''
+      }
       syncPanOverlay()
+    }
+
+    function normalizePanAvailability(options = {}) {
+      const previousCanPan = state.canPan
+      state.canPan = getPreviewPanMetrics().canPan
+      if (!state.canPan) {
+        state.panToolPinned = false
+        state.panToolTemporary = false
+        state.pan = null
+        state.panOverlay?.remove()
+        state.panOverlay = null
+        centerFrameNow()
+      }
+      if (previousCanPan !== state.canPan && options.renderPanel !== false) {
+        updateWorkspaceLayout()
+        renderPanel()
+      }
+      return state.canPan
     }
 
     function syncPanOverlay() {
@@ -723,6 +779,7 @@
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--panel-collapsed', state.panelCollapsed)
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--inspect', state.interaction === 'inspect')
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--fit', state.zoom === 'fit')
+      state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--can-pan', state.canPan)
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--pan-tool', isPanToolActive())
     }
 
@@ -730,13 +787,15 @@
       if (!state.enabled) return
       ensureUi()
       updateWorkspaceLayout()
-      renderPanel()
       renderFrame()
+      normalizePanAvailability({ renderPanel: false })
+      updateWorkspaceLayout()
+      renderPanel()
     }
 
     function centerFrameNow() {
       if (!state.stage) return
-      if (state.zoom === 'fit') {
+      if (state.zoom === 'fit' || !state.canPan) {
         state.stage.scrollLeft = 0
         state.stage.scrollTop = 0
         return
@@ -859,8 +918,9 @@
     }
 
     function handleResize() {
-      if (!state.enabled || state.zoom !== 'fit') return
+      if (!state.enabled) return
       renderFrame()
+      normalizePanAvailability()
       scheduleCenter()
       notifyViewportChange()
     }
@@ -876,7 +936,7 @@
 
     function handlePanPointerDown(event) {
       if (!state.enabled || event.button !== 0) return
-      if (state.zoom === 'fit') return
+      if (!normalizePanAvailability()) return
       if (!state.stage) return
       if (isPanToolActive()) {
         if (state.panel?.contains(event.target)) return
@@ -1030,6 +1090,8 @@
     function setPanelCollapsed(collapsed) {
       state.panelCollapsed = !!collapsed
       updateWorkspaceLayout()
+      normalizePanAvailability({ renderPanel: false })
+      updateWorkspaceLayout()
       renderPanel()
       scheduleCenter()
       notifyViewportChange()
@@ -1043,6 +1105,7 @@
     }
 
     function setPanToolPinned(pinned) {
+      if (pinned && !normalizePanAvailability()) return getState()
       state.panToolPinned = !!pinned
       syncPanToolUi()
       return getState()
@@ -1054,6 +1117,7 @@
 
     function setTemporaryPanTool(active) {
       const next = !!active
+      if (next && !normalizePanAvailability()) return false
       if (state.panToolTemporary === next) return false
       state.panToolTemporary = next
       syncPanToolUi()
@@ -1235,6 +1299,7 @@
       state.height = preset.height
       persistViewportPreference()
       render()
+      normalizePanAvailability()
       if (changed) {
         centerFrame()
         notifyViewportChange()
@@ -1250,6 +1315,7 @@
       state.presetId = resolveBreakpointPresetBySize(state.width, state.height, state.customPresets)?.id || 'custom'
       persistViewportPreference()
       renderViewportOnly(sourceTarget)
+      normalizePanAvailability()
       if (changed) {
         scheduleCenter()
         notifyViewportChange()
@@ -1263,6 +1329,7 @@
       state.presetId = resolveBreakpointPresetBySize(state.width, state.height, state.customPresets)?.id || 'custom'
       persistViewportPreference()
       render()
+      normalizePanAvailability()
       centerFrame()
       notifyViewportChange()
     }
@@ -1273,6 +1340,7 @@
       state.zoom = nextZoom
       persistViewportPreference()
       render()
+      normalizePanAvailability()
       centerFrame()
       if (changed) notifyViewportChange()
     }

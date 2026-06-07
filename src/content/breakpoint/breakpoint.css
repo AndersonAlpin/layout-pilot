@@ -28,7 +28,7 @@
     radial-gradient(circle at 40% 0%, rgba(56, 189, 248, 0.14), transparent 32%),
     #20242b;
   pointer-events: auto;
-  cursor: grab;
+  cursor: default;
 }
 
 .layoutpilot-breakpoint-workspace--panel-collapsed {
@@ -45,7 +45,7 @@
   scrollbar-color: rgba(125, 211, 252, 0.52) rgba(15, 23, 42, 0.62);
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  cursor: grab;
+  cursor: default;
 }
 
 .layoutpilot-breakpoint-stage::-webkit-scrollbar {
@@ -94,9 +94,15 @@
   left: 50%;
 }
 
+.layoutpilot-breakpoint-workspace--can-pan,
+.layoutpilot-breakpoint-workspace--can-pan .layoutpilot-breakpoint-stage,
 .layoutpilot-breakpoint-workspace--pan-tool,
 .layoutpilot-breakpoint-workspace--pan-tool .layoutpilot-breakpoint-stage {
   cursor: grab;
+}
+
+.layoutpilot-breakpoint-workspace--can-pan .layoutpilot-breakpoint-frame {
+  margin: 24px;
 }
 
 .layoutpilot-breakpoint-workspace--panning,
