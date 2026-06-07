@@ -89,10 +89,12 @@
       },
       reviewUnavailable: 'Review is not available in Responsive view yet.',
       fields: {
-        preset: 'Device',
+        preset: 'Preset',
+        size: 'Size',
         width: 'Width',
         height: 'Height',
-        zoom: 'Zoom'
+        zoom: 'Zoom',
+        preview: 'Preview'
       },
       presetGroups: {
         essential: 'Essentials',
@@ -106,15 +108,15 @@
         custom: 'Custom'
       },
       zoom: {
-        fit: 'Fit'
+        fit: 'Fit to screen'
       },
       actions: {
         close: 'Exit',
         center: 'Center preview',
-        move: 'Move view',
+        move: 'Move preview',
         collapse: 'Collapse panel',
         expand: 'Expand panel',
-        rotate: 'Toggle orientation'
+        rotate: 'Switch orientation'
       },
       blocked: {
         title: 'Preview blocked',

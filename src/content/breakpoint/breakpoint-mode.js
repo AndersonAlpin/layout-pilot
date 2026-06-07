@@ -315,17 +315,20 @@
       const moveDisabled = !isPanToolAvailable()
       const centerDisabled = state.zoom === 'fit'
       return `
-        <div class="layoutpilot-breakpoint-viewport-actions">
-          <button
-            class="layoutpilot-breakpoint-icon-button ${moveActive ? 'layoutpilot-breakpoint-icon-button--active' : ''}"
-            type="button"
-            data-layoutpilot-action="breakpoint-pan-tool"
-            ${tip(t('breakpoint.actions.move'))}
-            aria-label="${escapeHtml(t('breakpoint.actions.move'))}"
-            aria-pressed="${moveActive ? 'true' : 'false'}"
-            ${moveDisabled ? 'disabled' : ''}
-          >${icon('hand', 16)}</button>
-          <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-center" ${tip(t('breakpoint.actions.center'))} aria-label="${escapeHtml(t('breakpoint.actions.center'))}" ${centerDisabled ? 'disabled' : ''}>${icon('target', 16)}</button>
+        <div class="layoutpilot-breakpoint-field">
+          <span class="layoutpilot-breakpoint-field-label">${escapeHtml(t('breakpoint.fields.preview'))}</span>
+          <div class="layoutpilot-breakpoint-viewport-actions">
+            <button
+              class="layoutpilot-breakpoint-icon-button ${moveActive ? 'layoutpilot-breakpoint-icon-button--active' : ''}"
+              type="button"
+              data-layoutpilot-action="breakpoint-pan-tool"
+              ${tip(t('breakpoint.actions.move'))}
+              aria-label="${escapeHtml(t('breakpoint.actions.move'))}"
+              aria-pressed="${moveActive ? 'true' : 'false'}"
+              ${moveDisabled ? 'disabled' : ''}
+            >${icon('hand', 16)}</button>
+            <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-center" ${tip(t('breakpoint.actions.center'))} aria-label="${escapeHtml(t('breakpoint.actions.center'))}" ${centerDisabled ? 'disabled' : ''}>${icon('target', 16)}</button>
+          </div>
         </div>
       `
     }
@@ -368,11 +371,14 @@
           ${renderDropdownTrigger({ name: 'preset', label: getPresetLabel() })}
         </div>
 
-        <div class="layoutpilot-breakpoint-size-row">
-          <input class="layoutpilot-breakpoint-input" data-layoutpilot-breakpoint-field="width" aria-label="${escapeHtml(t('breakpoint.fields.width'))}" inputmode="numeric" value="${state.width}" />
-          <span class="layoutpilot-breakpoint-size-separator">x</span>
-          <input class="layoutpilot-breakpoint-input" data-layoutpilot-breakpoint-field="height" aria-label="${escapeHtml(t('breakpoint.fields.height'))}" inputmode="numeric" value="${state.height}" />
-          <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-rotate" ${tip(t('breakpoint.actions.rotate'))} aria-label="${escapeHtml(t('breakpoint.actions.rotate'))}">↺</button>
+        <div class="layoutpilot-breakpoint-field">
+          <span class="layoutpilot-breakpoint-field-label">${escapeHtml(t('breakpoint.fields.size'))}</span>
+          <div class="layoutpilot-breakpoint-size-row">
+            <input class="layoutpilot-breakpoint-input" data-layoutpilot-breakpoint-field="width" aria-label="${escapeHtml(t('breakpoint.fields.width'))}" inputmode="numeric" value="${state.width}" />
+            <span class="layoutpilot-breakpoint-size-separator">x</span>
+            <input class="layoutpilot-breakpoint-input" data-layoutpilot-breakpoint-field="height" aria-label="${escapeHtml(t('breakpoint.fields.height'))}" inputmode="numeric" value="${state.height}" />
+            <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-rotate" ${tip(t('breakpoint.actions.rotate'))} aria-label="${escapeHtml(t('breakpoint.actions.rotate'))}">↺</button>
+          </div>
         </div>
 
         <div class="layoutpilot-breakpoint-field">
@@ -381,11 +387,6 @@
         </div>
 
         ${renderViewportActions()}
-
-        <div class="layoutpilot-breakpoint-current">
-          <span class="layoutpilot-breakpoint-current-label">${escapeHtml(t('popup.breakpoint.current'))}</span>
-          <b class="layoutpilot-breakpoint-current-value">${escapeHtml(`${getPresetLabel()} · ${state.width} x ${state.height}`)}</b>
-        </div>
       `
     }
 
@@ -395,9 +396,6 @@
       const presetTrigger = state.panel.querySelector('[data-layoutpilot-breakpoint-menu="preset"]')
       const presetValue = presetTrigger?.querySelector('.layoutpilot-breakpoint-dropdown-value')
       if (presetValue) presetValue.textContent = getPresetLabel()
-
-      const currentValue = state.panel.querySelector('.layoutpilot-breakpoint-current-value')
-      if (currentValue) currentValue.textContent = `${getPresetLabel()} · ${state.width} x ${state.height}`
 
       const widthInput = state.panel.querySelector('[data-layoutpilot-breakpoint-field="width"]')
       const heightInput = state.panel.querySelector('[data-layoutpilot-breakpoint-field="height"]')

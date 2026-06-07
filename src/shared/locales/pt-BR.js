@@ -89,10 +89,12 @@
       },
       reviewUnavailable: 'Revisão ainda não está disponível na Visualização responsiva.',
       fields: {
-        preset: 'Dispositivo',
+        preset: 'Preset',
+        size: 'Tamanho',
         width: 'Largura',
         height: 'Altura',
-        zoom: 'Zoom'
+        zoom: 'Zoom',
+        preview: 'Preview'
       },
       presetGroups: {
         essential: 'Essenciais',
@@ -106,12 +108,12 @@
         custom: 'Personalizado'
       },
       zoom: {
-        fit: 'Ajustar'
+        fit: 'Ajustar à tela'
       },
       actions: {
         close: 'Sair',
         center: 'Centralizar preview',
-        move: 'Mover visualização',
+        move: 'Mover preview',
         collapse: 'Recolher painel',
         expand: 'Expandir painel',
         rotate: 'Alternar orientação'

@@ -89,10 +89,12 @@
       },
       reviewUnavailable: 'La revisión aún no está disponible en Vista responsiva.',
       fields: {
-        preset: 'Dispositivo',
+        preset: 'Preset',
+        size: 'Tamaño',
         width: 'Ancho',
         height: 'Alto',
-        zoom: 'Zoom'
+        zoom: 'Zoom',
+        preview: 'Preview'
       },
       presetGroups: {
         essential: 'Esenciales',
@@ -106,15 +108,15 @@
         custom: 'Personalizado'
       },
       zoom: {
-        fit: 'Ajustar'
+        fit: 'Ajustar a la pantalla'
       },
       actions: {
         close: 'Salir',
-        center: 'Centrar vista',
-        move: 'Mover vista',
+        center: 'Centrar preview',
+        move: 'Mover preview',
         collapse: 'Contraer panel',
         expand: 'Expandir panel',
-        rotate: 'Alternar orientación'
+        rotate: 'Cambiar orientación'
       },
       blocked: {
         title: 'Preview bloqueado',
