@@ -160,6 +160,22 @@
     return 'ready'
   }
 
+  function resolveBreakpointNavigationUrl(currentUrl, frameUrl) {
+    try {
+      const current = new URL(String(currentUrl || ''))
+      const frame = new URL(String(frameUrl || ''), current.href)
+      if (!['http:', 'https:'].includes(frame.protocol)) {
+        return { shouldNavigate: false, url: '' }
+      }
+      if (frame.href === current.href) {
+        return { shouldNavigate: false, url: '' }
+      }
+      return { shouldNavigate: true, url: frame.href }
+    } catch {
+      return { shouldNavigate: false, url: '' }
+    }
+  }
+
   function normalizeBreakpointInteraction(value) {
     return value === 'inspect' ? 'inspect' : 'navigate'
   }
@@ -187,6 +203,7 @@
     frameToInternalPoint,
     internalRectToViewport,
     classifyFrameProbe,
+    resolveBreakpointNavigationUrl,
     normalizeBreakpointInteraction,
     resolveActiveControllers
   }

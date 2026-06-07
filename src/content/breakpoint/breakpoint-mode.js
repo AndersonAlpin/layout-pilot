@@ -12,12 +12,14 @@
     normalizeBreakpointDimension,
     rotateBreakpointViewport,
     classifyFrameProbe,
+    resolveBreakpointNavigationUrl,
     normalizeBreakpointInteraction,
     frameToInternalPoint,
     internalRectToViewport
   } = root.breakpointPresets
 
   const FRAME_LOAD_TIMEOUT_MS = 12000
+  const FRAME_URL_SYNC_INTERVAL_MS = 300
   const PAN_THRESHOLD = 4
 
   function tip(text) {
@@ -55,6 +57,10 @@
       frameUnblockReady: false,
       frameLoadTimer: null,
       frameLoadNonce: 0,
+      frameUrl: '',
+      entryUrl: '',
+      lastSyncedFrameUrl: '',
+      frameUrlSyncTimer: null,
       resizeObserver: null,
       pan: null,
       centerTimer: null,
@@ -91,6 +97,48 @@
 
     function getCurrentUrl() {
       return window.location.href
+    }
+
+    function readFrameUrl() {
+      try {
+        const href = state.iframe?.contentWindow?.location?.href || ''
+        return href && href !== 'about:blank' ? href : ''
+      } catch {
+        return ''
+      }
+    }
+
+    function syncBrowserUrlToFrame(frameUrl) {
+      try {
+        const nextUrl = new URL(frameUrl, getCurrentUrl())
+        if (nextUrl.origin !== window.location.origin) return
+        if (nextUrl.href === getCurrentUrl()) return
+        window.history.replaceState(window.history.state, document.title, nextUrl.href)
+      } catch {}
+    }
+
+    function syncFrameUrl() {
+      if (!state.enabled || !state.iframe) return
+      const frameUrl = readFrameUrl()
+      if (!frameUrl || frameUrl === state.lastSyncedFrameUrl) return
+      state.frameUrl = frameUrl
+      state.lastSyncedFrameUrl = frameUrl
+      syncBrowserUrlToFrame(frameUrl)
+    }
+
+    function startFrameUrlSync() {
+      if (state.frameUrlSyncTimer) return
+      state.frameUrlSyncTimer = window.setInterval(syncFrameUrl, FRAME_URL_SYNC_INTERVAL_MS)
+    }
+
+    function stopFrameUrlSync() {
+      window.clearInterval(state.frameUrlSyncTimer)
+      state.frameUrlSyncTimer = null
+    }
+
+    function getFrameExitUrl() {
+      const result = resolveBreakpointNavigationUrl(state.entryUrl, state.frameUrl)
+      return result.shouldNavigate ? result.url : ''
     }
 
     function getViewportPreference() {
@@ -166,6 +214,7 @@
 
       window.clearTimeout(state.frameLoadTimer)
       if (status === 'ready') {
+        syncFrameUrl()
         state.frameReady = true
         if (state.frameBlocked) {
           state.frameBlocked = false
@@ -375,6 +424,7 @@
         // chunk loading and hash routing all work). srcdoc cannot do this for a
         // module/Vite app because import.meta.url becomes about:srcdoc.
         iframe.src = getCurrentUrl()
+        startFrameUrlSync()
         state.frameLoadTimer = window.setTimeout(() => {
           if (!state.iframe || nonce !== state.frameLoadNonce || state.frameReady) return
           markFrameBlocked(nonce)
@@ -442,6 +492,7 @@
 
     function removeUi() {
       window.clearTimeout(state.frameLoadTimer)
+      stopFrameUrlSync()
       if (state.centerTimer) window.cancelAnimationFrame(state.centerTimer)
       state.centerTimer = null
       state.frameLoadNonce += 1
@@ -456,6 +507,9 @@
       state.iframe = null
       state.frameBlocked = false
       state.frameReady = false
+      state.frameUrl = ''
+      state.entryUrl = ''
+      state.lastSyncedFrameUrl = ''
       state.pan = null
     }
 
@@ -563,6 +617,9 @@
 
       state.enabled = nextEnabled
       if (state.enabled) {
+        state.entryUrl = getCurrentUrl()
+        state.frameUrl = state.entryUrl
+        state.lastSyncedFrameUrl = state.entryUrl
         state.frameUnblockReady = false
         state.frameBlocked = false
         requestFrameUnblock(true, () => {
@@ -581,11 +638,14 @@
       }
 
       state.frameUnblockReady = false
+      syncFrameUrl()
+      const exitUrl = getFrameExitUrl()
       requestFrameUnblock(false)
       unbindResize()
       removeUi()
       showToast?.(t('breakpoint.toast.disabled'))
       onEnabledChange?.(false)
+      if (exitUrl) window.location.replace(exitUrl)
       return getState()
     }
 

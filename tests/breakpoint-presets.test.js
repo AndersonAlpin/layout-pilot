@@ -13,7 +13,8 @@ const {
   rotateBreakpointViewport,
   classifyFrameProbe,
   frameToInternalPoint,
-  internalRectToViewport
+  internalRectToViewport,
+  resolveBreakpointNavigationUrl
 } = window.LayoutPilotModules.breakpointPresets
 
 assert.ok(
@@ -186,6 +187,33 @@ assert.equal(
   classifyFrameProbe(null),
   'blocked',
   'treats a missing probe as blocked'
+)
+
+assert.deepEqual(
+  resolveBreakpointNavigationUrl(
+    'https://example.com/dashboard',
+    'https://example.com/dashboard'
+  ),
+  { shouldNavigate: false, url: '' },
+  'does not navigate when the responsive frame stayed on the current url'
+)
+
+assert.deepEqual(
+  resolveBreakpointNavigationUrl(
+    'https://example.com/dashboard',
+    'https://example.com/dashboard#/playlists'
+  ),
+  { shouldNavigate: true, url: 'https://example.com/dashboard#/playlists' },
+  'navigates the real tab to the responsive frame route when the hash changed'
+)
+
+assert.deepEqual(
+  resolveBreakpointNavigationUrl(
+    'https://example.com/dashboard',
+    'javascript:alert(1)'
+  ),
+  { shouldNavigate: false, url: '' },
+  'does not navigate to unsafe frame urls'
 )
 
 const {
