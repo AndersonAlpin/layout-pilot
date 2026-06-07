@@ -184,19 +184,30 @@
           <article class="policy-card">
             <h3>Permisos</h3>
             <p>
-              LayoutPilot usa permisos del navegador solo para ofrecer sus funciones de inspección y revisión. Estos
-              permisos permiten que la extensión se ejecute en la pestaña seleccionada por el usuario, inyecte la
-              interfaz de inspección/revisión, capture la pestaña visible para exportaciones iniciadas por el usuario y
-              guarde preferencias locales ligeras.
+              LayoutPilot usa permisos del navegador únicamente para proporcionar sus funciones de inspección, revisión
+              y vista responsiva. Estos permisos permiten que la extensión se ejecute en la pestaña seleccionada por el
+              usuario, inyecte la interfaz de inspección/revisión, capture la pestaña visible para exportaciones
+              iniciadas por el usuario y guarde preferencias locales ligeras.
             </p>
             <p>
-              Estos permisos se usan únicamente para el propósito declarado de la extensión. No se utilizan para
-              rastreo, publicidad, analytics ni recolección en segundo plano.
+              Estos permisos se usan solo para el propósito declarado de la extensión. No se usan para seguimiento,
+              publicidad, analytics ni recopilación de datos en segundo plano.
+            </p>
+            <p>
+              Cuando el usuario activa la Vista responsiva, LayoutPilot puede crear una regla temporal para la pestaña
+              actual para permitir que la página seleccionada cargue dentro del iframe de preview cuando headers
+              relacionados con iframe bloquearían esa carga. Esta regla está limitada a la pestaña activa, se aplica
+              solo mientras la Vista responsiva está activa y se elimina cuando se cierra el preview o la pestaña.
+            </p>
+            <p>
+              LayoutPilot no lee, recopila, almacena ni transmite cuerpos de solicitudes/respuestas, credenciales,
+              historial de navegación, datos personales ni contenido de la página mediante este permiso.
             </p>
             <div class="permission-badges" aria-label="Permisos del navegador usados por LayoutPilot">
               <code>activeTab</code>
               <code>scripting</code>
               <code>storage</code>
+              <code>declarativeNetRequestWithHostAccess</code>
             </div>
           </article>
 
@@ -227,5 +238,19 @@
         </section>
       </main>
     </div>
+    <script>
+      const languageDropdown = document.querySelector('.language-dropdown')
+
+      document.addEventListener('click', event => {
+        if (!languageDropdown?.open || languageDropdown.contains(event.target)) return
+        languageDropdown.open = false
+      })
+
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !languageDropdown?.open) return
+        languageDropdown.open = false
+        languageDropdown.querySelector('summary')?.focus()
+      })
+    </script>
   </body>
 </html>
