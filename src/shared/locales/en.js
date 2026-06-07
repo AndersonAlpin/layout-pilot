@@ -39,19 +39,23 @@
         title: 'Mode',
         inspect: {
           name: 'Inspect Mode',
-          description: 'Hover, pin, details and simple context.'
+          shortName: 'Inspect',
+          description: 'Inspect elements, pin details, and view context.'
         },
         review: {
           name: 'Review Mode',
-          description: 'Create visual annotations, mark areas and export the review.'
+          shortName: 'Review',
+          description: 'Create visual notes, mark areas, and export the review.'
         }
       },
       shortcuts: {
         title: 'Shortcuts',
+        show: 'View shortcuts',
+        hide: 'Hide shortcuts',
         note: 'I works after activating this tab from the popup.'
       },
       breakpoint: {
-        description: 'View the page at device sizes without shrinking the browser window.',
+        description: 'Test the page at different screen sizes without resizing the window.',
         current: 'Current',
         activate: 'Enable preview',
         deactivate: 'Disable preview'

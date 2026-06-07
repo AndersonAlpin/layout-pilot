@@ -39,19 +39,23 @@
         title: 'Modo',
         inspect: {
           name: 'Modo Inspección',
-          description: 'Hover, pin, detalles y contexto simple.'
+          shortName: 'Inspección',
+          description: 'Inspecciona elementos, fija detalles y ve el contexto.'
         },
         review: {
           name: 'Modo Revisión',
-          description: 'Crea anotaciones visuales, marca áreas y exporta la revisión.'
+          shortName: 'Revisión',
+          description: 'Crea notas visuales, marca áreas y exporta la revisión.'
         }
       },
       shortcuts: {
         title: 'Atajos',
+        show: 'Ver atajos',
+        hide: 'Ocultar atajos',
         note: 'I funciona después de activar esta pestaña desde el popup.'
       },
       breakpoint: {
-        description: 'Visualiza la página en tamaños de dispositivos sin reducir la ventana.',
+        description: 'Prueba la página en diferentes tamaños de pantalla sin redimensionar la ventana.',
         current: 'Actual',
         activate: 'Activar vista',
         deactivate: 'Desactivar vista'
