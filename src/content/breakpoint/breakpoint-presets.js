@@ -85,6 +85,7 @@
   ]
 
   const DEFAULT_PRESET_ID = 'iphone-16-17-pro'
+  const RESERVED_PRESET_IDS = new Set(['custom'])
 
   // Flat list of real device presets for id lookups (custom excluded, ids
   // de-duplicated — the essential group intentionally mirrors a few sizes that
@@ -111,6 +112,115 @@
 
   function getBreakpointPreset(id) {
     return BREAKPOINT_DEVICE_PRESETS.find(preset => preset.id === id) || null
+  }
+
+  function normalizeCustomPresetId(value, fallbackIndex) {
+    const raw = String(value || '').trim()
+    const id = raw
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+    return id && !RESERVED_PRESET_IDS.has(id) ? id : `custom-${fallbackIndex + 1}`
+  }
+
+  function getDefaultCustomPresetName(width, height, prefix = 'Custom') {
+    return `${String(prefix || 'Custom').trim() || 'Custom'} ${width} × ${height}`
+  }
+
+  function normalizeCustomBreakpointPresets(value) {
+    const source = Array.isArray(value) ? value : []
+    const seen = new Set()
+    const normalized = []
+    let generatedIdCount = 0
+
+    for (const item of source) {
+      const width = normalizeBreakpointDimension(item?.width, 390)
+      const height = normalizeBreakpointDimension(item?.height, 844)
+      const rawId = String(item?.id || '').trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      const usesGeneratedId = !rawId || RESERVED_PRESET_IDS.has(rawId)
+      const id = normalizeCustomPresetId(item?.id, generatedIdCount)
+      if (usesGeneratedId) generatedIdCount += 1
+      const label = String(item?.label || '').trim() || getDefaultCustomPresetName(width, height)
+      if (seen.has(id)) continue
+      seen.add(id)
+      normalized.push({ id, label, width, height })
+    }
+
+    return normalized
+  }
+
+  function getUniqueCustomPresetName(baseName, existingPresets = []) {
+    const fallback = String(baseName || '').trim() || 'Custom'
+    const names = new Set((existingPresets || []).map(preset => String(preset?.label || '').trim()).filter(Boolean))
+    if (!names.has(fallback)) return fallback
+
+    let index = 1
+    let candidate = `${fallback} (${index})`
+    while (names.has(candidate)) {
+      index += 1
+      candidate = `${fallback} (${index})`
+    }
+    return candidate
+  }
+
+  function getCustomPresetId(width, height, label, existingPresets = []) {
+    const suffixMatch = String(label || '').match(/\((\d+)\)$/)
+    const suffix = suffixMatch ? `-${suffixMatch[1]}` : ''
+    const baseId = `custom-${width}x${height}${suffix}`
+    const ids = new Set((existingPresets || []).map(preset => String(preset?.id || '').trim()).filter(Boolean))
+    if (!ids.has(baseId)) return baseId
+
+    let index = 1
+    let candidate = `${baseId}-${index}`
+    while (ids.has(candidate)) {
+      index += 1
+      candidate = `${baseId}-${index}`
+    }
+    return candidate
+  }
+
+  function createCustomBreakpointPreset(options = {}) {
+    const width = normalizeBreakpointDimension(options.width, 390)
+    const height = normalizeBreakpointDimension(options.height, 844)
+    const existingPresets = normalizeCustomBreakpointPresets(options.existingPresets)
+    const requestedLabel = String(options.label || '').trim()
+    const baseName = requestedLabel || getDefaultCustomPresetName(width, height, options.labelPrefix)
+    const label = getUniqueCustomPresetName(baseName, existingPresets)
+    const id = getCustomPresetId(width, height, label, existingPresets)
+    return { id, label, width, height }
+  }
+
+  function findBreakpointPreset(id, customPresets = []) {
+    return getBreakpointPreset(id) || normalizeCustomBreakpointPresets(customPresets).find(preset => preset.id === id) || null
+  }
+
+  function resolveBreakpointPresetBySize(width, height, customPresets = []) {
+    const targetWidth = normalizeBreakpointDimension(width, 390)
+    const targetHeight = normalizeBreakpointDimension(height, 844)
+    return [...BREAKPOINT_DEVICE_PRESETS, ...normalizeCustomBreakpointPresets(customPresets)]
+      .find(preset => preset.width === targetWidth && preset.height === targetHeight) || null
+  }
+
+  function hasBreakpointPresetDimensions(width, height, customPresets = []) {
+    return !!resolveBreakpointPresetBySize(width, height, customPresets)
+  }
+
+  function renameCustomBreakpointPreset(id, label, customPresets = []) {
+    const targetId = String(id || '').trim()
+    const nextLabel = String(label || '').trim()
+    if (!targetId || !nextLabel) return normalizeCustomBreakpointPresets(customPresets)
+
+    return normalizeCustomBreakpointPresets(customPresets).map(preset => (
+      preset.id === targetId ? { ...preset, label: nextLabel } : preset
+    ))
+  }
+
+  function removeCustomBreakpointPreset(id, customPresets = []) {
+    const targetId = String(id || '').trim()
+    return normalizeCustomBreakpointPresets(customPresets).filter(preset => preset.id !== targetId)
   }
 
   function rotateBreakpointViewport(viewport) {
@@ -198,6 +308,14 @@
     MIN_VIEWPORT_DIMENSION,
     MAX_VIEWPORT_DIMENSION,
     getBreakpointPreset,
+    normalizeCustomBreakpointPresets,
+    createCustomBreakpointPreset,
+    getUniqueCustomPresetName,
+    findBreakpointPreset,
+    resolveBreakpointPresetBySize,
+    hasBreakpointPresetDimensions,
+    renameCustomBreakpointPreset,
+    removeCustomBreakpointPreset,
     normalizeBreakpointDimension,
     rotateBreakpointViewport,
     frameToInternalPoint,

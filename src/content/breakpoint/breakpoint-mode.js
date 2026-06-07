@@ -1,7 +1,7 @@
 (() => {
   const root = window.LayoutPilotModules ||= {}
   const { createElement, escapeHtml } = root.dom
-  const { STORAGE_KEYS } = root.constants
+  const { MESSAGE_TYPE, STORAGE_KEYS } = root.constants
   const { icon } = root.icons
   const { createPopoverMenu, getTooltipAttrs, renderAttrs } = root.ui
   const BRAND_LOGO_URL = chrome.runtime.getURL('src/assets/brand/logo-horizontal.png')
@@ -9,6 +9,13 @@
     BREAKPOINT_PRESET_GROUPS,
     DEFAULT_PRESET_ID,
     getBreakpointPreset,
+    normalizeCustomBreakpointPresets,
+    createCustomBreakpointPreset,
+    findBreakpointPreset,
+    resolveBreakpointPresetBySize,
+    hasBreakpointPresetDimensions,
+    renameCustomBreakpointPreset,
+    removeCustomBreakpointPreset,
     normalizeBreakpointDimension,
     rotateBreakpointViewport,
     classifyFrameProbe,
@@ -24,6 +31,102 @@
 
   function tip(text) {
     return renderAttrs(getTooltipAttrs(text, { delayMs: 400 }))
+  }
+
+  function getTimestampForFilename(date = new Date()) {
+    const pad = value => String(value).padStart(2, '0')
+    return [
+      date.getFullYear(),
+      pad(date.getMonth() + 1),
+      pad(date.getDate())
+    ].join('-') + '-' + [
+      pad(date.getHours()),
+      pad(date.getMinutes())
+    ].join('-')
+  }
+
+  function slugFilenamePart(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  }
+
+  function loadImage(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const image = new Image()
+      image.onload = () => resolve(image)
+      image.onerror = () => reject(new Error('Could not load captured image.'))
+      image.src = dataUrl
+    })
+  }
+
+  function canvasToPngBlob(canvas) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (!blob) {
+          reject(new Error('Could not export preview canvas.'))
+          return
+        }
+        resolve(blob)
+      }, 'image/png')
+    })
+  }
+
+  function downloadPngBlob(blob, filename) {
+    const objectUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = filename
+    link.style.display = 'none'
+    document.documentElement.append(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+  }
+
+  function waitForCaptureRepaint() {
+    return new Promise(resolve => {
+      if (typeof window.requestAnimationFrame !== 'function') {
+        window.setTimeout(resolve, 50)
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => window.setTimeout(resolve, 0))
+      })
+    })
+  }
+
+  async function requestVisibleTabCapture() {
+    await waitForCaptureRepaint()
+
+    return new Promise((resolve, reject) => {
+      try {
+        chrome.runtime.sendMessage({ type: MESSAGE_TYPE.CAPTURE_VISIBLE_TAB }, response => {
+          const runtimeError = chrome.runtime.lastError
+          if (runtimeError) {
+            reject(new Error(runtimeError.message))
+            return
+          }
+
+          if (!response?.ok) {
+            reject(new Error(response?.error?.message || 'Unable to capture the visible tab.'))
+            return
+          }
+
+          if (typeof response.dataUrl !== 'string' || !response.dataUrl.startsWith('data:image/png')) {
+            reject(new Error('The visible tab capture did not return a PNG data URL.'))
+            return
+          }
+
+          resolve(response.dataUrl)
+        })
+      } catch (error) {
+        reject(error)
+      }
+    })
   }
 
   function createBreakpointMode(options = {}) {
@@ -48,9 +151,16 @@
       height: defaultPreset?.height || 874,
       zoom: 'fit',
       presetId: defaultPreset?.id || DEFAULT_PRESET_ID,
+      customPresets: [],
       panelCollapsed: false,
       panToolPinned: false,
       panToolTemporary: false,
+      savePresetDialogOpen: false,
+      savePresetDialogMode: 'create',
+      savePresetId: '',
+      savePresetName: '',
+      savePresetError: '',
+      captureBusy: false,
       panOverlay: null,
       frameBlocked: false,
       frameReady: false,
@@ -77,7 +187,7 @@
 
     function getPresetLabel() {
       if (state.presetId === 'custom') return t('breakpoint.presets.custom')
-      return getBreakpointPreset(state.presetId)?.label || t('breakpoint.presets.custom')
+      return findBreakpointPreset(state.presetId, state.customPresets)?.label || t('breakpoint.presets.custom')
     }
 
     function getState() {
@@ -158,14 +268,14 @@
     function applyViewportPreference(value) {
       const saved = value || {}
       if (saved.presetId === 'custom') {
-        state.presetId = 'custom'
         state.width = normalizeBreakpointDimension(saved.width, state.width)
         state.height = normalizeBreakpointDimension(saved.height, state.height)
+        state.presetId = resolveBreakpointPresetBySize(state.width, state.height, state.customPresets)?.id || 'custom'
         state.zoom = ['fit', '1', '0.75', '0.5'].includes(String(saved.zoom)) ? String(saved.zoom) : 'fit'
         return true
       }
 
-      const preset = getBreakpointPreset(saved.presetId) || getBreakpointPreset(DEFAULT_PRESET_ID)
+      const preset = findBreakpointPreset(saved.presetId, state.customPresets) || getBreakpointPreset(DEFAULT_PRESET_ID)
       if (!preset) return false
       state.presetId = preset.id
       state.width = preset.width
@@ -176,8 +286,15 @@
 
     async function loadViewportPreference() {
       try {
-        const result = await chrome.storage.local.get(STORAGE_KEYS.RESPONSIVE_PREVIEW_STATE)
-        if (state.preferenceDirty) return
+        const result = await chrome.storage.local.get([
+          STORAGE_KEYS.RESPONSIVE_PREVIEW_STATE,
+          STORAGE_KEYS.RESPONSIVE_CUSTOM_PRESETS
+        ])
+        state.customPresets = normalizeCustomBreakpointPresets(result?.[STORAGE_KEYS.RESPONSIVE_CUSTOM_PRESETS])
+        if (state.preferenceDirty) {
+          if (state.enabled) renderPanel()
+          return
+        }
         if (!applyViewportPreference(result?.[STORAGE_KEYS.RESPONSIVE_PREVIEW_STATE])) return
         if (state.enabled) {
           render()
@@ -185,6 +302,18 @@
         }
       } catch {
         // Preference persistence is best-effort; the preview must keep working.
+      }
+    }
+
+    async function persistCustomPresets() {
+      try {
+        await chrome.storage.local.set({
+          [STORAGE_KEYS.RESPONSIVE_CUSTOM_PRESETS]: state.customPresets
+        })
+        return true
+      } catch {
+        showToast?.(t('breakpoint.toast.presetSaveFailed'))
+        return false
       }
     }
 
@@ -255,7 +384,7 @@
     }
 
     function getPresetGroups() {
-      return BREAKPOINT_PRESET_GROUPS.map(group => ({
+      const groups = BREAKPOINT_PRESET_GROUPS.map(group => ({
         label: t(group.groupKey),
         items: group.items.map(item => ({
           value: item.id,
@@ -263,6 +392,17 @@
           meta: `${item.width} x ${item.height}`
         }))
       }))
+      if (state.customPresets.length) {
+        groups.push({
+          label: t('breakpoint.presetGroups.customSaved'),
+          items: state.customPresets.map(item => ({
+            value: item.id,
+            label: item.label,
+            meta: `${item.width} x ${item.height}`
+          }))
+        })
+      }
+      return groups
     }
 
     function getZoomGroups() {
@@ -302,6 +442,69 @@
       `
     }
 
+    function getDefaultSavePresetName() {
+      return createCustomBreakpointPreset({
+        width: state.width,
+        height: state.height,
+        existingPresets: state.customPresets,
+        labelPrefix: t('breakpoint.presets.custom')
+      }).label
+    }
+
+    function getSelectedCustomPreset() {
+      if (state.presetId === 'custom') return null
+      return state.customPresets.find(preset => preset.id === state.presetId) || null
+    }
+
+    function canSaveCurrentSize() {
+      return !hasBreakpointPresetDimensions(state.width, state.height, state.customPresets)
+    }
+
+    function renderSaveCurrentSizeButton() {
+      return canSaveCurrentSize()
+        ? `<button class="layoutpilot-breakpoint-secondary-button" type="button" data-layoutpilot-action="breakpoint-open-save-preset">${icon('plus', 14)}<span>${escapeHtml(t('breakpoint.actions.saveCurrentSize'))}</span></button>`
+        : ''
+    }
+
+    function renderSelectedPresetActions() {
+      if (!getSelectedCustomPreset()) return ''
+      return `
+        <div class="layoutpilot-breakpoint-preset-actions">
+          <button class="layoutpilot-breakpoint-mini-button" type="button" data-layoutpilot-action="breakpoint-open-rename-preset">${icon('edit', 14)}<span>${escapeHtml(t('breakpoint.actions.renamePreset'))}</span></button>
+          <button class="layoutpilot-breakpoint-mini-button layoutpilot-breakpoint-mini-button--danger" type="button" data-layoutpilot-action="breakpoint-remove-preset">${icon('trash', 14)}<span>${escapeHtml(t('breakpoint.actions.removePreset'))}</span></button>
+        </div>
+      `
+    }
+
+    function renderSavePresetDialog() {
+      if (!state.savePresetDialogOpen) return ''
+      const isRename = state.savePresetDialogMode === 'rename'
+      return `
+        <div class="layoutpilot-breakpoint-dialog-backdrop">
+          <div class="layoutpilot-breakpoint-dialog" role="dialog" aria-modal="true" aria-labelledby="layoutpilot-breakpoint-save-title">
+            <div class="layoutpilot-breakpoint-dialog-body">
+              <h3 id="layoutpilot-breakpoint-save-title">${escapeHtml(t(isRename ? 'breakpoint.customPreset.renameTitle' : 'breakpoint.customPreset.title'))}</h3>
+              <p>${escapeHtml(t(isRename ? 'breakpoint.customPreset.renameDescription' : 'breakpoint.customPreset.description'))}</p>
+              <label class="layoutpilot-breakpoint-dialog-field">
+                <span>${escapeHtml(t('breakpoint.customPreset.nameLabel'))}</span>
+                <input
+                  class="layoutpilot-breakpoint-dialog-input"
+                  data-layoutpilot-breakpoint-save-name="true"
+                  value="${escapeHtml(state.savePresetName || getDefaultSavePresetName())}"
+                  autocomplete="off"
+                />
+              </label>
+              ${state.savePresetError ? `<p class="layoutpilot-breakpoint-dialog-error">${escapeHtml(state.savePresetError)}</p>` : ''}
+            </div>
+            <div class="layoutpilot-breakpoint-dialog-actions">
+              <button class="layoutpilot-breakpoint-dialog-button" type="button" data-layoutpilot-action="breakpoint-cancel-save-preset">${escapeHtml(t('breakpoint.customPreset.cancel'))}</button>
+              <button class="layoutpilot-breakpoint-dialog-button layoutpilot-breakpoint-dialog-button--primary" type="button" data-layoutpilot-action="breakpoint-save-preset">${escapeHtml(t(isRename ? 'breakpoint.customPreset.renameSave' : 'breakpoint.customPreset.save'))}</button>
+            </div>
+          </div>
+        </div>
+      `
+    }
+
     function isPanToolAvailable() {
       return state.zoom !== 'fit'
     }
@@ -312,22 +515,23 @@
 
     function renderViewportActions() {
       const moveActive = isPanToolActive()
-      const moveDisabled = !isPanToolAvailable()
-      const centerDisabled = state.zoom === 'fit'
+      const manualZoom = isPanToolAvailable()
       return `
         <div class="layoutpilot-breakpoint-field">
           <span class="layoutpilot-breakpoint-field-label">${escapeHtml(t('breakpoint.fields.preview'))}</span>
           <div class="layoutpilot-breakpoint-viewport-actions">
-            <button
-              class="layoutpilot-breakpoint-icon-button ${moveActive ? 'layoutpilot-breakpoint-icon-button--active' : ''}"
-              type="button"
-              data-layoutpilot-action="breakpoint-pan-tool"
-              ${tip(t('breakpoint.actions.move'))}
-              aria-label="${escapeHtml(t('breakpoint.actions.move'))}"
-              aria-pressed="${moveActive ? 'true' : 'false'}"
-              ${moveDisabled ? 'disabled' : ''}
-            >${icon('hand', 16)}</button>
-            <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-center" ${tip(t('breakpoint.actions.center'))} aria-label="${escapeHtml(t('breakpoint.actions.center'))}" ${centerDisabled ? 'disabled' : ''}>${icon('target', 16)}</button>
+            ${manualZoom ? `
+              <button
+                class="layoutpilot-breakpoint-icon-button ${moveActive ? 'layoutpilot-breakpoint-icon-button--active' : ''}"
+                type="button"
+                data-layoutpilot-action="breakpoint-pan-tool"
+                ${tip(t('breakpoint.actions.move'))}
+                aria-label="${escapeHtml(t('breakpoint.actions.move'))}"
+                aria-pressed="${moveActive ? 'true' : 'false'}"
+              >${icon('hand', 16)}</button>
+              <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-center" ${tip(t('breakpoint.actions.center'))} aria-label="${escapeHtml(t('breakpoint.actions.center'))}">${icon('target', 16)}</button>
+            ` : ''}
+            <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-capture-preview" ${tip(t('breakpoint.actions.capture'))} aria-label="${escapeHtml(t('breakpoint.actions.capture'))}" ${state.captureBusy ? 'disabled' : ''}>${icon('camera', 16)}</button>
           </div>
         </div>
       `
@@ -369,6 +573,7 @@
         <div class="layoutpilot-breakpoint-field">
           <span class="layoutpilot-breakpoint-field-label">${escapeHtml(t('breakpoint.fields.preset'))}</span>
           ${renderDropdownTrigger({ name: 'preset', label: getPresetLabel() })}
+          <div class="layoutpilot-breakpoint-preset-actions-slot">${renderSelectedPresetActions()}</div>
         </div>
 
         <div class="layoutpilot-breakpoint-field">
@@ -379,6 +584,7 @@
             <input class="layoutpilot-breakpoint-input" data-layoutpilot-breakpoint-field="height" aria-label="${escapeHtml(t('breakpoint.fields.height'))}" inputmode="numeric" value="${state.height}" />
             <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-rotate" ${tip(t('breakpoint.actions.rotate'))} aria-label="${escapeHtml(t('breakpoint.actions.rotate'))}">↺</button>
           </div>
+          <div class="layoutpilot-breakpoint-save-size-slot">${renderSaveCurrentSizeButton()}</div>
         </div>
 
         <div class="layoutpilot-breakpoint-field">
@@ -387,6 +593,7 @@
         </div>
 
         ${renderViewportActions()}
+        ${renderSavePresetDialog()}
       `
     }
 
@@ -396,6 +603,12 @@
       const presetTrigger = state.panel.querySelector('[data-layoutpilot-breakpoint-menu="preset"]')
       const presetValue = presetTrigger?.querySelector('.layoutpilot-breakpoint-dropdown-value')
       if (presetValue) presetValue.textContent = getPresetLabel()
+
+      const saveSizeSlot = state.panel.querySelector('.layoutpilot-breakpoint-save-size-slot')
+      if (saveSizeSlot) saveSizeSlot.innerHTML = renderSaveCurrentSizeButton()
+
+      const presetActionsSlot = state.panel.querySelector('.layoutpilot-breakpoint-preset-actions-slot')
+      if (presetActionsSlot) presetActionsSlot.innerHTML = renderSelectedPresetActions()
 
       const widthInput = state.panel.querySelector('[data-layoutpilot-breakpoint-field="width"]')
       const heightInput = state.panel.querySelector('[data-layoutpilot-breakpoint-field="height"]')
@@ -546,6 +759,77 @@
         if (state.pan?.active) return
         centerFrameNow()
       })
+    }
+
+    function getTransientCaptureElements() {
+      return [
+        state.panel,
+        document.querySelector('.layoutpilot-tooltip'),
+        document.querySelector('.layoutpilot-toast'),
+        ...document.querySelectorAll('.layoutpilot-menu')
+      ].filter(Boolean)
+    }
+
+    function hideTransientUiForPreviewCapture() {
+      return getTransientCaptureElements().map(element => {
+        const previousVisibility = element.style.visibility
+        element.style.visibility = 'hidden'
+        return { element, previousVisibility }
+      })
+    }
+
+    function restoreTransientUi(records = []) {
+      for (const record of records) {
+        if (!record?.element?.isConnected) continue
+        record.element.style.visibility = record.previousVisibility
+      }
+    }
+
+    function getPreviewCaptureFilename() {
+      const presetPart = slugFilenamePart(getPresetLabel()) || 'custom'
+      return `layoutpilot-preview-${presetPart}-${state.width}x${state.height}-${getTimestampForFilename()}.png`
+    }
+
+    async function cropFrameCapture(dataUrl, frameRect) {
+      const image = await loadImage(dataUrl)
+      const scaleX = image.width / Math.max(1, window.innerWidth || image.width)
+      const scaleY = image.height / Math.max(1, window.innerHeight || image.height)
+      const sourceX = Math.max(0, Math.floor(frameRect.left * scaleX))
+      const sourceY = Math.max(0, Math.floor(frameRect.top * scaleY))
+      const sourceRight = Math.min(image.width, Math.ceil(frameRect.right * scaleX))
+      const sourceBottom = Math.min(image.height, Math.ceil(frameRect.bottom * scaleY))
+      const sourceWidth = Math.max(1, sourceRight - sourceX)
+      const sourceHeight = Math.max(1, sourceBottom - sourceY)
+
+      const canvas = document.createElement('canvas')
+      canvas.width = sourceWidth
+      canvas.height = sourceHeight
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight)
+      return canvasToPngBlob(canvas)
+    }
+
+    async function capturePreview() {
+      if (state.captureBusy || !state.frame) return
+      state.captureBusy = true
+      renderPanel()
+
+      let hiddenRecords = []
+      try {
+        const frameRect = state.frame.getBoundingClientRect()
+        if (!frameRect.width || !frameRect.height) throw new Error('Preview frame is not visible.')
+        hiddenRecords = hideTransientUiForPreviewCapture()
+        const dataUrl = await requestVisibleTabCapture()
+        const blob = await cropFrameCapture(dataUrl, frameRect)
+        downloadPngBlob(blob, getPreviewCaptureFilename())
+        showToast?.(t('breakpoint.toast.previewCaptured'))
+      } catch {
+        showToast?.(t('breakpoint.toast.previewCaptureFailed'))
+      } finally {
+        restoreTransientUi(hiddenRecords)
+        state.captureBusy = false
+        renderPanel()
+      }
     }
 
     function removeUi() {
@@ -781,8 +1065,164 @@
       return setPanelCollapsed(!state.panelCollapsed)
     }
 
+    function focusSavePresetName() {
+      window.requestAnimationFrame(() => {
+        const field = state.panel?.querySelector('[data-layoutpilot-breakpoint-save-name]')
+        field?.focus?.()
+        field?.select?.()
+      })
+    }
+
+    function openSavePresetDialog() {
+      if (!canSaveCurrentSize()) return
+      state.savePresetDialogOpen = true
+      state.savePresetDialogMode = 'create'
+      state.savePresetId = ''
+      state.savePresetName = getDefaultSavePresetName()
+      state.savePresetError = ''
+      renderPanel()
+      focusSavePresetName()
+    }
+
+    function openRenamePresetDialog() {
+      const preset = getSelectedCustomPreset()
+      if (!preset) return
+      state.savePresetDialogOpen = true
+      state.savePresetDialogMode = 'rename'
+      state.savePresetId = preset.id
+      state.savePresetName = preset.label
+      state.savePresetError = ''
+      renderPanel()
+      focusSavePresetName()
+    }
+
+    function closeSavePresetDialog() {
+      state.savePresetDialogOpen = false
+      state.savePresetDialogMode = 'create'
+      state.savePresetId = ''
+      state.savePresetName = ''
+      state.savePresetError = ''
+      renderPanel()
+    }
+
+    async function renameSelectedPreset() {
+      const preset = getSelectedCustomPreset()
+      if (!preset) {
+        closeSavePresetDialog()
+        return
+      }
+
+      const nameField = state.panel?.querySelector('[data-layoutpilot-breakpoint-save-name]')
+      const label = String(nameField?.value || '').trim()
+      if (!label) {
+        state.savePresetError = t('breakpoint.customPreset.emptyName')
+        renderPanel()
+        focusSavePresetName()
+        return
+      }
+
+      const exists = state.customPresets.some(item => item.id !== preset.id && item.label.toLowerCase() === label.toLowerCase())
+      if (exists) {
+        state.savePresetError = t('breakpoint.customPreset.duplicateName')
+        renderPanel()
+        focusSavePresetName()
+        return
+      }
+
+      const previousCustomPresets = state.customPresets
+      state.customPresets = renameCustomBreakpointPreset(preset.id, label, state.customPresets)
+      const saved = await persistCustomPresets()
+      if (!saved) {
+        state.customPresets = previousCustomPresets
+        renderPanel()
+        return
+      }
+
+      state.savePresetDialogOpen = false
+      state.savePresetDialogMode = 'create'
+      state.savePresetId = ''
+      state.savePresetName = ''
+      state.savePresetError = ''
+      render()
+      showToast?.(t('breakpoint.toast.presetRenamed'))
+      notifyViewportChange()
+    }
+
+    async function removeSelectedPreset() {
+      const preset = getSelectedCustomPreset()
+      if (!preset) return
+
+      const previousCustomPresets = state.customPresets
+      state.customPresets = removeCustomBreakpointPreset(preset.id, state.customPresets)
+      state.presetId = 'custom'
+      const saved = await persistCustomPresets()
+      if (!saved) {
+        state.customPresets = previousCustomPresets
+        state.presetId = preset.id
+        renderPanel()
+        return
+      }
+
+      persistViewportPreference()
+      render()
+      showToast?.(t('breakpoint.toast.presetRemoved'))
+      notifyViewportChange()
+    }
+
+    async function saveCurrentPreset() {
+      if (state.savePresetDialogMode === 'rename') {
+        await renameSelectedPreset()
+        return
+      }
+      if (!canSaveCurrentSize()) {
+        closeSavePresetDialog()
+        return
+      }
+      const nameField = state.panel?.querySelector('[data-layoutpilot-breakpoint-save-name]')
+      const label = String(nameField?.value || '').trim()
+      if (!label) {
+        state.savePresetError = t('breakpoint.customPreset.emptyName')
+        renderPanel()
+        focusSavePresetName()
+        return
+      }
+
+      const exists = state.customPresets.some(preset => preset.label.toLowerCase() === label.toLowerCase())
+      if (exists) {
+        state.savePresetError = t('breakpoint.customPreset.duplicateName')
+        renderPanel()
+        focusSavePresetName()
+        return
+      }
+
+      const preset = createCustomBreakpointPreset({
+        label,
+        width: state.width,
+        height: state.height,
+        existingPresets: state.customPresets,
+        labelPrefix: t('breakpoint.presets.custom')
+      })
+      const previousCustomPresets = state.customPresets
+      state.customPresets = normalizeCustomBreakpointPresets([...state.customPresets, preset])
+      const saved = await persistCustomPresets()
+      if (!saved) {
+        state.customPresets = previousCustomPresets
+        renderPanel()
+        return
+      }
+
+      state.presetId = preset.id
+      persistViewportPreference()
+      state.savePresetDialogOpen = false
+      state.savePresetName = ''
+      state.savePresetError = ''
+      render()
+      showToast?.(t('breakpoint.toast.presetSaved'))
+      notifyViewportChange()
+    }
+
     function applyPreset(id) {
-      const preset = getBreakpointPreset(id)
+      const preset = findBreakpointPreset(id, state.customPresets)
       if (!preset) {
         state.presetId = 'custom'
         render()
@@ -805,9 +1245,9 @@
       const nextWidth = normalizeBreakpointDimension(width, state.width)
       const nextHeight = normalizeBreakpointDimension(height, state.height)
       const changed = nextWidth !== state.width || nextHeight !== state.height
-      state.presetId = 'custom'
       state.width = nextWidth
       state.height = nextHeight
+      state.presetId = resolveBreakpointPresetBySize(state.width, state.height, state.customPresets)?.id || 'custom'
       persistViewportPreference()
       renderViewportOnly(sourceTarget)
       if (changed) {
@@ -818,9 +1258,9 @@
 
     function rotate() {
       const rotated = rotateBreakpointViewport(state)
-      state.presetId = 'custom'
       state.width = rotated.width
       state.height = rotated.height
+      state.presetId = resolveBreakpointPresetBySize(state.width, state.height, state.customPresets)?.id || 'custom'
       persistViewportPreference()
       render()
       centerFrame()
@@ -859,6 +1299,12 @@
       if (action === 'breakpoint-rotate') rotate()
       if (action === 'breakpoint-center') centerFrame()
       if (action === 'breakpoint-pan-tool') togglePanTool()
+      if (action === 'breakpoint-open-save-preset') openSavePresetDialog()
+      if (action === 'breakpoint-open-rename-preset') openRenamePresetDialog()
+      if (action === 'breakpoint-remove-preset') removeSelectedPreset()
+      if (action === 'breakpoint-cancel-save-preset') closeSavePresetDialog()
+      if (action === 'breakpoint-save-preset') saveCurrentPreset()
+      if (action === 'breakpoint-capture-preview') capturePreview()
       if (action === 'breakpoint-interaction') setInteraction(trigger.dataset.layoutpilotBreakpointInteraction)
       if (action === 'breakpoint-menu') openFieldMenu(trigger.dataset.layoutpilotBreakpointMenu, trigger)
       return true
@@ -878,7 +1324,19 @@
     }
 
     function handleFieldKeyDown(event) {
-      if (!state.enabled || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return false
+      if (!state.enabled) return false
+      const saveNameField = event.target?.closest?.('[data-layoutpilot-breakpoint-save-name]')
+      if (saveNameField && event.key === 'Enter') {
+        event.preventDefault()
+        saveCurrentPreset()
+        return true
+      }
+      if (saveNameField && event.key === 'Escape') {
+        event.preventDefault()
+        closeSavePresetDialog()
+        return true
+      }
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return false
       const target = event.target?.closest?.('[data-layoutpilot-breakpoint-field="width"], [data-layoutpilot-breakpoint-field="height"]')
       const field = target?.dataset?.layoutpilotBreakpointField
       if (!field) return false

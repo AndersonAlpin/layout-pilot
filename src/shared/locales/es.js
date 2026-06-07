@@ -102,7 +102,8 @@
         androidPhones: 'Teléfonos Android',
         tablets: 'Tablets',
         computers: 'Computadoras',
-        custom: 'Personalizado'
+        custom: 'Personalizado',
+        customSaved: 'Personalizados'
       },
       presets: {
         custom: 'Personalizado'
@@ -114,9 +115,26 @@
         close: 'Salir',
         center: 'Centrar preview',
         move: 'Mover preview',
+        capture: 'Capturar preview',
+        saveCurrentSize: 'Guardar tamaño actual',
+        savePreset: 'Guardar preset',
+        renamePreset: 'Renombrar',
+        removePreset: 'Eliminar',
         collapse: 'Contraer panel',
         expand: 'Expandir panel',
         rotate: 'Cambiar orientación'
+      },
+      customPreset: {
+        title: 'Guardar tamaño actual',
+        description: 'Crea un preset personalizado con el tamaño actual del preview.',
+        renameTitle: 'Renombrar preset',
+        renameDescription: 'Actualiza el nombre de este preset personalizado.',
+        nameLabel: 'Nombre del preset',
+        cancel: 'Cancelar',
+        save: 'Guardar',
+        renameSave: 'Renombrar',
+        emptyName: 'Ingresa un nombre para el preset.',
+        duplicateName: 'Ya existe un preset con ese nombre.'
       },
       blocked: {
         title: 'Preview bloqueado',
@@ -124,7 +142,13 @@
       },
       toast: {
         enabled: 'Vista responsiva activa',
-        disabled: 'Vista responsiva desactivada'
+        disabled: 'Vista responsiva desactivada',
+        presetSaved: 'Preset personalizado guardado',
+        presetRenamed: 'Preset personalizado renombrado',
+        presetRemoved: 'Preset personalizado eliminado',
+        presetSaveFailed: 'No se pudo guardar el preset',
+        previewCaptured: 'Preview capturado',
+        previewCaptureFailed: 'No se pudo capturar el preview'
       }
     },
     detail: {

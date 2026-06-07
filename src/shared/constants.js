@@ -146,6 +146,7 @@
       LANGUAGE: 'layoutPilotLanguage',
       LAST_MODE: 'layoutPilotLastMode',
       RESPONSIVE_PREVIEW_STATE: 'layoutPilotResponsivePreviewState',
+      RESPONSIVE_CUSTOM_PRESETS: 'layoutPilotResponsiveCustomPresets',
       REVIEW_COLOR_MODE: 'layoutPilotReviewColorMode',
       REVIEW_DEFAULT_COLOR: 'layoutPilotReviewDefaultColor',
       REVIEW_RECENT_COLORS: 'layoutPilotReviewRecentColors'

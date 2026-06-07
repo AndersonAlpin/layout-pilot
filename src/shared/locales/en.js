@@ -102,7 +102,8 @@
         androidPhones: 'Android phones',
         tablets: 'Tablets',
         computers: 'Computers',
-        custom: 'Custom'
+        custom: 'Custom',
+        customSaved: 'Custom'
       },
       presets: {
         custom: 'Custom'
@@ -114,9 +115,26 @@
         close: 'Exit',
         center: 'Center preview',
         move: 'Move preview',
+        capture: 'Capture preview',
+        saveCurrentSize: 'Save current size',
+        savePreset: 'Save preset',
+        renamePreset: 'Rename',
+        removePreset: 'Remove',
         collapse: 'Collapse panel',
         expand: 'Expand panel',
         rotate: 'Switch orientation'
+      },
+      customPreset: {
+        title: 'Save current size',
+        description: 'Create a custom preset from the current preview size.',
+        renameTitle: 'Rename preset',
+        renameDescription: 'Update this custom preset name.',
+        nameLabel: 'Preset name',
+        cancel: 'Cancel',
+        save: 'Save',
+        renameSave: 'Rename',
+        emptyName: 'Enter a preset name.',
+        duplicateName: 'A preset with this name already exists.'
       },
       blocked: {
         title: 'Preview blocked',
@@ -124,7 +142,13 @@
       },
       toast: {
         enabled: 'Responsive view on',
-        disabled: 'Responsive view off'
+        disabled: 'Responsive view off',
+        presetSaved: 'Custom preset saved',
+        presetRenamed: 'Custom preset renamed',
+        presetRemoved: 'Custom preset removed',
+        presetSaveFailed: 'Could not save preset',
+        previewCaptured: 'Preview captured',
+        previewCaptureFailed: 'Could not capture preview'
       }
     },
     detail: {

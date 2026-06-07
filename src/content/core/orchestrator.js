@@ -189,6 +189,11 @@
     breakpointController.handleFieldChange?.(event)
   }
 
+  function handleUiInput(event) {
+    if (!isLayoutPilotElement(event.target)) return
+    breakpointController.handleFieldChange?.(event)
+  }
+
   function handleKeyDown(event) {
     if (isLayoutPilotElement(event.target) && breakpointController.handleFieldKeyDown?.(event)) return
 
@@ -370,6 +375,7 @@
     document.removeEventListener('keyup', handleKeyUp, true)
     document.removeEventListener('click', handleUiClick, true)
     document.removeEventListener('change', handleUiChange, true)
+    document.removeEventListener('input', handleUiInput, true)
     rekaModalShield.stop()
     teardownTooltips()
     window.removeEventListener('pagehide', handleLifecycleCleanup)
@@ -395,6 +401,7 @@
   document.addEventListener('keyup', handleKeyUp, true)
   document.addEventListener('click', handleUiClick, true)
   document.addEventListener('change', handleUiChange, true)
+  document.addEventListener('input', handleUiInput, true)
   rekaModalShield.start()
   window.addEventListener('pagehide', handleLifecycleCleanup)
   window.addEventListener('beforeunload', handleLifecycleCleanup)

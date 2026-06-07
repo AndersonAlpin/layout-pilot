@@ -10,6 +10,14 @@ const {
   DEFAULT_PRESET_ID,
   getBreakpointPreset,
   normalizeBreakpointDimension,
+  normalizeCustomBreakpointPresets,
+  createCustomBreakpointPreset,
+  getUniqueCustomPresetName,
+  findBreakpointPreset,
+  hasBreakpointPresetDimensions,
+  resolveBreakpointPresetBySize,
+  renameCustomBreakpointPreset,
+  removeCustomBreakpointPreset,
   rotateBreakpointViewport,
   classifyFrameProbe,
   frameToInternalPoint,
@@ -96,6 +104,131 @@ assert.equal(
   getBreakpointPreset('missing-preset'),
   null,
   'returns null for unknown presets'
+)
+
+assert.deepEqual(
+  normalizeCustomBreakpointPresets([
+    { id: 'custom-a', label: 'Custom A', width: '2560', height: '1080' },
+    { id: '', label: '', width: 0, height: 9000 },
+    { id: 'custom-a', label: 'Duplicate', width: 500, height: 500 }
+  ]),
+  [
+    { id: 'custom-a', label: 'Custom A', width: 2560, height: 1080 },
+    { id: 'custom-1', label: 'Custom 240 × 3840', width: 240, height: 3840 }
+  ],
+  'normalizes custom presets and drops duplicate ids'
+)
+
+assert.deepEqual(
+  normalizeCustomBreakpointPresets([
+    { id: 'custom', label: 'Saved custom size', width: 410, height: 852 }
+  ]),
+  [
+    { id: 'custom-1', label: 'Saved custom size', width: 410, height: 852 }
+  ],
+  'keeps the virtual custom preset id reserved for manual sizes'
+)
+
+assert.equal(
+  getUniqueCustomPresetName('Custom 2560 × 1080', [
+    { label: 'Custom 2560 × 1080' },
+    { label: 'Custom 2560 × 1080 (1)' }
+  ]),
+  'Custom 2560 × 1080 (2)',
+  'suggests the next available custom preset suffix'
+)
+
+assert.deepEqual(
+  createCustomBreakpointPreset({
+    label: '  ',
+    width: 2560,
+    height: 1080,
+    existingPresets: [{ label: 'Custom 2560 × 1080' }]
+  }),
+  { id: 'custom-2560x1080-1', label: 'Custom 2560 × 1080 (1)', width: 2560, height: 1080 },
+  'creates a custom preset with default label and duplicate suffix'
+)
+
+assert.deepEqual(
+  createCustomBreakpointPreset({
+    label: '  ',
+    labelPrefix: 'Personalizado',
+    width: 409,
+    height: 852
+  }),
+  { id: 'custom-409x852', label: 'Personalizado 409 × 852', width: 409, height: 852 },
+  'creates a custom preset with localized default label prefix'
+)
+
+assert.deepEqual(
+  findBreakpointPreset('custom-2560x1080', [
+    { id: 'custom-2560x1080', label: 'Saved size', width: 2560, height: 1080 }
+  ]),
+  { id: 'custom-2560x1080', label: 'Saved size', width: 2560, height: 1080 },
+  'finds saved custom presets by id'
+)
+
+assert.equal(
+  hasBreakpointPresetDimensions(393, 852),
+  true,
+  'detects dimensions that already exist in default presets'
+)
+
+assert.equal(
+  hasBreakpointPresetDimensions(400, 852),
+  false,
+  'does not match custom dimensions that are not saved yet'
+)
+
+assert.equal(
+  hasBreakpointPresetDimensions(400, 852, [
+    { id: 'custom-400x852', label: 'Custom 400 × 852', width: 400, height: 852 }
+  ]),
+  true,
+  'detects dimensions that already exist in custom presets'
+)
+
+assert.deepEqual(
+  resolveBreakpointPresetBySize(393, 852),
+  { id: 'mobile-lg', label: 'Mobile large', width: 393, height: 852 },
+  'resolves matching default preset dimensions'
+)
+
+assert.deepEqual(
+  resolveBreakpointPresetBySize(409, 852, [
+    { id: 'custom-409x852', label: 'Personalizado 409 × 852', width: 409, height: 852 }
+  ]),
+  { id: 'custom-409x852', label: 'Personalizado 409 × 852', width: 409, height: 852 },
+  'resolves matching custom preset dimensions'
+)
+
+assert.equal(
+  resolveBreakpointPresetBySize(410, 852, [
+    { id: 'custom-409x852', label: 'Personalizado 409 × 852', width: 409, height: 852 }
+  ]),
+  null,
+  'returns null when dimensions do not match any default or custom preset'
+)
+
+assert.deepEqual(
+  renameCustomBreakpointPreset('custom-400x852', 'Renamed size', [
+    { id: 'custom-400x852', label: 'Custom 400 × 852', width: 400, height: 852 }
+  ]),
+  [
+    { id: 'custom-400x852', label: 'Renamed size', width: 400, height: 852 }
+  ],
+  'renames a custom preset without changing dimensions or id'
+)
+
+assert.deepEqual(
+  removeCustomBreakpointPreset('custom-400x852', [
+    { id: 'custom-400x852', label: 'Custom 400 × 852', width: 400, height: 852 },
+    { id: 'custom-500x852', label: 'Custom 500 × 852', width: 500, height: 852 }
+  ]),
+  [
+    { id: 'custom-500x852', label: 'Custom 500 × 852', width: 500, height: 852 }
+  ],
+  'removes a custom preset by id'
 )
 
 assert.equal(
