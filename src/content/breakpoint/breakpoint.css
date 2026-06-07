@@ -94,6 +94,11 @@
   left: 50%;
 }
 
+.layoutpilot-breakpoint-workspace--pan-tool,
+.layoutpilot-breakpoint-workspace--pan-tool .layoutpilot-breakpoint-stage {
+  cursor: grab;
+}
+
 .layoutpilot-breakpoint-workspace--panning,
 .layoutpilot-breakpoint-workspace--panning .layoutpilot-breakpoint-stage,
 .layoutpilot-breakpoint-workspace--panning .layoutpilot-hit-shield {
@@ -101,6 +106,7 @@
 }
 
 .layoutpilot-breakpoint-frame {
+  position: relative;
   display: block;
   flex: 0 0 auto;
   overflow: hidden;
@@ -135,6 +141,14 @@
   height: 100%;
   border: 0;
   background: #fff;
+}
+
+.layoutpilot-breakpoint-pan-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: grab;
+  background: transparent;
 }
 
 .layoutpilot-breakpoint-frame--blocked {
@@ -372,6 +386,25 @@
   border-color: rgba(56, 189, 248, 0.55);
   color: #031525;
   background: #38bdf8;
+}
+
+.layoutpilot-breakpoint-icon-button--active {
+  border-color: rgba(56, 189, 248, 0.68);
+  color: #031525;
+  background: #7dd3fc;
+}
+
+.layoutpilot-breakpoint-icon-button:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.layoutpilot-breakpoint-viewport-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 2px;
 }
 
 .layoutpilot-breakpoint-icon-button:hover,

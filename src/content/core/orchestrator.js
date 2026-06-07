@@ -200,6 +200,11 @@
 
     if (shouldIgnoreShortcut(event) && !allowReviewCancel) return
 
+    if (breakpointController.handleKeyDown?.(event)) {
+      consumeShortcut(event)
+      return
+    }
+
     const activeController = getActiveController()
     if (state.enabled && activeController.blocksGlobalShortcuts?.()) {
       consumeShortcut(event)
@@ -257,6 +262,12 @@
     if (normalized === SHORTCUT.CANCEL) {
       consumeShortcut(event)
       setEnabled(false)
+    }
+  }
+
+  function handleKeyUp(event) {
+    if (breakpointController.handleKeyUp?.(event)) {
+      consumeShortcut(event)
     }
   }
 
@@ -356,6 +367,7 @@
     }
     breakpointController.destroy?.()
     document.removeEventListener('keydown', handleKeyDown, true)
+    document.removeEventListener('keyup', handleKeyUp, true)
     document.removeEventListener('click', handleUiClick, true)
     document.removeEventListener('change', handleUiChange, true)
     rekaModalShield.stop()
@@ -380,6 +392,7 @@
   }
 
   document.addEventListener('keydown', handleKeyDown, true)
+  document.addEventListener('keyup', handleKeyUp, true)
   document.addEventListener('click', handleUiClick, true)
   document.addEventListener('change', handleUiChange, true)
   rekaModalShield.start()

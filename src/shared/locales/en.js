@@ -107,6 +107,7 @@
       actions: {
         close: 'Exit',
         center: 'Center preview',
+        move: 'Move view',
         collapse: 'Collapse panel',
         expand: 'Expand panel',
         rotate: 'Toggle orientation'

@@ -102,11 +102,12 @@
         custom: 'Personalizado'
       },
       zoom: {
-        fit: 'Fit'
+        fit: 'Ajustar'
       },
       actions: {
         close: 'Sair',
         center: 'Centralizar preview',
+        move: 'Mover visualização',
         collapse: 'Recolher painel',
         expand: 'Expandir painel',
         rotate: 'Alternar orientação'

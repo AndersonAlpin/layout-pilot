@@ -14,6 +14,7 @@
     'chevron-down': '<path d="m6 9 6 6 6-6"/>',
     'chevron-left': '<path d="m15 18-6-6 6-6"/>',
     'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+    hand: '<path d="M18 11.5V10a2 2 0 0 0-4 0V9a2 2 0 0 0-4 0v1.5V5a2 2 0 0 0-4 0v9l-1.2-1.6a2 2 0 0 0-3.2 2.4l3.8 5A5.5 5.5 0 0 0 9.8 22H14a6 6 0 0 0 6-6v-4.5a2 2 0 0 0-2-2Z"/>',
     target: '<circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2"/>',
     pin: '<path d="M12 3v5"/><path d="M7 8h10"/><path d="m9 8 1 7h4l1-7"/><path d="M12 15v6"/>',
     'pin-off': '<path d="M12 3v5"/><path d="M7 8h10"/><path d="m9 8 1 7h4l1-7"/><path d="M12 15v6"/><path d="m5 5 14 14"/>',

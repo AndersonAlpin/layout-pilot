@@ -49,6 +49,9 @@
       zoom: 'fit',
       presetId: defaultPreset?.id || DEFAULT_PRESET_ID,
       panelCollapsed: false,
+      panToolPinned: false,
+      panToolTemporary: false,
+      panOverlay: null,
       frameBlocked: false,
       frameReady: false,
       // Gates iframe creation until the background confirms the X-Frame-Options /
@@ -87,6 +90,8 @@
         presetId: state.presetId,
         presetLabel: getPresetLabel(),
         panelCollapsed: state.panelCollapsed,
+        panToolActive: isPanToolActive(),
+        panToolPinned: state.panToolPinned,
         frameBlocked: state.frameBlocked
       }
     }
@@ -297,6 +302,34 @@
       `
     }
 
+    function isPanToolAvailable() {
+      return state.zoom !== 'fit'
+    }
+
+    function isPanToolActive() {
+      return isPanToolAvailable() && (state.panToolPinned || state.panToolTemporary)
+    }
+
+    function renderViewportActions() {
+      const moveActive = isPanToolActive()
+      const moveDisabled = !isPanToolAvailable()
+      const centerDisabled = state.zoom === 'fit'
+      return `
+        <div class="layoutpilot-breakpoint-viewport-actions">
+          <button
+            class="layoutpilot-breakpoint-icon-button ${moveActive ? 'layoutpilot-breakpoint-icon-button--active' : ''}"
+            type="button"
+            data-layoutpilot-action="breakpoint-pan-tool"
+            ${tip(t('breakpoint.actions.move'))}
+            aria-label="${escapeHtml(t('breakpoint.actions.move'))}"
+            aria-pressed="${moveActive ? 'true' : 'false'}"
+            ${moveDisabled ? 'disabled' : ''}
+          >${icon('hand', 16)}</button>
+          <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-center" ${tip(t('breakpoint.actions.center'))} aria-label="${escapeHtml(t('breakpoint.actions.center'))}" ${centerDisabled ? 'disabled' : ''}>${icon('target', 16)}</button>
+        </div>
+      `
+    }
+
     function renderPanel() {
       if (!state.panel) return
       presetMenu.close()
@@ -318,7 +351,6 @@
         <div class="layoutpilot-breakpoint-panel-header">
           <img class="layoutpilot-breakpoint-logo" src="${escapeHtml(BRAND_LOGO_URL)}" alt="${escapeHtml(t('breakpoint.title'))}" />
           <span class="layoutpilot-breakpoint-panel-header-actions">
-            <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-center" ${tip(t('breakpoint.actions.center'))} aria-label="${escapeHtml(t('breakpoint.actions.center'))}">${icon('target', 16)}</button>
             <button class="layoutpilot-breakpoint-icon-button" type="button" data-layoutpilot-action="breakpoint-collapse" ${tip(t('breakpoint.actions.collapse'))} aria-label="${escapeHtml(t('breakpoint.actions.collapse'))}">${icon('chevron-right', 16)}</button>
             <button class="layoutpilot-breakpoint-icon-button layoutpilot-breakpoint-icon-button--primary" type="button" data-layoutpilot-action="breakpoint-close">${escapeHtml(t('breakpoint.actions.close'))}</button>
           </span>
@@ -347,6 +379,8 @@
           <span class="layoutpilot-breakpoint-field-label">${escapeHtml(t('breakpoint.fields.zoom'))}</span>
           ${renderDropdownTrigger({ name: 'zoom', label: getZoomLabel() })}
         </div>
+
+        ${renderViewportActions()}
 
         <div class="layoutpilot-breakpoint-current">
           <span class="layoutpilot-breakpoint-current-label">${escapeHtml(t('popup.breakpoint.current'))}</span>
@@ -405,6 +439,7 @@
           </div>
         `
         state.iframe = null
+        state.panOverlay = null
         return
       }
 
@@ -432,6 +467,22 @@
           markFrameBlocked(nonce)
         }, FRAME_LOAD_TIMEOUT_MS)
       }
+      syncPanOverlay()
+    }
+
+    function syncPanOverlay() {
+      if (!state.frame || !state.iframe || state.frameBlocked) return
+      if (!isPanToolActive()) {
+        state.panOverlay?.remove()
+        state.panOverlay = null
+        return
+      }
+      if (!state.panOverlay) {
+        state.panOverlay = document.createElement('div')
+        state.panOverlay.className = 'layoutpilot-breakpoint-pan-overlay'
+        state.panOverlay.setAttribute('aria-hidden', 'true')
+      }
+      if (!state.panOverlay.isConnected) state.frame.appendChild(state.panOverlay)
     }
 
     function ensureUi() {
@@ -461,6 +512,7 @@
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--panel-collapsed', state.panelCollapsed)
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--inspect', state.interaction === 'inspect')
       state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--fit', state.zoom === 'fit')
+      state.workspace.classList.toggle('layoutpilot-breakpoint-workspace--pan-tool', isPanToolActive())
     }
 
     function render() {
@@ -513,6 +565,9 @@
       state.stage = null
       state.frame = null
       state.iframe = null
+      state.panOverlay = null
+      state.panToolPinned = false
+      state.panToolTemporary = false
       state.frameBlocked = false
       state.frameReady = false
       state.frameUrl = ''
@@ -531,6 +586,7 @@
     function isPanStartTarget(target) {
       if (!target) return false
       if (state.panel?.contains(target)) return false
+      if (target === state.panOverlay) return true
       if (state.frame?.contains(target)) return false
       if (target === state.stage || target === state.workspace) return true
       return !!target.classList?.contains?.('layoutpilot-hit-shield')
@@ -539,7 +595,12 @@
     function handlePanPointerDown(event) {
       if (!state.enabled || event.button !== 0) return
       if (state.zoom === 'fit') return
-      if (!state.stage || !isPanStartTarget(event.target)) return
+      if (!state.stage) return
+      if (isPanToolActive()) {
+        if (state.panel?.contains(event.target)) return
+      } else if (!isPanStartTarget(event.target)) {
+        return
+      }
 
       state.pan = {
         pointerId: event.pointerId,
@@ -693,6 +754,30 @@
       return getState()
     }
 
+    function syncPanToolUi() {
+      updateWorkspaceLayout()
+      syncPanOverlay()
+      renderPanel()
+    }
+
+    function setPanToolPinned(pinned) {
+      state.panToolPinned = !!pinned
+      syncPanToolUi()
+      return getState()
+    }
+
+    function togglePanTool() {
+      return setPanToolPinned(!state.panToolPinned)
+    }
+
+    function setTemporaryPanTool(active) {
+      const next = !!active
+      if (state.panToolTemporary === next) return false
+      state.panToolTemporary = next
+      syncPanToolUi()
+      return true
+    }
+
     function togglePanel() {
       if (!state.enabled) return setEnabled(true)
       return setPanelCollapsed(!state.panelCollapsed)
@@ -775,6 +860,7 @@
       if (action === 'breakpoint-expand') setPanelCollapsed(false)
       if (action === 'breakpoint-rotate') rotate()
       if (action === 'breakpoint-center') centerFrame()
+      if (action === 'breakpoint-pan-tool') togglePanTool()
       if (action === 'breakpoint-interaction') setInteraction(trigger.dataset.layoutpilotBreakpointInteraction)
       if (action === 'breakpoint-menu') openFieldMenu(trigger.dataset.layoutpilotBreakpointMenu, trigger)
       return true
@@ -810,6 +896,17 @@
       const height = state.panel?.querySelector('[data-layoutpilot-breakpoint-field="height"]')?.value
       applyDimensions(width, height, target)
       return true
+    }
+
+    function handleKeyDown(event) {
+      if (!state.enabled || event.repeat || event.key !== ' ') return false
+      if (!isPanToolAvailable()) return false
+      return setTemporaryPanTool(true)
+    }
+
+    function handleKeyUp(event) {
+      if (!state.enabled || event.key !== ' ') return false
+      return setTemporaryPanTool(false)
     }
 
     function readFrameGeometry() {
@@ -893,6 +990,8 @@
       handleUiClick,
       handleFieldChange,
       handleFieldKeyDown,
+      handleKeyDown,
+      handleKeyUp,
       getElementAtPoint,
       mapElementInfo,
       refreshLanguage,
